@@ -1,0 +1,143 @@
+/* Unmasking: the reveal screen. Tokens from globals.css. */
+
+/* unmasking */
+.reveal-cards,
+.reveal-ballots,
+.reveal-votes {
+  list-style: none;
+}
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.reveal-banner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-6);
+  align-items: center;
+}
+.reveal-banner-bare {
+  grid-template-columns: 1fr;
+}
+.reveal-title {
+  font-size: var(--text-2xl);
+}
+.reveal-reason {
+  margin-top: var(--space-2);
+  font-size: var(--text-md);
+}
+/* the one beat of theatre in the app: the mask comes up out of the dark once */
+.reveal-mask-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-6);
+  align-items: center;
+  animation: unmask 600ms var(--ease-out) 300ms both;
+}
+@keyframes unmask {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.reveal-seats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.reveal-player-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.reveal-seat {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--rule) solid var(--line);
+}
+@media (min-width: 40rem) {
+  .reveal-seat {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+.reveal-truth,
+.reveal-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.reveal-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.reveal-cards > li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.reveal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.reveal-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 0.125rem var(--space-2);
+  border: var(--rule) solid var(--muted);
+  font-size: var(--text-sm);
+}
+.reveal-tag.reveal-lie {
+  border-color: var(--danger-ink);
+}
+.reveal-word {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-caps: small-caps;
+}
+.reveal-true {
+  color: var(--success-ink);
+}
+.reveal-lie {
+  color: var(--danger-ink);
+}
+.reveal-votes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.reveal-ballots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+.reveal-ballots li {
+  display: flex;
+  gap: var(--space-2);
+}
+.reveal-again {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+@media (max-width: 40rem) {
+  .reveal-banner,
+  .reveal-mask-body {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}

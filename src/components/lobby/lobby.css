@@ -1,0 +1,112 @@
+/* Lobby and landing entry. Layout only; every visual token comes from globals.css and ui.css. */
+
+/* landing entry: the two ways in */
+.entry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-8);
+  align-items: start;
+}
+.entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* the hall */
+.lobby {
+  width: min(100%, 72rem);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+.lobby-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-8);
+}
+.lobby-code {
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+  font-size: clamp(var(--text-3xl), 12vw, 5.5rem);
+  letter-spacing: 0.18em;
+  margin-right: -0.18em;
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+}
+.lobby-copy-note {
+  flex-basis: 100%;
+}
+.lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-8);
+  align-items: start;
+}
+.lobby-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.lobby-name {
+  font-weight: 500;
+}
+.lobby-roster {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.lobby-roster > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.lobby-legend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.lobby-legend > li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+.lobby-legend p {
+  font-size: var(--text-sm);
+}
+.lobby-legend p.lobby-name {
+  font-size: var(--text-base);
+}
+.lobby-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.lobby-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+.lobby-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
+}
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}

@@ -1,0 +1,241 @@
+/* The game screen at /room/[code]. Layout and states only; tokens from globals.css, primitives from ui.css. */
+
+.room {
+  width: min(100% - 2 * var(--space-4), 72rem);
+  margin: 0 auto;
+  padding: var(--space-4) 0 var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+}
+h3.section-title {
+  font-size: var(--text-md);
+}
+
+/* header */
+.room-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--rule) solid var(--ink);
+}
+.room-phase {
+  font-size: var(--text-xl);
+  margin-inline-end: auto;
+}
+.room-hall {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.room-hall-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-variant-caps: small-caps;
+}
+.room-code {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.room-me {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.room-name {
+  font-weight: 500;
+}
+.room-leave {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+@media (max-width: 40rem) {
+  .room-phase {
+    flex-basis: 100%;
+  }
+  .room-me {
+    margin-inline-start: auto;
+  }
+}
+
+/* join */
+.join {
+  width: 100%;
+  max-width: 28rem;
+  margin: var(--space-12) auto 0;
+}
+.join-lead {
+  margin-top: var(--space-3);
+}
+.join form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.join .field {
+  width: 100%;
+}
+.join-leave {
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.fault-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* clocks */
+.clock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.clock-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+.timer-paused {
+  font-size: var(--text-xl);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.clock-big .timer,
+.clock-big .timer-paused {
+  font-size: var(--text-3xl);
+}
+.clock-live .clock-label {
+  color: var(--ink);
+}
+.tribunal-clocks .clock:not(.clock-live) .timer {
+  color: var(--muted);
+}
+
+/* reading */
+.read-grid {
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr);
+}
+.read-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+@media (min-width: 56rem) {
+  .read-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}
+
+/* the problem */
+.problem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 72ch;
+}
+.problem-statement {
+  white-space: pre-wrap;
+}
+.problem-examples,
+.panel-pre,
+.log-pre {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface);
+  background-image: var(--tx-grain);
+}
+.panel-pre {
+  background-color: var(--bg);
+}
+
+/* seat panels */
+.panel-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.panel-duty {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.panel-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.panel-tags li {
+  padding: 0.125rem var(--space-2);
+  border: var(--rule) solid var(--muted);
+  font-size: var(--text-sm);
+}
+.panel-hints {
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.panel-hints li::marker {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.panel-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.panel-link a {
+  font-weight: 500;
+}
+.panel > .action {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--rule) solid var(--line);
+}
+
+/* the Changeling's line */
+.changeling-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-top: var(--rule) solid var(--ink);
+  border-bottom: var(--rule) solid var(--ink);
+}
+.changeling-note p {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}

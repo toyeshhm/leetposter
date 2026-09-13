@@ -1,0 +1,116 @@
+/* The /design gallery. Layout only; every visual token comes from globals.css and ui.css. */
+.g-page {
+  width: min(100% - 2 * var(--space-6), 72rem);
+  margin: 0 auto;
+  padding: var(--space-12) 0 var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.g-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  gap: var(--space-6);
+}
+.g-head p {
+  max-width: 48ch;
+  color: var(--muted);
+}
+@media (max-width: 40rem) {
+  .g-head {
+    grid-template-columns: 1fr;
+  }
+}
+.g-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.g-section > h2 {
+  font-size: var(--text-xl);
+}
+.g-hero {
+  width: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+}
+.g-hero .plate {
+  width: 100%;
+  height: auto;
+}
+.g-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-8) var(--space-8);
+}
+.g-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.g-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.g-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+}
+.g-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.g-swatch > i {
+  display: block;
+  height: 3.5rem;
+  border: var(--rule) solid var(--ink);
+  background: var(--sw);
+}
+.g-swatch code {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.g-type > * + * {
+  margin-top: var(--space-3);
+}
+.g-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-6);
+  align-items: start;
+}
+.g-states {
+  display: grid;
+  grid-template-columns: 7rem repeat(6, auto);
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  overflow-x: auto;
+}
+.g-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.g-verdicts {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+.g-accepted {
+  --art-spot: var(--success);
+}
+.g-rejected {
+  --art-spot: var(--danger);
+}

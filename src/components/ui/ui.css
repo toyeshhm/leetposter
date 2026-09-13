@@ -1,0 +1,271 @@
+/* Changeling UI primitives. Tokens in src/app/globals.css. Square corners, 2px rules, no shadows. */
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  border: var(--rule) solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: var(--text-base);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.btn-primary:is(:hover, [data-state="hover"]) {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+.btn-secondary {
+  border-color: var(--ink);
+}
+.btn-secondary:is(:hover, [data-state="hover"]) {
+  background: var(--raised);
+}
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--ink);
+}
+.btn-danger:is(:hover, [data-state="hover"]) {
+  background: color-mix(in oklch, var(--danger), black 18%);
+  border-color: var(--danger-ink);
+}
+.btn-ghost {
+  color: var(--muted);
+}
+.btn-ghost:is(:hover, [data-state="hover"]) {
+  color: var(--ink);
+  background: var(--raised);
+}
+.btn:is(:active, [data-state="active"]):not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* thumbs: 44px targets where there is no pointer to aim with */
+@media (pointer: coarse) {
+  .btn,
+  .field-control {
+    min-height: 2.75rem;
+  }
+}
+.btn[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.8;
+}
+.btn-glyph {
+  display: inline-flex;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.btn[aria-busy="true"] .btn-glyph {
+  animation: turn 1.4s var(--ease-out) infinite;
+}
+@keyframes turn {
+  0%,
+  40% {
+    transform: rotate(0deg);
+  }
+  70%,
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+/* forced states for the gallery only */
+[data-state="focus"] {
+  outline: var(--rule) solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Field */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.field-label {
+  font-weight: 500;
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+}
+.field-control {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-3);
+  border: var(--rule) solid var(--muted);
+  border-radius: 0;
+  background-color: var(--surface);
+  background-image: var(--tx-grain);
+  color: var(--ink);
+  transition: border-color var(--dur) var(--ease-out);
+}
+textarea.field-control {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: var(--leading-body);
+}
+.field-control:is(:hover, :focus-visible, [data-state="hover"]) {
+  border-color: var(--ink);
+}
+.field-control[aria-invalid="true"] {
+  border-color: var(--danger-ink);
+}
+.field-control:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.field-hint {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.field-error {
+  color: var(--danger-ink);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* Frame */
+.frame {
+  --plate-bg: var(--surface);
+  position: relative;
+  margin: 0;
+  min-inline-size: 0;
+  border: var(--rule) solid var(--ink);
+  padding: var(--space-6);
+  background-color: var(--surface);
+  background-image: var(--tx-grain);
+}
+.frame-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  color: var(--ink);
+}
+.frame-corner-tl {
+  top: -2px;
+  left: -2px;
+}
+.frame-corner-tr {
+  top: -2px;
+  right: -2px;
+}
+.frame-corner-br {
+  bottom: -2px;
+  right: -2px;
+}
+.frame-corner-bl {
+  bottom: -2px;
+  left: -2px;
+}
+.frame-title {
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  color: var(--ink);
+}
+/* one level only: a frame inside a frame is a plain block */
+.frame .frame {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.frame .frame > :is(.frame-corner, .frame-title) {
+  display: none;
+}
+
+/* Timer */
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: var(--text-xl);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  transition: color var(--dur) var(--ease-out);
+}
+.timer-urgent {
+  color: var(--accent);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
+  border: var(--rule) solid var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.badge-note {
+  color: var(--muted);
+  font-variant-caps: normal;
+  letter-spacing: 0;
+}
+
+/* Notice */
+.notice {
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule) solid var(--ink);
+  background-color: var(--surface);
+  background-image: var(--tx-grain);
+  font-size: var(--text-sm);
+}
+.notice-error {
+  border-color: var(--danger-ink);
+  color: var(--danger-ink);
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+  color: var(--ink);
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: var(--rule);
+  background: currentColor;
+}
+.divider > .plate {
+  margin: 0 calc(-1 * var(--space-3));
+}
+.divider-label {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: 1;
+}
