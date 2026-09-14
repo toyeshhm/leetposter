@@ -65,6 +65,16 @@ export function act(creds: Credentials, action: Action): Promise<PlayerView> {
   });
 }
 
+/** The shared editor's last saved state (base64 Yjs update), null before the first save. */
+export function loadDoc(creds: Credentials): Promise<{ doc: string | null }> {
+  return call<{ doc: string | null }>(`/api/rooms/${encodeURIComponent(creds.code)}/doc`, { method: "GET" }, creds.token);
+}
+
+/** Save the full editor state. `keepalive` lets the request outlive a closing tab (64 KiB cap in browsers). */
+export function saveDoc(creds: Credentials, doc: string, keepalive: boolean): Promise<{ ok: true }> {
+  return call<{ ok: true }>(`/api/rooms/${encodeURIComponent(creds.code)}/doc`, { method: "POST", body: JSON.stringify({ doc }), keepalive }, creds.token);
+}
+
 /* Credentials live in localStorage, one entry per hall, so a second hall never evicts the first. */
 const key = (code: string): string => `leetposter.credentials.${code}`;
 const PROBE_KEY = "leetposter.probe";

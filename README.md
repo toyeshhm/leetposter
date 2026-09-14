@@ -6,7 +6,7 @@ The traitor role is still called the Changeling in-game. Never put "LeetCode" (t
 
 ## The game
 
-**Players.** 4 to 8. Everyone sees the problem statement and examples. Everyone types in a shared editor (external for now: any shared doc or editor the group already uses). Exactly one player is the Changeling.
+**Players.** 4 to 8. Everyone sees the problem statement and examples. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
 
 **Seats.** Dealt secretly at start. Every player, including the Changeling, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private.
 
@@ -27,15 +27,19 @@ Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartogra
 1. Lobby: host pastes the problem (title, URL, statement, examples, tags, hints, constraints) and starts.
 2. Reading (5 min): everyone reads the statement alone and sees their own panel.
 3. Building (40 min, pauses during freezes): shared editor, cards, submissions. Cap of 4 submissions. Accepted ends the round: crew win. The 4th rejection starts the final vote.
-4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. Editor should lock (external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Changeling: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
+4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. The in-app editor locks (an external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Changeling: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
 5. Final vote: when the build clock hits zero or the 4th rejection lands. 60 s discussion, 15 s vote, no Skip. Plurality is ejected. Changeling ejected: crew win. Anything else including a tie: Changeling wins.
-6. Reveal: the Changeling, the final editor state (external), every seat's true panel next to every card they played, the vote history.
+6. Reveal: the Changeling, the final editor state, read-only, every seat's true panel next to every card they played, the vote history.
 
 **Win conditions.** Crew: an Accepted submission, or the Changeling is ejected. Changeling: no Accepted submission and still standing after the final vote.
 
+## Pasting a problem
+
+The host does not fill the form by hand. On the LeetCode page, open Topics and every Hint, select all, copy, and paste the whole thing into the "Paste the whole page" box in the lobby. "Sort it out" sends it to `POST /api/parse`, where a deterministic line parser (`src/server/parse/leetcode.ts`) splits it into title, link, statement (with the follow-up), examples, tags, hints and constraints, and restores the exponents that copying flattens (`104` becomes `10^4`). Every field stays editable before "Set the problem". When the parser cannot find the title, statement or constraints and `GROQ_API_KEY` is set, the same text goes to Groq (`src/server/parse/groq.ts`, currently `openai/gpt-oss-120b`) and the model's answer fills whatever the parser left empty; "Sort with the model" forces that path. Without a key the parser's result comes back with its warnings and the model button is hidden.
+
 ## Architecture
 
-Next.js 16 (App Router, TypeScript strict) on Vercel. Supabase Postgres holds one row per room: `rooms(code, state jsonb, version)`. All game logic is a pure reducer over `RoomState`. Route handlers load the row, apply the action, save with optimistic concurrency on `version`. Clients poll their personalized view every 1.5 s (`ponytail:` upgrade to Realtime if it ever matters).
+Next.js 16 (App Router, TypeScript strict) on Vercel. Supabase Postgres holds one row per room: `rooms(code, state jsonb, version, doc text)`; `doc` is the shared editor's last saved Yjs state. All game logic is a pure reducer over `RoomState`. Route handlers load the row, apply the action, save with optimistic concurrency on `version`. Clients poll their personalized view every 1.5 s (`ponytail:` upgrade to Realtime if it ever matters). The shared editor is a Yjs document: edits and carets travel peer to peer over one Supabase Realtime broadcast channel per hall, and the full state is saved to the row 2 s after the last local edit so a reload or a late joiner starts from it.
 
 ```
 src/game/types.ts      the contract: RoomState, Action, PlayerView, Settings. Read this first.
@@ -46,20 +50,31 @@ src/game/errors.ts     GameError with typed codes.
 src/server/supabase.ts server-only Supabase client from SUPABASE_URL / SUPABASE_KEY.
 src/server/store.ts    loadRoom / createRoom / withRoom(code, fn) with version retry.
 src/server/validate.ts zod schemas for every request body (Problem, Action, names, codes).
+src/server/parse/leetcode.ts  deterministic line parser for a pasted LeetCode page -> Problem + warnings.
+src/server/parse/groq.ts      Groq fallback that fills whatever the parser left empty.
+src/server/parse/schema.ts    zod schemas for the request body and the model's answer.
+src/server/parse/types.ts     ParsedProblem / ParseResponse: {problem, confidence, warnings, source, llmAvailable}.
+src/app/api/parse/route.ts                POST {text, mode} -> ParseResponse
 src/app/api/rooms/route.ts                POST {name} -> {code, playerId, token}
 src/app/api/rooms/[code]/join/route.ts    POST {name} -> {code, playerId, token}
 src/app/api/rooms/[code]/route.ts         GET, Authorization: Bearer <token> -> PlayerView (ticks first)
 src/app/api/rooms/[code]/act/route.ts     POST {token, action} -> PlayerView
+src/app/api/rooms/[code]/doc/route.ts     GET (bearer) -> {doc}; POST {doc} saves it, refused while the editor is locked
 src/client/api.ts      fetch wrappers (ApiError) + localStorage credentials, keyed by hall code.
 src/client/useRoom.ts  polling hook: { view, error, clockOffset, send, busy }.
+src/client/docSync.ts     connectDoc: Yjs updates + y-protocols awareness over a Realtime broadcast channel.
+src/client/docPersist.ts  persistDoc: load the saved state, save 2 s after the last local edit and on unload.
+src/client/supabaseBrowser.ts browser Supabase client (publishable key), Realtime only.
 src/app/page.tsx                 landing: create or join.
 src/app/room/[code]/page.tsx     the whole game: lobby, reading, building, freeze, final vote, reveal.
 src/app/error.tsx                last-resort error boundary for the client screens.
+src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, languages, theme.
+src/components/lobby/*   the lobby: PasteBox (whole-page paste -> /api/parse), ProblemForm, SettingsForm, Roster.
 src/components/ui/*    primitives (Button, Field, Frame, Timer, ...).
 src/components/art/*   original SVG artwork as React components (sigils, mask, borders, hero).
-tests/unit/*.test.ts        vitest, 100% statements+branches on src/game and src/server.
-tests/integration/*.test.ts vitest against the real Supabase in .env.local. No mocks.
-e2e/*.spec.ts               Playwright, multi-context 4-player game.
+tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api.
+tests/integration/*.test.ts vitest against the real Supabase and Groq in .env.local. No mocks.
+e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the paste box.
 ```
 
 **Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.

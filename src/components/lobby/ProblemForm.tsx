@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type SyntheticEvent, type ReactElement } fr
 import { errorMessage } from "@/client/api";
 import { Button, Field, Frame, Notice, TextareaField } from "@/components/ui";
 import type { Action, PlayerView, Problem } from "@/game/types";
+import { PasteBox } from "./PasteBox";
 import { errorProp } from "./util";
 import "./lobby.css";
 
@@ -50,6 +51,8 @@ interface Note {
   text: string;
 }
 
+const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n") });
+
 /** The host pastes the problem. Statement and examples are public; the rest become seat panels. */
 export function ProblemForm({
   send,
@@ -79,6 +82,12 @@ export function ProblemForm({
       setDraft((d) => ({ ...d, [key]: value }));
     };
 
+  const fill = (p: Problem): void => {
+    setDraft(toDraft(p));
+    setErrors({});
+    setNote(null);
+  };
+
   const submit = async (): Promise<void> => {
     const parsed = parse(draft);
     setErrors(parsed.errors);
@@ -100,7 +109,8 @@ export function ProblemForm({
   return (
     <Frame title="The problem">
       <form className="lobby-form" onSubmit={onSubmit} noValidate>
-        <p className="muted prose">Paste a LeetCode-style problem. Only the Herald sees the title and link; only the seats see their panels.</p>
+        <PasteBox onSorted={fill} disabled={busy} />
+        <p className="muted prose">Or fill the parts yourself. Only the Herald sees the title and link; only the seats see their panels.</p>
         <div className="lobby-pair">
           <Field label="Title" name="title" value={draft.title} onChange={edit("title")} disabled={busy} {...errorProp(errors.title)} />
           <Field

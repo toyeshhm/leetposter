@@ -69,7 +69,7 @@
   margin-top: var(--space-6);
 }
 
-/* the work: side (clock, table), main (seat, record), problem */
+/* the work: side (clock, table), main (the file, seat, record), problem */
 .build-grid {
   display: grid;
   gap: var(--space-8);
@@ -105,7 +105,8 @@
 }
 @media (min-width: 56rem) {
   .build-grid {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr) minmax(0, 4fr);
+    /* the file is the widest column: the statement is read once, the code is read all night */
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr) minmax(0, 4fr);
     grid-template-areas: "problem main side";
     align-items: start;
     gap: var(--space-8) var(--space-6);

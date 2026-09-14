@@ -1,0 +1,41 @@
+/* The shared editor. Tokens from globals.css; the CodeMirror internals are themed in theme.ts. */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.editor-reason {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.editor-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.editor-bar .field {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+.editor-bar .field-control {
+  width: auto;
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-2);
+}
+.editor-body {
+  height: 50vh;
+  min-height: 40vh;
+  border: var(--rule) solid var(--line);
+  background-color: var(--surface);
+  overflow: hidden;
+}
+.editor-body[data-locked="true"] {
+  border-style: dashed;
+}
+.editor-body[aria-busy="true"] {
+  opacity: 0.6;
+}

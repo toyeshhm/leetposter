@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { ChangelingMask, CrewEmblem, SEAT_TITLES } from "@/components/art";
+import { Editor } from "@/components/editor/Editor";
 import { Badge, Divider, Frame, Notice } from "@/components/ui";
 import { cx } from "@/components/ui/cx";
 import type { PlayerView, PublicPlayer, Seat } from "@/game/types";
@@ -66,6 +67,9 @@ export function RevealScreen({ view }: { view: PlayerView }): ReactElement {
           );
         })}
       </section>
+
+      <Divider>The final code</Divider>
+      <Editor view={view} />
 
       <Divider>The votes</Divider>
       <VoteHistory view={view} />

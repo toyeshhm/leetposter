@@ -1,0 +1,126 @@
+Problem List
+Debugging...
+Submit
+00:00:00
+Register
+or
+Log in
+Premium
+Description
+Editorial
+Editorial
+Solutions
+Solutions
+Submissions
+Submissions
+Code
+Testcase
+Test Result
+Test Result
+4. Median of Two Sorted Arrays
+Hard
+Topics
+Companies
+
+Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.
+
+The overall run time complexity should be O(log (m+n)).
+
+
+
+Example 1:
+
+Input: nums1 = [1,3], nums2 = [2]
+Output: 2.00000
+Explanation: merged array = [1,2,3] and median is 2.
+
+
+Example 2:
+
+Input: nums1 = [1,2], nums2 = [3,4]
+Output: 2.50000
+Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.
+
+
+
+
+Constraints:
+
+nums1.length == m
+nums2.length == n
+0 <= m <= 1000
+0 <= n <= 1000
+1 <= m + n <= 2000
+-106 <= nums1[i], nums2[i] <= 106
+
+Accepted
+4,597,097/9.7M
+Acceptance Rate
+47.6%
+Topics
+Companies
+Similar Questions
+Discussion (1K)
+Choose a type
+Comment
+💡 Discussion Rules
+
+1. Please don't post any solutions in this discussion.
+
+2. The problem discussion is for asking questions about the problem or for sharing tips - anything except for solutions.
+
+3. If you'd like to share your solution for feedback and ideas, please head to the solutions tab and post it there.
+
+Sort by:Best
+kevin_125
+Jan 02, 2023
+
+I got this exact question in an interview last week. I almost gave up because I knew I'm unable to come up with the optimal O(log(n+m)) solution.
+
+3.5K
+Show 45 Replies
+Reply
+1
+2
+3
+4
+5
+6
+102
+Copyright © 2026 LeetCode. All rights reserved.
+32.7K
+1K
+300 Online
+C++
+Auto
+1
+2
+3
+4
+5
+6
+class Solution {
+public:
+double findMedianSortedArrays(vector<int>& nums1,
+vector<int>& nums2) {
+
+}
+};
+Saved
+Ln 1, Col 1
+You need to log in / sign up to run or submit
+Case 1
+Case 2
+nums1 =
+[1,3]
+nums2 =
+[2]
+1
+2
+3
+4
+[1,3]
+[2]
+[1,2]
+[3,4]
+Source

@@ -50,3 +50,18 @@ async function saveRoom(code: string, state: RoomState, version: number): Promis
   if (error !== null) throw new Error(`saveRoom ${code}: ${error.message}`);
   return data.length === 1;
 }
+
+/** The shared editor's last saved Yjs state (base64); null before the first save. */
+export async function loadDoc(code: string): Promise<string | null> {
+  const { data, error } = await supabase.from("rooms").select("doc").eq("code", code).maybeSingle();
+  if (error !== null) throw new Error(`loadDoc ${code}: ${error.message}`);
+  if (data === null) throw new GameError("not-found", `No hall called ${code}.`);
+  return data.doc;
+}
+
+/** Overwrite the saved editor state. ponytail: last writer wins; the state is a full CRDT snapshot, so nothing is lost that the writer had seen. */
+export async function saveDoc(code: string, doc: string): Promise<void> {
+  const { data, error } = await supabase.from("rooms").update({ doc }).eq("code", code).select("code");
+  if (error !== null) throw new Error(`saveDoc ${code}: ${error.message}`);
+  if (data.length !== 1) throw new GameError("not-found", `No hall called ${code}.`);
+}

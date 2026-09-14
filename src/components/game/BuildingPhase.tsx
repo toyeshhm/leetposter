@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { AcceptedMark, RejectedSeal } from "@/components/art";
+import { Editor } from "@/components/editor/Editor";
 import { Notice, Timer } from "@/components/ui";
 import { mmss } from "@/components/ui/clock";
 import { cx } from "@/components/ui/cx";
@@ -21,7 +22,7 @@ export interface BoardProps {
   busy: boolean;
 }
 
-/** The Work, and the tribunals that interrupt it. Three columns on a desk, one on a phone (the ballot first). */
+/** The Work, and the tribunals that interrupt it. Three columns on a desk, one on a phone (the ballot first, then the file). */
 export function BuildingPhase({ view, clockOffset, act, busy }: BoardProps): ReactElement {
   const inVote = view.phase !== "building";
   return (
@@ -35,7 +36,9 @@ export function BuildingPhase({ view, clockOffset, act, busy }: BoardProps): Rea
         </aside>
         <section className="build-main" aria-label="Your seat and the record">
           <LastVerdict view={view} />
-          {inVote ? <Tribunal view={view} clockOffset={clockOffset} act={act} busy={busy} /> : <Actions view={view} act={act} busy={busy} />}
+          {inVote ? <Tribunal view={view} clockOffset={clockOffset} act={act} busy={busy} /> : null}
+          <Editor view={view} />
+          {inVote ? null : <Actions view={view} act={act} busy={busy} />}
           <CardsLog view={view} />
         </section>
         <section className="build-problem">

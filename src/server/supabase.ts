@@ -1,14 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import type { RoomState } from "@/game/types";
 
-/** Minimal schema for the one table we own: rooms(code, state jsonb, version). */
+/** Minimal schema for the one table we own: rooms(code, state jsonb, version, doc). */
 export interface Database {
   public: {
     Tables: {
       rooms: {
-        Row: { code: string; state: unknown; version: number; updated_at: string };
+        Row: { code: string; state: unknown; version: number; updated_at: string; doc: string | null };
         Insert: { code: string; state: RoomState; version: number };
-        Update: { state?: RoomState; version?: number; updated_at?: string };
+        Update: { state?: RoomState; version?: number; updated_at?: string; doc?: string };
         Relationships: [];
       };
     };
