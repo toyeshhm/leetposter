@@ -14,6 +14,18 @@ export function SiteHeader(): ReactElement {
         <Link href="/leaderboard" className="site-board">
           Leaderboard
         </Link>
+        <Link href="/halls" className="site-board">
+          Halls
+        </Link>
+        <Link href="/problems" className="site-board">
+          Problems
+        </Link>
+        <Link href="/store" className="site-board">
+          Store
+        </Link>
+        <Link href="/pass" className="site-board">
+          Pass
+        </Link>
       </span>
       <SessionNav />
     </header>

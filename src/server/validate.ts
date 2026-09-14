@@ -19,6 +19,8 @@ export const problem: z.ZodType<Problem> = z.object({
   tags: z.array(tag).max(20),
   hints: z.array(hint).max(20),
   constraints: z.string().max(5000),
+  bankId: z.string().regex(/^[a-z0-9-]{3,60}$/).optional(),
+  rating: z.number().int().min(800).max(3500).optional(),
 });
 
 const submit = z.discriminatedUnion("verdict", [

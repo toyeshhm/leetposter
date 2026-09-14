@@ -32,6 +32,10 @@ export interface Problem {
   tags: string[];
   hints: string[];
   constraints: string;
+  /** Set when the problem came from the Leetposter bank: the Herald's verdict is judged in-app. */
+  bankId?: string | undefined;
+  /** Leetposter rating (800..3500, Codeforces-like). Absent when nothing could estimate it. */
+  rating?: number | undefined;
 }
 
 export interface Settings {
@@ -210,7 +214,7 @@ export interface PlayerView {
   players: PublicPlayer[];
   settings: Settings;
   /** Public problem parts; null in lobby before the host pastes it. */
-  problem: { statement: string; tagCount: number; hintCount: number } | null;
+  problem: { statement: string; tagCount: number; hintCount: number; rating: number | null; bankId: string | null } | null;
   /** True for the host in the lobby once a problem is set. */
   problemReady: boolean;
   /** My own seat panels only (the imposter included); every panel at the reveal. */

@@ -39,7 +39,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["**/*.mjs", "**/*.config.ts", "e2e/**", "tests/**"],
+    files: ["**/*.mjs", "**/*.config.ts", "e2e/**", "tests/**", "scripts/**"],
     rules: { "no-console": "off" },
   },
 ]);

@@ -4,6 +4,7 @@ import type { GameResultRow } from "@/server/achievements";
 import { rateHall, type Ladder, type Ratings } from "@/server/elo";
 import { log } from "@/server/log";
 import { loadRatings, UNRATED, upsertRatings, type LadderRow } from "@/server/ratings";
+import { afterHall } from "@/server/afterHall";
 import { supabase } from "@/server/supabase";
 
 const HISTORY_LIMIT = 50;
@@ -55,6 +56,7 @@ export async function recordResults(state: RoomState): Promise<void> {
       return { user_id: c.userId, ladder: c.ladder, rating: c.rating, games: before.games + 1, wins: before.wins + (c.won ? 1 : 0) };
     }),
   );
+  await afterHall(state);
 }
 
 /** Seats a player held at any point: their seats now, plus any seat they played a card from (the Herald seat moves on ejection). */

@@ -149,3 +149,72 @@ Nobody needs an account to play. Signing up (email + password through Supabase A
 **Ladders.** The same reveal rates the hall: one match, the Changeling against the crew as a body, Elo with K = 32. Everyone starts at 1200 and a guest always weighs 1200. Each crew member rates against the Changeling's overall rating; the Changeling rates against the mean of the crew's overall ratings. Three `ratings` rows per account, one per ladder: overall (every hall), crew (halls as crew), changeling (halls in the mask), each with its games and wins. A hall is rated once: if its `game_results` rows already exist the ratings stand. `/leaderboard` shows five boards: the three ladders, plus two counts folded from `game_results`, solves (crew wins on an accepted submission) and changeling wins. Ranks are competition ranks (1, 2, 2, 4); the top fifty are listed and a signed-in player sees their own line wherever they stand. `/me` opens with the three ratings.
 
 Routes: `POST /api/account` (choose the name after sign-up), `GET /api/account` (me; 404 `not-found` until the name is chosen), `GET /api/account/history`, `GET /api/account/achievements`, `GET|POST /api/friends`, `POST /api/friends/[username]/accept`, `DELETE /api/friends/[username]`, `GET /api/leaderboard?board=<board>` (bearer optional; `me` and `ratings` are null for a guest). Pages: `/account`, `/me`, `/friends`, `/leaderboard`.
+
+## Problem bank
+
+`src/problems/bank/*.json` holds original problems written for the Hall (lore in
+`src/problems/lore.md`, format in `src/problems/schema.ts`, checker `node scripts/problems/check.ts`).
+Each has a statement with Example blocks, input and output formats, constraints, tags from the
+fixed tag list, two to four hints, a difficulty, a rating, a Python reference solution, an
+independent brute-force solution, samples and 8 to 25 hidden stdin/stdout tests. The checker runs
+both solutions on every test through the real `python3` and regenerates `src/problems/bank/index.ts`.
+
+In the lobby the host can roll a bank problem by rating band instead of pasting. Bank problems are
+judged in-app: the Herald's Submit runs the shared file (Python or JavaScript) against the samples
+and hidden tests in their own browser with the problem's time limit, and the verdict (Accepted, or
+the first failing category and case) is recorded automatically; the Herald still fills the report
+card by hand, so a Changeling Herald can still lie about the details. Hidden tests are fetched by
+the Herald's token only (`GET /api/problems/[id]/tests`). `/problems` lists the bank with ratings
+and tags; `/problems/[id]` shows one statement.
+
+## Ratings
+
+Leetposter ratings run 800 to 3500, Codeforces-shaped. Bands: 800-1100 loops and simulation,
+1100-1400 sorting, hashing and prefix sums, 1400-1700 two pointers, binary search and greedy with a
+proof, 1700-2000 basic DP and graph search, 2000-2300 harder DP, DSU and shortest paths, 2300-2600
+segment trees and tricky constructions, 2600+ expert.
+
+- Bank problems start at the authored rating and move with real halls: after each recorded hall the
+  problem plays an Elo match (K = 24) against the crew's mean overall rating; Accepted means the crew
+  won. Stored in `problem_stats`.
+- Looked-up LeetCode problems use the zerotrac contest rating list when the problem is in it
+  (fetched at lookup time, cached in memory); otherwise a heuristic: base 1000 / 1500 / 2000 by
+  difficulty, adjusted by acceptance rate (each point of acceptance below 50% adds 8, above
+  subtracts 8, clamped to 300) and tag weights.
+- Pasted problems with no LeetCode match use the same heuristic from the difficulty word, tags and
+  the size of the constraints (10^5 and above adds 150).
+Every problem the host sets carries `rating` when one could be estimated, shown to the whole hall.
+
+## Spectators and the halls board
+
+A host may list their hall (`rooms.listed`). `/halls` shows listed halls that moved in the last
+15 minutes: code, host, phase, seats taken, problem rating, and a Watch link. Anyone with a code
+can watch any hall at `/room/[code]/watch`: the spectator view (`GET /api/rooms/[code]/spectate`,
+no token) shows the statement, every seat panel, the record, the clock and the votes, but hides who
+the Changeling is until the reveal, so a player opening it learns nothing they could not learn by
+being every seat at once. Spectators do not see the shared editor.
+
+## Economy
+
+All cosmetics are original hand-drawn SVG in `src/components/cosmetics/`. Nothing affects play.
+
+- **Candles** are the soft currency, in `wallets`, earned from quests and the pass. **XP** feeds
+  the pass. Both are granted server-side only.
+- **Items** (`items`): kinds avatar (a hooded portrait), frame (a border for the avatar), title
+  (a line under your name), theme (a full colour scheme for the site), caret (your cursor colour
+  in the editor), badge (shown on the roster and profile), emote (a small mark you can play at the
+  reveal). Rarity common to legendary. Store items have a candle price; pass items name a season
+  and tier.
+- **Loadout** (`loadouts`): one equipped item per slot; the roster, the reveal, the profile and the
+  site theme read it. Guests see the defaults.
+- **Store** at `/store`: buy with candles, see owned items, equip from `/me`.
+- **Seasons** (`seasons`): one per month, 30 tiers with an XP cost each, a free reward track and a
+  paid track. Four seasons are seeded ahead. `/pass` shows the current season, your XP, both tracks,
+  and claims rewards. The paid pass is bought with Stripe Checkout (`POST /api/pass/checkout`,
+  webhook `POST /api/stripe/webhook`); `purchases` records it and `pass_progress.paid` unlocks the
+  paid track for that season. Stripe keys: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+  `STRIPE_PRICE_PASS`. Without them the checkout route answers "The store has no till yet."
+- **Quests** (`src/server/economy/quests.ts` for definitions, `quest_progress` for state): three
+  daily and three weekly quests drawn deterministically from a pool by the date; each pays XP and
+  candles; progress is computed from hall results by the after-hall hook and claimed on `/pass`.
+- **Badges and achievements** stay on `/me`; each achievement now also grants a badge item.

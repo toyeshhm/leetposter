@@ -103,7 +103,7 @@ describe("personalize", () => {
     expect(view.players.map((p) => p.isImposter)).toEqual([false, null, null, null]);
     expect(view.players.map((p) => p.isHost)).toEqual([true, false, false, false]);
     expect(view.panel).toEqual({ tags: problem.tags, hints: null, constraints: null, title: null, url: null });
-    expect(view.problem).toEqual({ statement: problem.statement, tagCount: 2, hintCount: 3 });
+    expect(view.problem).toEqual({ statement: problem.statement, tagCount: 2, hintCount: 3, rating: null, bankId: null });
     expect(view.problemReady).toBe(true);
     expect(view.reveal).toBeNull();
   });

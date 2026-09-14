@@ -14,6 +14,8 @@ export const modelProblem: z.ZodType<Problem> = z.object({
   tags: z.array(z.string()),
   hints: z.array(z.string()),
   constraints: z.string(),
+  bankId: z.string().optional(),
+  rating: z.number().int().optional(),
 });
 
 /** The part of Groq's chat-completion envelope we read. */
