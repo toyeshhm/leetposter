@@ -106,7 +106,7 @@ export async function actHandler(code: string, token: string, action: Action, re
   return personalize(state, actorId, now);
 }
 
-const STATUS: Partial<Record<GameErrorCode, number>> = { "not-found": 404, unauthorized: 401, invalid: 400 };
+const STATUS: Partial<Record<GameErrorCode, number>> = { "not-found": 404, unauthorized: 401, invalid: 400, upstream: 502 };
 
 /** Run route work; GameError -> {code, message} with its status, anything else -> logged 500. */
 export async function respond(work: () => Promise<unknown>): Promise<Response> {

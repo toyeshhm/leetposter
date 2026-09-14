@@ -6,7 +6,7 @@ The traitor role is still called the Changeling in-game. Never put "LeetCode" (t
 
 ## The game
 
-**Players.** 4 to 8. Everyone sees the problem statement, examples included. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
+**Players.** 1 to 8; four or more for a real game. Under four (for testing) the four seats are shared round the table, so a solo host holds every seat. Everyone sees the problem statement, examples included. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
 
 **Seats.** Dealt secretly at start. Everyone sees the statement; a seat adds one extra channel of information on top of it. Every player, including the Changeling, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private, and who is the Changeling is secret.
 
@@ -24,7 +24,7 @@ Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartogra
 **Truth rule.** Cards are the official record and are shown next to the truth at the reveal. Crew must fill every card truthfully. Voice is free for everyone: speculate, hedge, be wrong. That is the honest players' cover.
 
 **Timeline.**
-1. Lobby: host pastes the problem (title, URL, statement with its examples, tags, hints, constraints) and starts.
+1. Lobby: host fetches or pastes the problem (title, URL, statement with its examples, tags, hints, constraints) and starts.
 2. Reading (5 min): everyone reads the statement alone and sees their own panel.
 3. Building (40 min, pauses during freezes): shared editor, cards, submissions. Cap of 4 submissions. Accepted ends the round: crew win. The 4th rejection starts the final vote.
 4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. The in-app editor locks (an external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Changeling: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
@@ -33,9 +33,15 @@ Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartogra
 
 **Win conditions.** Crew: an Accepted submission, or the Changeling is ejected. Changeling: no Accepted submission and still standing after the final vote.
 
-## Pasting a problem
+## Getting a problem in
 
-The host does not fill the form by hand. On the LeetCode page, open Topics and every Hint, select all, copy, and paste the whole thing into the "Paste the whole page" box in the lobby. "Sort it out" sends it to `POST /api/parse`, where a deterministic line parser (`src/server/parse/leetcode.ts`) splits it into title, link, statement (the Example blocks and the follow-up included), tags, hints and constraints, and restores the exponents that copying flattens (`104` becomes `10^4`). Every field stays editable before "Set the problem". When the parser cannot find the title, statement or constraints and `GROQ_API_KEY` is set, the same text goes to Groq (`src/server/parse/groq.ts`, currently `openai/gpt-oss-120b`) and the model's answer fills whatever the parser left empty; "Sort with the model" forces that path. Without a key the parser's result comes back with its warnings and the model button is hidden.
+The host does not fill the form by hand. One box, "Problem", takes either a whole-page paste or just a title, number or leetcode.com link; "Sort it out" sends it to `POST /api/parse`.
+
+**A short text** ("1147", "Two Sum", "longest chunked palindrome", a link) is a lookup: `src/server/lookup/leetcode.ts` asks LeetCode's GraphQL endpoint for the matching question (exact number, else exact title, else the first hit whose title carries every word typed), fetches it, and turns its HTML into plain text (`src/server/lookup/html.ts`: `10<sup>4</sup>` becomes `10^4`, `nums<sub>1</sub>` becomes `nums_1`, the Example blocks keep their lines). Nothing matching is a 404 ("LeetCode has no problem called X."); a paywalled problem comes back without content and is reported the same way.
+
+**A whole page** (on LeetCode: open Topics and every Hint, select all, copy, paste) goes through the deterministic line parser first (`src/server/parse/leetcode.ts`: title, link, statement with the Example blocks and the follow-up, tags, hints, constraints, with the exponents that copying flattens restored, `104` to `10^4`). Its title is then looked up on LeetCode; when that answers, LeetCode's fields win and the parser fills whatever LeetCode left empty ("Checked against LeetCode."). When it does not, the parser's result stands ("LeetCode did not answer; used the pasted text."), and if the parser could not find the title, statement or constraints and `GROQ_API_KEY` is set, the same text goes to Groq (`src/server/parse/groq.ts`, currently `openai/gpt-oss-120b`) and the model's answer fills whatever the parser left empty. "Sort with the model" forces the Groq path; without a key that button is hidden.
+
+The honest caveat: the lookup uses LeetCode's undocumented, unauthenticated GraphQL endpoint, which is LeetCode's to change. It may stop working, or Cloudflare may block the server's network. A short text then answers 502 ("LeetCode did not answer. Paste the page instead."), and a pasted page still works through the parser. Either way every field stays editable before "Set the problem".
 
 ## Architecture
 
@@ -58,8 +64,10 @@ src/server/friends.ts      friendships table: list, request, accept, remove; Fri
 src/server/parse/leetcode.ts  deterministic line parser for a pasted LeetCode page -> Problem + warnings.
 src/server/parse/groq.ts      Groq fallback that fills whatever the parser left empty.
 src/server/parse/schema.ts    zod schemas for the request body and the model's answer.
-src/server/parse/types.ts     ParsedProblem / ParseResponse: {problem, confidence, warnings, source, llmAvailable}.
-src/app/api/parse/route.ts                POST {text, mode} -> ParseResponse
+src/server/parse/types.ts     ParsedProblem / ParseResponse: {problem, confidence, warnings, source (parser | llm | leetcode), llmAvailable}.
+src/server/lookup/leetcode.ts lookupLeetCode(query): search + detail against LeetCode's GraphQL endpoint -> ParsedProblem.
+src/server/lookup/html.ts     the small deterministic HTML -> text converter and the statement/constraints split.
+src/app/api/parse/route.ts                POST {text, mode} -> ParseResponse (a short text: 404 not found, 502 when LeetCode does not answer)
 src/app/api/rooms/route.ts                POST {name} -> {code, playerId, token}
 src/app/api/rooms/[code]/join/route.ts    POST {name} -> {code, playerId, token}
 src/app/api/rooms/[code]/route.ts         GET, Authorization: Bearer <token> -> PlayerView (ticks first)
@@ -84,18 +92,18 @@ src/app/account/page.tsx         sign in / sign up / your seat.
 src/app/me/page.tsx              the ledger: your recorded games and the achievements grid.
 src/app/friends/page.tsx         friends, requests, and their recent halls.
 src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, languages, theme.
-src/components/lobby/*   the lobby: PasteBox (whole-page paste -> /api/parse), ProblemForm, SettingsForm, Roster.
+src/components/lobby/*   the lobby: PasteBox (whole page or title/number -> /api/parse), ProblemForm, SettingsForm, Roster.
 src/components/site/*    SiteHeader and SessionNav (signed-out link or @username + sign out).
 src/components/history/* HistoryScreen (game rows) and Marks (the achievements grid).
 src/components/friends/* FriendsScreen: friends list, incoming and outgoing requests, add by username.
 src/components/ui/*    primitives (Button, Field, Frame, Timer, ...).
 src/components/art/*   original SVG artwork as React components (sigils, mask, borders, hero).
 tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api (incl. achievements rules).
-tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends) and Groq in .env.local. No mocks.
-e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the paste box, sign-up + account seat, history, friends.
+tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends), Groq in .env.local, and leetcode.com (lookup). No mocks.
+e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the problem box (lookup and paste), sign-up + account seat, history, friends.
 ```
 
-**Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.
+**Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404/502; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.
 
 **Secrets.** `SUPABASE_URL` and `SUPABASE_KEY` are server-only (no `NEXT_PUBLIC_`). Player tokens are 32 hex chars from `crypto.randomUUID()`-grade randomness and never appear in any view except the join response.
 

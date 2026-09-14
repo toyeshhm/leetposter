@@ -42,16 +42,26 @@ describe("lobby", () => {
     fails("wrong-phase", () => act(s, "p0", T0, { type: "start" }));
   });
 
-  it("start needs a problem and 4..8 players", () => {
+  it("start needs a problem and at most 8 players", () => {
     fails("invalid", () => act(lobby(4), "p0", T0, { type: "start" }));
     const withProblem = (n: number): RoomState => act(lobby(n), "p0", T0, { type: "setProblem", problem: PROBLEM });
-    fails("too-few-players", () => act(withProblem(3), "p0", T0, { type: "start" }));
     fails("room-full", () => act(withProblem(9), "p0", T0, { type: "start" }));
     const s = act(withProblem(8), "p0", T0 + 5, { type: "start" });
     expect(s.phase).toBe("reading");
     expect(s.clock).toEqual({ phaseStartedAt: T0 + 5, buildElapsedMs: 0, buildRunningSince: null });
     expect(s.players.filter((p) => p.isImposter)).toHaveLength(1);
     expect(s.players.every((p) => p.seats.length === 1)).toBe(true);
+  });
+
+  it("a solo host holds every seat, is the Changeling, and can play the whole round to the reveal", () => {
+    const s = building(1);
+    expect(s.players).toHaveLength(1);
+    expect([...holder(s, "runner").seats].sort()).toEqual(["bounds", "oracle", "runner", "tagger"]);
+    expect(holder(s, "runner").isImposter).toBe(true);
+    const played = act(act(s, "p0", T_BUILD + MIN, { type: "declareTags", tags: PROBLEM.tags }), "p0", T_BUILD + MIN, rejected("[1,2]"));
+    const r = act(played, "p0", T_BUILD + 2 * MIN, { type: "submit", verdict: "accepted" });
+    expect(r.phase).toBe("reveal");
+    expect(r.outcome).toEqual({ winner: "crew", reason: "accepted" });
   });
 
   it("with a zero read timer, start answers with the building already open", () => {

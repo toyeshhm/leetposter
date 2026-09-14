@@ -60,6 +60,20 @@ describe("deal", () => {
     expect(seen.size).toBeGreaterThan(5);
   });
 
+  it("shares the four seats round the table under four players", () => {
+    const solo = deal(players(1), lcg(2));
+    expect([...at(solo, 0).seats].sort()).toEqual([...SEATS].sort());
+    expect(at(solo, 0).isImposter).toBe(true);
+    const pair = deal(players(2), lcg(4));
+    expect(pair.map((p) => p.seats.length)).toEqual([2, 2]);
+    expect(pair.flatMap((p) => p.seats).sort()).toEqual([...SEATS].sort());
+    expect(pair.filter((p) => p.isImposter)).toHaveLength(1);
+    const trio = deal(players(3), lcg(5));
+    expect(trio.map((p) => p.seats.length)).toEqual([2, 1, 1]);
+    expect(trio.flatMap((p) => p.seats).sort()).toEqual([...SEATS].sort());
+    expect(trio.filter((p) => p.isImposter)).toHaveLength(1);
+  });
+
   it("rejects more than eight players (no seat to deal)", () => {
     expect(() => deal(players(9), lcg(1))).toThrow(GameError);
   });

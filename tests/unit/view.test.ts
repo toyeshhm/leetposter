@@ -108,6 +108,11 @@ describe("personalize", () => {
     expect(view.reveal).toBeNull();
   });
 
+  it("shows a solo host, who holds every seat, all four panels", () => {
+    const solo = makeState({ players: [player("a", ["tagger", "oracle", "bounds", "runner"], { isImposter: true })] });
+    expect(personalize(solo, "a", T0).panel).toEqual({ tags: problem.tags, hints: problem.hints, constraints: problem.constraints, title: problem.title, url: problem.url });
+  });
+
   it("gives each seat its own panel slice", () => {
     expect(personalize(makeState(), "c", T0).panel).toEqual({ tags: null, hints: null, constraints: problem.constraints, title: null, url: null });
     expect(personalize(makeState(), "d", T0).panel).toEqual({ tags: null, hints: null, constraints: null, title: problem.title, url: problem.url });

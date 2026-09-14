@@ -1,8 +1,9 @@
 "use client";
 import { useState, type ReactElement } from "react";
-import { errorMessage } from "@/client/api";
+import { call, errorMessage } from "@/client/api";
 import { Button, Notice, TextareaField } from "@/components/ui";
 import type { Problem } from "@/game/types";
+import { isQuery } from "@/server/parse/leetcode";
 import type { ParseResponse } from "@/server/parse/types";
 import "./lobby.css";
 
@@ -11,15 +12,12 @@ interface Note {
   text: string;
 }
 
-async function requestParse(text: string, mode: "auto" | "llm"): Promise<ParseResponse> {
-  const res = await fetch("/api/parse", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, mode }) });
-  const body: unknown = res.headers.get("content-type")?.startsWith("application/json") === true ? await res.json() : null;
-  if (res.ok) return body as ParseResponse;
-  const message = typeof body === "object" && body !== null && "message" in body ? String(body.message) : `${String(res.status)} ${res.statusText}`;
-  throw new Error(`The paste could not be sorted (${message}).`);
-}
+const BY: Record<ParseResponse["source"], string> = { leetcode: "Fetched from LeetCode.", parser: "Sorted by the parser.", llm: "Sorted by the model." };
 
-/** One box for the whole LeetCode page; the server splits it and `onSorted` fills the form. */
+/** A whole page that came back as "leetcode" was parsed, then checked. */
+const by = (r: ParseResponse, text: string): string => (r.source === "leetcode" && !isQuery(text) ? "Sorted by the parser, checked against LeetCode." : BY[r.source]);
+
+/** One box for the whole LeetCode page, or just its title or number; the server sorts it and `onSorted` fills the form. */
 export function PasteBox({ onSorted, disabled }: { onSorted: (problem: Problem) => void; disabled: boolean }): ReactElement {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,11 +28,10 @@ export function PasteBox({ onSorted, disabled }: { onSorted: (problem: Problem) 
     setBusy(true);
     setNote(null);
     try {
-      const result = await requestParse(text, mode);
+      const result = await call<ParseResponse>("/api/parse", { method: "POST", body: JSON.stringify({ text, mode }) });
       setLlmAvailable(result.llmAvailable);
       onSorted(result.problem);
-      const by = result.source === "llm" ? "Sorted by the model." : "Sorted by the parser.";
-      setNote({ kind: result.warnings.length > 0 ? "error" : "info", text: [by, ...result.warnings].join(" ") });
+      setNote({ kind: result.confidence === "low" ? "error" : "info", text: [by(result, text.trim()), ...result.warnings].join(" ") });
     } catch (e: unknown) {
       setNote({ kind: "error", text: errorMessage(e) });
     } finally {
@@ -46,9 +43,9 @@ export function PasteBox({ onSorted, disabled }: { onSorted: (problem: Problem) 
   return (
     <div className="lobby-stack">
       <TextareaField
-        label="Paste the whole page"
+        label="Problem"
         name="paste"
-        hint="On LeetCode, open Topics and every Hint first. Then select all, copy, and paste it here."
+        hint="Paste the whole LeetCode page, or just its title or number."
         rows={6}
         value={text}
         onChange={(e) => {

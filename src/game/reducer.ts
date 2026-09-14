@@ -1,6 +1,6 @@
 import { deal } from "./deal";
 import { GameError } from "./errors";
-import { MAX_PLAYERS, MIN_PLAYERS } from "./types";
+import { MAX_PLAYERS } from "./types";
 import type { Action, ActionContext, CardEntry, Player, Problem, RoomState, Seat, VoteRound } from "./types";
 import { at, buildElapsed } from "./util";
 
@@ -98,7 +98,6 @@ function tick(state: RoomState, now: number, random: () => number): RoomState {
 function start(s: RoomState, actor: Player, ctx: ActionContext): RoomState {
   requireHostInLobby(s, actor);
   requireProblem(s);
-  if (s.players.length < MIN_PLAYERS) throw new GameError("too-few-players", `need at least ${String(MIN_PLAYERS)} players`);
   if (s.players.length > MAX_PLAYERS) throw new GameError("room-full", `at most ${String(MAX_PLAYERS)} players`);
   return {
     ...s,

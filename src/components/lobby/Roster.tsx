@@ -1,11 +1,10 @@
 import type { ReactElement } from "react";
 import { ChangelingMask, SEAT_TITLES, SeatSigil } from "@/components/art";
-import { MAX_PLAYERS, MIN_PLAYERS, SEATS, type PublicPlayer, type Seat } from "@/game/types";
+import { MAX_PLAYERS, SEATS, type PublicPlayer, type Seat } from "@/game/types";
 import "./lobby.css";
 
 /** Who is at the table. Seats are not dealt until the reading begins, so names only. */
 export function Roster({ players, meId }: { players: PublicPlayer[]; meId: string }): ReactElement {
-  const missing = MIN_PLAYERS - players.length;
   return (
     <div className="lobby-stack">
       <ol className="lobby-roster">
@@ -19,7 +18,7 @@ export function Roster({ players, meId }: { players: PublicPlayer[]; meId: strin
         ))}
       </ol>
       <p className="muted tabular">
-        {players.length} of {MAX_PLAYERS} seats taken.{missing > 0 ? ` ${String(missing)} more before the reading can begin.` : ""}
+        {players.length} of {MAX_PLAYERS} seats taken.{players.length < SEATS.length ? " Under four, the seats are shared." : ""}
       </p>
     </div>
   );

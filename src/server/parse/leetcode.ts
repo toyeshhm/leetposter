@@ -30,6 +30,9 @@ export function slugUrl(title: string): string {
   return `https://leetcode.com/problems/${slug}/`;
 }
 
+/** A title, a number or a link rather than a whole page: short, and none of a page's section headings. */
+export const isQuery = (text: string): boolean => text.length < 200 && !/Example|Constraints/.test(text);
+
 /** Warnings and confidence for a problem from either source. */
 export function assess(problem: Problem): Pick<ParsedProblem, "confidence" | "warnings"> {
   const warnings: string[] = [];

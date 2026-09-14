@@ -18,7 +18,7 @@ export const REPORT_CATEGORIES = [
 ] as const;
 export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 
-export const MIN_PLAYERS = 4;
+export const MIN_PLAYERS = 1;
 export const MAX_PLAYERS = 8;
 
 /** The problem as pasted by the host. The statement (examples included) is public; the rest are seat panels. */
@@ -248,4 +248,5 @@ export type GameErrorCode =
   | "taken"
   | "ejected"
   | "freeze-unavailable"
-  | "no-submissions-left";
+  | "no-submissions-left"
+  | "upstream";

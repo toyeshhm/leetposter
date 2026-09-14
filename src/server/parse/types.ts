@@ -5,10 +5,12 @@ export interface ParsedProblem {
   problem: Problem;
   confidence: "high" | "low";
   warnings: string[];
-  source: "parser" | "llm";
+  source: "parser" | "llm" | "leetcode";
 }
 
 /** POST /api/parse answer: the parse plus whether "Sort with the model" is on offer. */
 export interface ParseResponse extends ParsedProblem {
   llmAvailable: boolean;
+  /** The problem's LeetCode number, when LeetCode answered. */
+  number?: string;
 }
