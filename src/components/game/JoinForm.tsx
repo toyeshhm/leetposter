@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, type ReactElement } from "react";
 import { assertStorage, errorMessage, joinRoom } from "@/client/api";
 import { useSession } from "@/client/session";
+import { NamelessNotice } from "@/components/lobby/Entry";
 import { Button, Field, Frame, Notice } from "@/components/ui";
 import { storeCredentials } from "./credentialsStore";
 
@@ -20,7 +21,8 @@ export function JoinForm({ code, reason }: { code: string; reason: string | null
     setError(null);
     try {
       assertStorage();
-      storeCredentials(await joinRoom(code, name.trim(), session.accessToken ?? undefined));
+      // Only a named account is attached to the seat: the server refuses a nameless token.
+      storeCredentials(await joinRoom(code, name.trim(), session.status === "in" && session.accessToken !== null ? session.accessToken : undefined));
     } catch (failure: unknown) {
       setError(errorMessage(failure));
     } finally {
@@ -37,6 +39,7 @@ export function JoinForm({ code, reason }: { code: string; reason: string | null
           <span className="room-code">{code}</span>
         </p>
         <p className="join-lead">Give the table a name to know you by.</p>
+        {session.status === "needs-profile" ? <NamelessNotice /> : null}
         <form
           onSubmit={(e) => {
             e.preventDefault();

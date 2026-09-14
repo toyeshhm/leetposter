@@ -62,7 +62,7 @@ export function fetchAccount(accessToken: string): Promise<{ id: string; usernam
   return call<{ id: string; username: string; email?: string }>("/api/account", { method: "GET" }, accessToken);
 }
 
-/** Claim a username for a freshly signed-up account. */
+/** Claim a username for a signed-in account that has none yet. */
 export function createAccount(username: string, accessToken: string): Promise<{ id: string; username: string }> {
   return call<{ id: string; username: string }>("/api/account", { method: "POST", body: JSON.stringify({ username }) }, accessToken);
 }

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, type ReactElement, type SyntheticEvent } from "react";
-import { createAccount, errorMessage } from "@/client/api";
+import { errorMessage } from "@/client/api";
 import { useSession } from "@/client/session";
 import { supabaseBrowser } from "@/client/supabaseBrowser";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -21,8 +21,8 @@ async function signIn(email: string, password: string): Promise<void> {
     });
 }
 
-/** Sign up, then claim the username with the new session's token; the header picks the session up on its own. */
-async function signUp(username: string, email: string, password: string): Promise<void> {
+/** Sign up; the session then lands in "needs-profile" and the name step below claims the username. */
+async function signUp(email: string, password: string): Promise<void> {
   const { data, error } = await supabaseBrowser.auth.signUp({
     email,
     password,
@@ -32,27 +32,22 @@ async function signUp(username: string, email: string, password: string): Promis
       cause: error,
     });
   if (data.session === null) throw new Error("Confirm the email the scribe sent you, then sign in.");
-  await createAccount(username, data.session.access_token);
-  // The nav fetched the profile before it existed; a fresh event makes it look again.
-  await supabaseBrowser.auth.refreshSession();
 }
 
 function AuthForm(): ReactElement {
   const [mode, setMode] = useState<"in" | "up">("in");
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const usernameError = mode === "up" && username !== "" && !USERNAME_RE.test(username) ? "3 to 20 lowercase letters, digits or underscores." : undefined;
-  const ready = email.trim() !== "" && password !== "" && (mode === "in" || USERNAME_RE.test(username));
+  const ready = email.trim() !== "" && password !== "";
 
   const onSubmit = (e: SyntheticEvent<HTMLFormElement>): void => {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const work = mode === "in" ? signIn(email.trim(), password) : signUp(username, email.trim(), password);
+    const work = mode === "in" ? signIn(email.trim(), password) : signUp(email.trim(), password);
     work
       .catch((failure: unknown) => {
         setError(errorMessage(failure));
@@ -65,23 +60,6 @@ function AuthForm(): ReactElement {
   return (
     <Frame title={mode === "in" ? "Sign in" : "Sign up"}>
       <form className="account-form" onSubmit={onSubmit} noValidate>
-        {mode === "up" ? (
-          <Field
-            label="Username"
-            name="username"
-            hint="How the table will know you across halls."
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            maxLength={20}
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value.toLowerCase());
-            }}
-            disabled={busy}
-            {...(usernameError === undefined ? {} : { error: usernameError })}
-          />
-        ) : null}
         <Field
           label="Email"
           name="email"
@@ -125,6 +103,56 @@ function AuthForm(): ReactElement {
   );
 }
 
+/** The name step: a signed-in account with no profile row yet, whether fresh from sign-up or an older sign-up that never got here. */
+function ChooseName({ createProfile }: { createProfile: (username: string) => Promise<void> }): ReactElement {
+  const [username, setUsername] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const usernameError = username !== "" && !USERNAME_RE.test(username) ? "3 to 20 lowercase letters, digits or underscores." : error;
+
+  const onSubmit = (e: SyntheticEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    createProfile(username)
+      .catch((failure: unknown) => {
+        setError(errorMessage(failure));
+      })
+      .finally(() => {
+        setBusy(false);
+      });
+  };
+
+  return (
+    <Frame title="Choose your name">
+      <form className="account-form" onSubmit={onSubmit} noValidate>
+        <p>You are signed in, but the hall has no name for you yet. Halls are remembered under it.</p>
+        <Field
+          label="Username"
+          name="username"
+          hint="3 to 20 lowercase letters, digits or underscores. How the table will know you across halls."
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={20}
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value.toLowerCase());
+            setError(null);
+          }}
+          disabled={busy}
+          {...(usernameError === null ? {} : { error: usernameError })}
+        />
+        <div className="account-switch">
+          <Button type="submit" variant="primary" loading={busy} disabled={!USERNAME_RE.test(username)}>
+            Take the name
+          </Button>
+        </div>
+      </form>
+    </Frame>
+  );
+}
+
 function SignedIn({ username, signOut }: { username: string; signOut: () => Promise<void> }): ReactElement {
   const [error, setError] = useState<string | null>(null);
   return (
@@ -158,7 +186,13 @@ export default function AccountPage(): ReactElement {
       <main className="account">
         <h1>Accounts</h1>
         <p className="muted">Nobody needs one to play. With one, the hall remembers your games.</p>
-        {session.status === "loading" ? null : session.username === null ? <AuthForm /> : <SignedIn username={session.username} signOut={session.signOut} />}
+        {session.status === "loading" ? null : session.status === "needs-profile" ? (
+          <ChooseName createProfile={session.createProfile} />
+        ) : session.username === null ? (
+          <AuthForm />
+        ) : (
+          <SignedIn username={session.username} signOut={session.signOut} />
+        )}
       </main>
     </>
   );

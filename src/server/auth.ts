@@ -21,23 +21,29 @@ export async function verifyToken(token: string): Promise<{ id: string; email: s
   return { id: data.user.id, email: data.user.email };
 }
 
-/** Verify the token and load its profile; GameError("unauthorized") when either is missing. */
-export async function loadAccount(token: string): Promise<AccountUser & { email: string | undefined }> {
+async function account(token: string): Promise<{ id: string; email: string | undefined; username: string | null }> {
   const { id, email } = await verifyToken(token);
-  const username = await findProfile(id);
-  if (username === null) throw new GameError("unauthorized", "This sign-in has no name yet. Finish signing up.");
+  return { id, email, username: await findProfile(id) };
+}
+
+/** Verify the token and load its profile; GameError("not-found") for a signed-in user who never chose a name. */
+export async function loadAccount(token: string): Promise<AccountUser & { email: string | undefined }> {
+  const { id, email, username } = await account(token);
+  if (username === null) throw new GameError("not-found", "No name chosen yet.");
   return { id, username, email };
 }
 
 /**
  * Resolve the signed-in account from `Authorization: Bearer <supabase access token>`.
  * Verifies the token with Supabase Auth (server client) and loads the profile row.
- * Throws GameError("unauthorized") when the token is missing, invalid, or has no profile.
+ * Throws GameError("unauthorized") when the token is missing, invalid, or has no profile:
+ * only GET /api/account (loadAccount) tells a nameless sign-in apart, so the client can offer the name step.
  */
 export async function requireUser(req: Pick<NextRequest, "headers">): Promise<AccountUser> {
   const token = bearerToken(req);
   if (token === null) throw new GameError("unauthorized", "Sign in first.");
-  const { id, username } = await loadAccount(token);
+  const { id, username } = await account(token);
+  if (username === null) throw new GameError("unauthorized", "This sign-in has no name yet. Choose your name first.");
   return { id, username };
 }
 

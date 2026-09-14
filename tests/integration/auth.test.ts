@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, describe, expect, it } from "vitest";
+import { GET as historyGet } from "@/app/api/account/history/route";
 import { GET as accountGet, POST as accountPost } from "@/app/api/account/route";
 import { POST as actPost } from "@/app/api/rooms/[code]/act/route";
 import { POST as joinPost } from "@/app/api/rooms/[code]/join/route";
@@ -103,12 +104,16 @@ describe("POST /api/account", () => {
 });
 
 describe("GET /api/account and the request helpers", () => {
-  it("answers the profile for a good token and 401 otherwise", async () => {
+  it("answers 404 for a signed-in user with no name, the profile once chosen, and 401 otherwise", async () => {
+    // A confirmed auth user whose profile row was never created (sign-up with email confirmation on).
     const cal = await newUser("cal");
     const nameless = req("GET", "http://x", cal.token);
-    await fail(await me(cal.token), 401, "unauthorized");
-    await expect(requireUser(nameless)).rejects.toThrow(GameError);
+    await fail(await me(cal.token), 404, "not-found");
+    // Every other route keeps its 401 until the name is chosen.
+    await expect(requireUser(nameless)).rejects.toThrow(new GameError("unauthorized", "This sign-in has no name yet. Choose your name first."));
     await expect(optionalUser(nameless)).rejects.toThrow(/no name yet/);
+    await fail(await historyGet(req("GET", "http://x/api/account/history", cal.token)), 401, "unauthorized");
+    await fail(await create(cal.token, { name: "Cal" }), 401, "unauthorized");
     await json(await claim(cal.token, `cal_${run}`));
     expect(await json(await me(cal.token))).toEqual({ id: cal.id, username: `cal_${run}`, email: cal.email });
     expect(await requireUser(nameless)).toEqual({ id: cal.id, username: `cal_${run}` });

@@ -17,10 +17,11 @@ test.afterAll(async () => {
 test("a signed-in host's hall lands in the ledger, and First Candle is lit", async ({ page, request }) => {
   await page.goto("/account");
   await page.getByRole("button", { name: "New here? Sign up" }).click();
-  await page.getByLabel("Username").fill(username);
   await page.getByLabel("Email").fill(`${username}@example.test`);
   await page.getByLabel("Password").fill(`pw-${run}-history`);
   await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByLabel("Username").fill(username);
+  await page.getByRole("button", { name: "Take the name" }).click();
   await expect(page.getByText(`@${username}`).first()).toBeVisible();
 
   // The hall is opened through the landing form so the seat carries the account; the rest of the table is seeded through the API.

@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, type SyntheticEvent, type ReactElement } from "react";
 import { assertStorage, createRoom, errorMessage, joinRoom, saveCredentials } from "@/client/api";
 import { useSession } from "@/client/session";
@@ -106,13 +107,25 @@ function HallForm({ mode, username, accessToken, sessionLoading }: HallFormProps
   );
 }
 
-/** The two ways in: open a new hall, or join one by code. */
+/** The two ways in: open a new hall, or join one by code. A sign-in with no name yet takes a guest seat, and is told so. */
 export function Entry(): ReactElement {
   const session = useSession();
+  // Only a named account is attached to the seat: the server refuses a nameless token.
+  const accessToken = session.status === "in" ? session.accessToken : null;
   return (
     <div className="entry">
-      <HallForm mode="create" username={session.username} accessToken={session.accessToken} sessionLoading={session.status === "loading"} />
-      <HallForm mode="join" username={session.username} accessToken={session.accessToken} sessionLoading={session.status === "loading"} />
+      {session.status === "needs-profile" ? <NamelessNotice /> : null}
+      <HallForm mode="create" username={session.username} accessToken={accessToken} sessionLoading={session.status === "loading"} />
+      <HallForm mode="join" username={session.username} accessToken={accessToken} sessionLoading={session.status === "loading"} />
     </div>
+  );
+}
+
+/** One line for a signed-in player who never chose a name: seats taken now are a guest's. */
+export function NamelessNotice(): ReactElement {
+  return (
+    <Notice className="entry-notice">
+      You are signed in but have no name yet, so this hall will not be remembered. <Link href="/account">Choose your name</Link> first.
+    </Notice>
   );
 }

@@ -110,3 +110,8 @@
   align-items: center;
   gap: var(--space-3);
 }
+
+/* The nameless-sign-in notice spans both forms. */
+.entry-notice {
+  grid-column: 1 / -1;
+}

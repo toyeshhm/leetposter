@@ -4,11 +4,18 @@ import { useState, type ReactElement } from "react";
 import { errorMessage } from "@/client/api";
 import { useSession } from "@/client/session";
 
-/** "Sign in", or the username (to /me) and "Sign out". Renders nothing until the session is known. */
+/** "Sign in", "Choose your name" for a nameless sign-in, or the username (to /me) and "Sign out". Renders nothing until the session is known. */
 export function SessionNav(): ReactElement | null {
   const session = useSession();
   const [error, setError] = useState<string | null>(null);
   if (session.status === "loading") return null;
+  if (session.status === "needs-profile") {
+    return (
+      <nav className="site-nav" aria-label="Account">
+        <Link href="/account">Choose your name</Link>
+      </nav>
+    );
+  }
   if (session.status === "out" || session.username === null) {
     return (
       <nav className="site-nav" aria-label="Account">

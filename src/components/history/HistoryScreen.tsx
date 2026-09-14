@@ -37,10 +37,10 @@ export function HistoryScreen(): ReactElement {
   }, [token]);
 
   if (session.status === "loading") return <p className="muted">Opening the ledger.</p>;
-  if (token === null) {
+  if (session.status !== "in" || token === null) {
     return (
       <Notice>
-        The ledger is kept for those who sign in. <Link href="/account">Sign in or sign up</Link> and your halls are remembered.
+        The ledger is kept for those who sign in and choose a name. <Link href="/account">Sign in or sign up</Link> and your halls are remembered.
       </Notice>
     );
   }

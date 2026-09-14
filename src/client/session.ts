@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { ApiError, errorMessage, fetchAccount } from "./api";
+import { ApiError, createAccount, errorMessage, fetchAccount } from "./api";
 import { supabaseBrowser } from "./supabaseBrowser";
 
 export interface SessionState {
-  status: "loading" | "out" | "in";
+  /** "needs-profile": signed in with Supabase Auth but no name chosen yet (the profile row is missing). */
+  status: "loading" | "out" | "needs-profile" | "in";
   userId: string | null;
   username: string | null;
   /** Supabase access token to send as `Authorization: Bearer` to account routes. */
@@ -13,9 +14,11 @@ export interface SessionState {
   /** Why the username could not be loaded for a live session; null otherwise. */
   error: string | null;
   signOut: () => Promise<void>;
+  /** Claim a username for the signed-in account (status "needs-profile"), then the session is "in". */
+  createProfile: (username: string) => Promise<void>;
 }
 
-const OUT: Omit<SessionState, "signOut"> = { status: "out", userId: null, username: null, accessToken: null, error: null };
+const OUT: Omit<SessionState, "signOut" | "createProfile"> = { status: "out", userId: null, username: null, accessToken: null, error: null };
 
 async function signOut(): Promise<void> {
   const { error } = await supabaseBrowser.auth.signOut();
@@ -24,7 +27,7 @@ async function signOut(): Promise<void> {
 
 /** Subscribe to the Supabase Auth session in the browser and expose the profile username. */
 export function useSession(): SessionState {
-  const [state, setState] = useState<Omit<SessionState, "signOut">>({ ...OUT, status: "loading" });
+  const [state, setState] = useState<Omit<SessionState, "signOut" | "createProfile">>({ ...OUT, status: "loading" });
 
   useEffect(() => {
     let current: string | null = null;
@@ -50,9 +53,15 @@ export function useSession(): SessionState {
         setState({ status: "in", userId: account.id, username: account.username, accessToken: session.access_token, error: null });
       } catch (failure: unknown) {
         if (current !== session.access_token) return;
-        // A signed-up user who never claimed a name answers 401: signed in, nameless. Anything else is shown.
-        const nameless = failure instanceof ApiError && failure.code === "unauthorized";
-        setState({ status: "in", userId: session.user.id, username: null, accessToken: session.access_token, error: nameless ? null : errorMessage(failure) });
+        // No profile row yet (a sign-up that never reached the name step) answers 404: signed in, nameless. Anything else is shown.
+        const nameless = failure instanceof ApiError && failure.code === "not-found";
+        setState({
+          status: nameless ? "needs-profile" : "in",
+          userId: session.user.id,
+          username: null,
+          accessToken: session.access_token,
+          error: nameless ? null : errorMessage(failure),
+        });
       }
     };
     void supabaseBrowser.auth.getSession().then(({ data }) => absorb(data.session));
@@ -64,5 +73,14 @@ export function useSession(): SessionState {
     };
   }, []);
 
-  return { ...state, signOut };
+  const createProfile = async (username: string): Promise<void> => {
+    if (state.accessToken === null) throw new Error("Sign in first.");
+    const account = await createAccount(username, state.accessToken);
+    setState({ status: "in", userId: account.id, username: account.username, accessToken: state.accessToken, error: null });
+    // Every other useSession (the header's nav) fetched the profile before it existed; a fresh token makes them look again.
+    const { error } = await supabaseBrowser.auth.refreshSession();
+    if (error !== null) throw error;
+  };
+
+  return { ...state, signOut, createProfile };
 }

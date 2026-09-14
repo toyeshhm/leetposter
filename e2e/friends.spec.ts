@@ -9,10 +9,11 @@ const BRIN = `e2e_brin_${suffix}`;
 async function signUp(page: Page, username: string): Promise<void> {
   await page.goto("/account");
   await page.getByRole("button", { name: "New here? Sign up" }).click();
-  await page.getByLabel("Username").fill(username);
   await page.getByLabel("Email").fill(`${username}@friends.test`);
   await page.getByLabel("Password").fill("correct-horse-battery");
   await page.getByRole("button", { name: "Sign up", exact: true }).click();
+  await page.getByLabel("Username").fill(username);
+  await page.getByRole("button", { name: "Take the name" }).click();
   await expect(page.getByText(`Signed in as @${username}`)).toBeVisible();
 }
 
