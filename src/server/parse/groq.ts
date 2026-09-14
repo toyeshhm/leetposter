@@ -10,11 +10,10 @@ const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 const TIMEOUT_MS = 20_000;
 
 const SYSTEM_PROMPT = `You receive the full text of a LeetCode problem page copied from the browser (select all, copy), including menus, stats, discussion and editor noise.
-Return ONLY a JSON object with exactly these seven keys:
+Return ONLY a JSON object with exactly these six keys:
 "title" (string: the problem title without its leading number),
 "url" (string: https://leetcode.com/problems/<slug>/),
-"statement" (string: the problem statement paragraphs separated by blank lines, including any Follow-up paragraph, without the examples or constraints),
-"examples" (string: every "Example k:" block verbatim with its Input/Output/Explanation lines),
+"statement" (string: the problem statement paragraphs separated by blank lines, then every "Example k:" block verbatim with its Input/Output/Explanation lines, then any Follow-up paragraph; without the constraints),
 "tags" (array of strings: the topic tags listed under the Topics section after the acceptance stats, in order; NOT level chips like Junior, Mid Level, Senior, Easy, Medium, Hard),
 "hints" (array of strings: the text under each "Hint k" header, in order),
 "constraints" (string: the lines under "Constraints:", one per line).
@@ -41,7 +40,7 @@ export function readCompletion(body: unknown): ParsedProblem {
   const result = modelProblem.safeParse(raw);
   if (!result.success) {
     log.error("groq.bad_shape", { content });
-    throw new GameError("invalid", "The model left out some of the seven fields.");
+    throw new GameError("invalid", "The model left out some of the six fields.");
   }
   const fields = result.data;
   const problem = {

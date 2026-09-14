@@ -179,8 +179,8 @@ export default function DesignPage(): ReactElement {
           <h3>Reading, five minutes</h3>
           <h4>Cards on the record</h4>
           <p>
-            Everyone sees the problem statement and examples. Each seat holds one channel of information about the problem. One of you is the
-            Changeling, sees every channel, and lies on any card. Voice is free for everyone: speculate, hedge, be wrong. That is the honest
+            Everyone sees the problem statement, examples included. Each seat holds one channel of information about the problem. One of you is the
+            Changeling, holds a seat like anyone else, and lies on any card. Voice is free for everyone: speculate, hedge, be wrong. That is the honest
             players&apos; cover.
           </p>
           <p className="muted">Secondary text at 7.5:1. Cards are the official record and are shown next to the truth at the reveal.</p>

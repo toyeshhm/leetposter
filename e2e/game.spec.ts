@@ -31,7 +31,6 @@ test("full game through the UI: crew win on an accepted submission", async ({ br
     await problem.getByLabel("Title").fill(PROBLEM.title);
     await problem.getByLabel("Link").fill(PROBLEM.url);
     await problem.getByLabel("Statement").fill(PROBLEM.statement);
-    await problem.getByLabel("Examples").fill(PROBLEM.examples);
     await problem.getByLabel("Tags", { exact: true }).fill(PROBLEM.tags.join(", "));
     await problem.getByLabel("Hints", { exact: true }).fill(PROBLEM.hints.join("\n"));
     await problem.getByLabel("Constraints").fill(PROBLEM.constraints);
@@ -50,8 +49,11 @@ test("full game through the UI: crew win on an accepted submission", async ({ br
     await host.getByRole("button", { name: "Begin the reading" }).click();
     await Promise.all(pages.map((p) => expect(p.getByRole("heading", { level: 1, name: "The Reading" })).toBeVisible()));
     await Promise.all(pages.map((p) => expect(p.getByRole("timer")).toBeVisible()));
+    await expect(host.getByText("Input: nums = [2,7,11,15], target = 9")).toBeVisible();
 
     const seats = await seatMap(pages);
+    // Everyone, the Changeling included, holds exactly one seat and sees only that panel.
+    for (const page of pages) expect(await heldSeats(page)).toHaveLength(1);
     const readingTags = seats.tagger.getByRole("group", { name: SEAT_TITLES.tagger }).getByRole("list", { name: "Topic tags" });
     await expect(readingTags.getByRole("listitem")).toHaveText(PROBLEM.tags);
     const readingLink = seats.runner.getByRole("group", { name: SEAT_TITLES.runner }).getByRole("link", { name: PROBLEM.title });

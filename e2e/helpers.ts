@@ -9,8 +9,7 @@ export const NAMES = ["Ada", "Brin", "Cass", "Dov"] as const;
 export const PROBLEM: Problem = {
   title: "Two Sum",
   url: "https://example.com/problems/two-sum",
-  statement: "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.",
-  examples: "nums = [2,7,11,15], target = 9 -> [0,1]",
+  statement: "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.\n\nExample 1:\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]",
   tags: ["array", "hash-table"],
   hints: ["Try a hash map.", "One pass is enough."],
   constraints: "2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9",

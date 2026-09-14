@@ -8,7 +8,6 @@ const problem: Problem = {
   title: "Two Sum",
   url: "https://example.com/two-sum",
   statement: "Find two numbers that add to target.",
-  examples: "[2,7,11,15], 9 -> [0,1]",
   tags: ["array", "hash-table"],
   hints: ["hash", "one pass", "done"],
   constraints: "2 <= n <= 10^4",
@@ -104,7 +103,7 @@ describe("personalize", () => {
     expect(view.players.map((p) => p.isImposter)).toEqual([false, null, null, null]);
     expect(view.players.map((p) => p.isHost)).toEqual([true, false, false, false]);
     expect(view.panel).toEqual({ tags: problem.tags, hints: null, constraints: null, title: null, url: null });
-    expect(view.problem).toEqual({ statement: problem.statement, examples: problem.examples, tagCount: 2, hintCount: 3 });
+    expect(view.problem).toEqual({ statement: problem.statement, tagCount: 2, hintCount: 3 });
     expect(view.problemReady).toBe(true);
     expect(view.reveal).toBeNull();
   });
@@ -114,12 +113,17 @@ describe("personalize", () => {
     expect(personalize(makeState(), "d", T0).panel).toEqual({ tags: null, hints: null, constraints: null, title: problem.title, url: problem.url });
   });
 
-  it("gives the imposter every panel and every imposter flag", () => {
+  it("gives the imposter only the panel of the seat they hold, and no other seat's secrets", () => {
     const view = personalize(makeState(), "b", T0);
     expect(view.me.isImposter).toBe(true);
     expect(view.me.isHost).toBe(false);
     expect(view.players.map((p) => p.isImposter)).toEqual([false, true, false, false]);
-    expect(view.panel).toEqual({ tags: problem.tags, hints: problem.hints, constraints: problem.constraints, title: problem.title, url: problem.url });
+    expect(view.panel).toEqual({ tags: null, hints: problem.hints, constraints: null, title: null, url: null });
+    const json = JSON.stringify(view);
+    for (const tag of problem.tags) expect(json).not.toContain(tag);
+    expect(json).not.toContain(problem.constraints);
+    expect(json).not.toContain(problem.title);
+    expect(json).not.toContain(problem.url);
   });
 
   it("hides everything before the problem is set", () => {

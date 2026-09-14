@@ -6,9 +6,9 @@ The traitor role is still called the Changeling in-game. Never put "LeetCode" (t
 
 ## The game
 
-**Players.** 4 to 8. Everyone sees the problem statement and examples. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
+**Players.** 4 to 8. Everyone sees the problem statement, examples included. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
 
-**Seats.** Dealt secretly at start. Every player, including the Changeling, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private.
+**Seats.** Dealt secretly at start. Everyone sees the statement; a seat adds one extra channel of information on top of it. Every player, including the Changeling, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private, and who is the Changeling is secret.
 
 | Seat | In-world name | Sees | Plays |
 |---|---|---|---|
@@ -19,12 +19,12 @@ The traitor role is still called the Changeling in-game. Never put "LeetCode" (t
 
 Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartographer, second Warden, third Oracle. Two holders of the same seat who disagree tell the crew one of them is lying.
 
-**The Changeling** holds a normal seat and additionally sees every panel. They may lie on any card and on voice: a Changeling seated as Oracle can reveal a hint that reads nothing like the true one, since a hint card carries whatever text the Oracle typed and is only checked against the true hint at the reveal. The one thing never faked is the Accepted/Rejected verdict.
+**The Changeling** holds a normal seat and sees only that seat's panel, like any crew member. They may lie on any card and on voice: a Changeling seated as Oracle can reveal a hint that reads nothing like the true one, since a hint card carries whatever text the Oracle typed and is only checked against the true hint at the reveal. The one thing never faked is the Accepted/Rejected verdict. Balance knob: if the Changeling loses far more than 60% of calibrated rounds, consider giving them the full problem.
 
 **Truth rule.** Cards are the official record and are shown next to the truth at the reveal. Crew must fill every card truthfully. Voice is free for everyone: speculate, hedge, be wrong. That is the honest players' cover.
 
 **Timeline.**
-1. Lobby: host pastes the problem (title, URL, statement, examples, tags, hints, constraints) and starts.
+1. Lobby: host pastes the problem (title, URL, statement with its examples, tags, hints, constraints) and starts.
 2. Reading (5 min): everyone reads the statement alone and sees their own panel.
 3. Building (40 min, pauses during freezes): shared editor, cards, submissions. Cap of 4 submissions. Accepted ends the round: crew win. The 4th rejection starts the final vote.
 4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. The in-app editor locks (an external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Changeling: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
@@ -35,7 +35,7 @@ Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartogra
 
 ## Pasting a problem
 
-The host does not fill the form by hand. On the LeetCode page, open Topics and every Hint, select all, copy, and paste the whole thing into the "Paste the whole page" box in the lobby. "Sort it out" sends it to `POST /api/parse`, where a deterministic line parser (`src/server/parse/leetcode.ts`) splits it into title, link, statement (with the follow-up), examples, tags, hints and constraints, and restores the exponents that copying flattens (`104` becomes `10^4`). Every field stays editable before "Set the problem". When the parser cannot find the title, statement or constraints and `GROQ_API_KEY` is set, the same text goes to Groq (`src/server/parse/groq.ts`, currently `openai/gpt-oss-120b`) and the model's answer fills whatever the parser left empty; "Sort with the model" forces that path. Without a key the parser's result comes back with its warnings and the model button is hidden.
+The host does not fill the form by hand. On the LeetCode page, open Topics and every Hint, select all, copy, and paste the whole thing into the "Paste the whole page" box in the lobby. "Sort it out" sends it to `POST /api/parse`, where a deterministic line parser (`src/server/parse/leetcode.ts`) splits it into title, link, statement (the Example blocks and the follow-up included), tags, hints and constraints, and restores the exponents that copying flattens (`104` becomes `10^4`). Every field stays editable before "Set the problem". When the parser cannot find the title, statement or constraints and `GROQ_API_KEY` is set, the same text goes to Groq (`src/server/parse/groq.ts`, currently `openai/gpt-oss-120b`) and the model's answer fills whatever the parser left empty; "Sort with the model" forces that path. Without a key the parser's result comes back with its warnings and the model button is hidden.
 
 ## Architecture
 

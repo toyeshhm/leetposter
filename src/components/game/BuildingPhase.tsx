@@ -4,13 +4,13 @@ import { Editor } from "@/components/editor/Editor";
 import { Notice, Timer } from "@/components/ui";
 import { mmss } from "@/components/ui/clock";
 import { cx } from "@/components/ui/cx";
-import type { Action, PlayerView, Seat } from "@/game/types";
+import type { Action, PlayerView } from "@/game/types";
 import { CardsLog } from "./CardsLog";
 import { ProblemText } from "./ProblemText";
 import { Roster } from "./Roster";
 import { ChangelingNote, SeatPanel } from "./SeatPanel";
 import { FreezeButton, SeatAction } from "./SeatActions";
-import { holdersOf, playerName, recentResult, visibleSeats } from "./select";
+import { playerName, recentResult } from "./select";
 import { Tribunal } from "./Tribunal";
 import "./build.css";
 
@@ -50,27 +50,15 @@ export function BuildingPhase({ view, clockOffset, act, busy }: BoardProps): Rea
 }
 
 function Actions({ view, act, busy }: Omit<BoardProps, "clockOffset">): ReactElement {
-  const others = visibleSeats(view).filter((seat) => !view.me.seats.includes(seat));
-  const panel = (seat: Seat): ReactElement => {
-    const held = view.me.seats.includes(seat);
-    return (
-      <SeatPanel key={seat} seat={seat} panel={view.panel} held={held} holders={holdersOf(view, seat)}>
-        {held ? <SeatAction seat={seat} view={view} act={act} busy={busy} /> : null}
-      </SeatPanel>
-    );
-  };
   return (
     <>
-      {view.me.isImposter ? <ChangelingNote size={40} /> : null}
-      {view.me.seats.map((seat) => panel(seat))}
+      {view.me.isImposter ? <ChangelingNote seats={view.me.seats} size={40} /> : null}
+      {view.me.seats.map((seat) => (
+        <SeatPanel key={seat} seat={seat} panel={view.panel}>
+          <SeatAction seat={seat} view={view} act={act} busy={busy} />
+        </SeatPanel>
+      ))}
       <FreezeButton view={view} act={act} busy={busy} />
-      {others.length === 0 ? null : (
-        // The Changeling sees every panel; folded, so the record they must keep straight stays in reach.
-        <details className="panels-more">
-          <summary>{others.length === 1 ? "The other panel" : `The other ${others.length === 2 ? "two" : "three"} panels`}</summary>
-          {others.map((seat) => panel(seat))}
-        </details>
-      )}
     </>
   );
 }

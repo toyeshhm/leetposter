@@ -80,7 +80,7 @@ export default function Home(): ReactElement {
             speculate, hedge, be wrong. That is the honest players&apos; cover.
           </p>
           <p>
-            The Changeling holds a seat like anyone else, sees every panel, and may lie on any card and in any sentence. The one thing never faked is the
+            The Changeling holds a seat like anyone else, sees only that seat&apos;s panel, and may lie on any card and in any sentence. The one thing never faked is the
             verdict.
           </p>
         </section>

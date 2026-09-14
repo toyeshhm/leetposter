@@ -11,7 +11,6 @@ interface Draft {
   title: string;
   url: string;
   statement: string;
-  examples: string;
   tags: string;
   hints: string;
   constraints: string;
@@ -28,7 +27,6 @@ function parse(draft: Draft): { problem: Problem | null; errors: Partial<Record<
   const title = draft.title.trim();
   const url = draft.url.trim();
   const statement = draft.statement.trim();
-  const examples = draft.examples.trim();
   const constraints = draft.constraints.trim();
   const tags = draft.tags
     .split(",")
@@ -38,12 +36,11 @@ function parse(draft: Draft): { problem: Problem | null; errors: Partial<Record<
   if (title === "") errors.title = "The Herald needs a title.";
   if (!URL.canParse(url)) errors.url = "The Herald needs a link that opens.";
   if (statement === "") errors.statement = "Everyone reads the statement. Paste it.";
-  if (examples === "") errors.examples = "Paste at least one example.";
   if (tags.length === 0) errors.tags = "The Cartographer needs at least one tag.";
   if (hints.length === 0) errors.hints = "The Oracle needs at least one hint.";
   if (constraints === "") errors.constraints = "The Warden needs the constraints.";
   if (Object.keys(errors).length > 0) return { problem: null, errors };
-  return { problem: { title, url, statement, examples, tags, hints, constraints }, errors };
+  return { problem: { title, url, statement, tags, hints, constraints }, errors };
 }
 
 interface Note {
@@ -53,7 +50,7 @@ interface Note {
 
 const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n") });
 
-/** The host pastes the problem. Statement and examples are public; the rest become seat panels. */
+/** The host pastes the problem. The statement (examples included) is public; the rest become seat panels. */
 export function ProblemForm({
   send,
   busy,
@@ -67,7 +64,6 @@ export function ProblemForm({
     title: "",
     url: "",
     statement: problem?.statement ?? "",
-    examples: problem?.examples ?? "",
     tags: "",
     hints: "",
     constraints: "",
@@ -129,22 +125,12 @@ export function ProblemForm({
         <TextareaField
           label="Statement"
           name="statement"
-          hint="Public. Everyone reads it."
-          rows={8}
+          hint="Public. Everyone reads it, examples included."
+          rows={12}
           value={draft.statement}
           onChange={edit("statement")}
           disabled={busy}
           {...errorProp(errors.statement)}
-        />
-        <TextareaField
-          label="Examples"
-          name="examples"
-          hint="Public."
-          rows={5}
-          value={draft.examples}
-          onChange={edit("examples")}
-          disabled={busy}
-          {...errorProp(errors.examples)}
         />
         <Field
           label="Tags"

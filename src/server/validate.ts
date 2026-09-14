@@ -15,8 +15,7 @@ const hint = z.string().trim().min(1).max(2000);
 export const problem: z.ZodType<Problem> = z.object({
   title: z.string().trim().min(1).max(200),
   url: z.url({ protocol: /^https?$/ }),
-  statement: z.string().trim().min(1).max(20000),
-  examples: z.string().max(10000),
+  statement: z.string().trim().min(1).max(30000),
   tags: z.array(tag).max(20),
   hints: z.array(hint).max(20),
   constraints: z.string().max(5000),

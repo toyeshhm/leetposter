@@ -14,7 +14,8 @@ test("the host pastes a whole LeetCode page and the form fills itself", async ({
   await expect(problem.getByLabel("Title")).toHaveValue("Two Sum");
   await expect(problem.getByLabel("Link")).toHaveValue("https://leetcode.com/problems/two-sum/");
   await expect(problem.getByLabel("Statement")).toHaveValue(/return indices of the two numbers/);
-  await expect(problem.getByLabel("Examples")).toHaveValue(/Example 3:/);
+  await expect(problem.getByLabel("Statement")).toHaveValue(/Example 3:/);
+  await expect(problem.getByLabel("Statement")).not.toHaveValue(/Constraints:/);
   await expect(problem.getByLabel("Tags", { exact: true })).toHaveValue("Array, Hash Table");
   const hints = (await problem.getByLabel("Hints", { exact: true }).inputValue()).split("\n");
   expect(hints).toHaveLength(3);

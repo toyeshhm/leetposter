@@ -18,7 +18,6 @@ const PROBLEM: Problem = {
   title: "Two Sum",
   url: "https://example.test/two-sum",
   statement: "Find two numbers that add up to target.",
-  examples: "[2,7,11,15], 9 -> [0,1]",
   tags: ["array", "hash-table"],
   hints: ["Try a map.", "One pass."],
   constraints: "2 <= n <= 1e4",

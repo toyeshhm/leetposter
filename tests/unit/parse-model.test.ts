@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { GameError } from "@/game/errors";
 import { groqKey, parseWithGroq, readCompletion } from "@/server/parse/groq";
 
-const fields = { title: " Two Sum ", url: "https://leetcode.com/problems/two-sum/", statement: "s", examples: "e", tags: [" Array ", ""], hints: ["", "h"], constraints: "c" };
+const fields = { title: " Two Sum ", url: "https://leetcode.com/problems/two-sum/", statement: "s", tags: [" Array ", ""], hints: ["", "h"], constraints: "c" };
 const envelope = (content: string): unknown => ({ choices: [{ message: { content } }] });
 
 function invalid(body: unknown): string {
@@ -39,9 +39,9 @@ describe("readCompletion", () => {
     expect(invalid(envelope("{not json"))).toContain("not answer with JSON");
   });
 
-  it("rejects JSON missing any of the seven fields", () => {
-    expect(invalid(envelope(JSON.stringify({ title: "x" })))).toContain("seven fields");
-    expect(invalid(envelope(JSON.stringify({ ...fields, hints: "not an array" })))).toContain("seven fields");
+  it("rejects JSON missing any of the six fields", () => {
+    expect(invalid(envelope(JSON.stringify({ title: "x" })))).toContain("six fields");
+    expect(invalid(envelope(JSON.stringify({ ...fields, hints: "not an array" })))).toContain("six fields");
   });
 });
 

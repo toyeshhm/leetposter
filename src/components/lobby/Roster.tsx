@@ -49,7 +49,7 @@ export function SeatLegend(): ReactElement {
         <ChangelingMask size={40} decorative />
         <div>
           <p className="lobby-name">The Changeling</p>
-          <p className="muted">Holds a seat like anyone else and sees every panel. May lie on any card. Cannot fake a verdict.</p>
+          <p className="muted">Holds a seat like anyone else and sees only that seat&apos;s panel. May lie on any card. Cannot fake a verdict.</p>
         </div>
       </li>
     </ul>

@@ -9,7 +9,6 @@ const PROBLEM: Problem = {
   title: "Two Sum",
   url: "https://example.test/two-sum",
   statement: "Find two numbers that add up to target.",
-  examples: "[2,7,11,15], 9 -> [0,1]",
   tags: ["array", "hash-table"],
   hints: ["Try a map.", "One pass."],
   constraints: "2 <= n <= 1e4",
@@ -78,7 +77,7 @@ describe("token", () => {
 describe("problem", () => {
   it("accepts a full problem and empty optional-ish text, trimming what goes on the record", () => {
     expect(parse(problem, PROBLEM)).toEqual(PROBLEM);
-    expect(parse(problem, { ...PROBLEM, examples: "", constraints: "", tags: [], hints: [] }).tags).toEqual([]);
+    expect(parse(problem, { ...PROBLEM, constraints: "", tags: [], hints: [] }).tags).toEqual([]);
     expect(parse(problem, { ...PROBLEM, title: " Two Sum ", tags: [" array "], hints: [" Try a map. "] })).toMatchObject({
       title: "Two Sum",
       tags: ["array"],
@@ -93,8 +92,7 @@ describe("problem", () => {
     invalid(problem, { ...PROBLEM, url: "not a url" });
     invalid(problem, { ...PROBLEM, statement: "" });
     invalid(problem, { ...PROBLEM, statement: " \n " });
-    invalid(problem, { ...PROBLEM, statement: "s".repeat(20001) });
-    invalid(problem, { ...PROBLEM, examples: "e".repeat(10001) });
+    invalid(problem, { ...PROBLEM, statement: "s".repeat(30001) });
     invalid(problem, { ...PROBLEM, tags: Array.from({ length: 21 }, () => "t") });
     invalid(problem, { ...PROBLEM, tags: [""] });
     invalid(problem, { ...PROBLEM, tags: ["  "] });

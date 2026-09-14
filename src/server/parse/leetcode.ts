@@ -3,7 +3,7 @@ import type { ParsedProblem } from "./types";
 
 const TITLE = /^(\d+)\. (.+)$/;
 const DIFFICULTY = new Set(["Easy", "Medium", "Hard"]);
-const CHIPS = new Set(["Topics", "Companies", "Hint", "premium lock icon"]);
+const CHIPS = new Set(["Topics", "Companies", "Hint", "premium lock icon", "Solved", "Attempted"]);
 const LEVEL_CHIPS = new Set(["Junior", "Mid Level", "Senior", ...DIFFICULTY]);
 const EXAMPLE = /^Example \d+:$/;
 const HINT = /^Hint \d+$/;
@@ -35,7 +35,6 @@ export function assess(problem: Problem): Pick<ParsedProblem, "confidence" | "wa
   const warnings: string[] = [];
   if (problem.title === "") warnings.push("No title found. The page should start with a numbered title like \"1. Two Sum\".");
   if (problem.statement === "") warnings.push("No statement found. Copy from the problem's Description tab.");
-  if (problem.examples === "") warnings.push("No examples found.");
   if (problem.constraints === "") warnings.push("No constraints found. The Warden's panel is empty.");
   if (problem.tags.length === 0) warnings.push("Topics were collapsed on the page, so no tags. Open Topics before copying.");
   if (problem.hints.length === 0) warnings.push("No hints found. Open every Hint before copying (some problems have none).");
@@ -49,7 +48,6 @@ export function fillEmpty(base: Problem, over: Problem): Problem {
     title: over.title === "" ? base.title : over.title,
     url: over.title === "" ? base.url : over.url,
     statement: over.statement === "" ? base.statement : over.statement,
-    examples: over.examples === "" ? base.examples : over.examples,
     tags: over.tags.length === 0 ? base.tags : over.tags,
     hints: over.hints.length === 0 ? base.hints : over.hints,
     constraints: over.constraints === "" ? base.constraints : over.constraints,
@@ -117,16 +115,15 @@ export function parseLeetCodePaste(text: string): ParsedProblem {
   const { index: titleAt, title } = findTitle(lines);
   const url = title === "" ? "" : slugUrl(title);
 
-  // Statement: after the difficulty and chip lines, up to the first example (or the constraints).
+  // Statement: after the difficulty, status and chip lines, up to the constraints: prose paragraphs, then the Example blocks.
   const orEnd = (i: number): number => (i < 0 ? lines.length : i);
   const bodyAt = orEnd(find(lines, titleAt + 1, (l) => !(isBlank(l) || DIFFICULTY.has(l) || CHIPS.has(l))));
   const isSectionEnd = (l: string): boolean => EXAMPLE.test(l) || l === CONSTRAINTS || l === ACCEPTED;
   const statementParts = titleAt < 0 ? [] : paragraphs(lines, bodyAt, isSectionEnd);
-
-  const exampleAt = find(lines, bodyAt, (l) => EXAMPLE.test(l));
+  const exampleAt = titleAt < 0 ? -1 : find(lines, bodyAt, (l) => EXAMPLE.test(l));
   const constraintsAt = find(lines, bodyAt, (l) => l === CONSTRAINTS);
   const exampleLines = exampleAt < 0 ? [] : collect(lines, exampleAt, (l) => l === CONSTRAINTS || l === ACCEPTED);
-  const examples = exampleLines.map((l, i) => (i > 0 && EXAMPLE.test(l) ? `\n${l}` : l)).join("\n");
+  if (exampleLines.length > 0) statementParts.push(exampleLines.map((l, i) => (i > 0 && EXAMPLE.test(l) ? `\n${l}` : l)).join("\n"));
 
   const constraintsFrom = constraintsAt < 0 ? lines.length : orEnd(find(lines, constraintsAt + 1, (l) => !isBlank(l)));
   const constraintLines = collect(lines, constraintsFrom, (l) => isBlank(l) || isFollowUp(l) || l === ACCEPTED).map(repairExponents);
@@ -150,7 +147,6 @@ export function parseLeetCodePaste(text: string): ParsedProblem {
     title,
     url,
     statement: statementParts.join("\n\n"),
-    examples,
     tags,
     hints,
     constraints: constraintLines.join("\n"),

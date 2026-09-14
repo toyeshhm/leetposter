@@ -21,14 +21,14 @@ export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 8;
 
-/** The problem as pasted by the host. Statement + examples are public; the rest are seat panels. */
+/** The problem as pasted by the host. The statement (examples included) is public; the rest are seat panels. */
 export interface Problem {
   /** Shown only to the runner (they need the link) and at the reveal. */
   title: string;
   /** Shown only to the runner and at the reveal. */
   url: string;
+  /** Prose plus the Example blocks, line breaks kept. */
   statement: string;
-  examples: string;
   tags: string[];
   hints: string[];
   constraints: string;
@@ -210,10 +210,10 @@ export interface PlayerView {
   players: PublicPlayer[];
   settings: Settings;
   /** Public problem parts; null in lobby before the host pastes it. */
-  problem: { statement: string; examples: string; tagCount: number; hintCount: number } | null;
+  problem: { statement: string; tagCount: number; hintCount: number } | null;
   /** True for the host in the lobby once a problem is set. */
   problemReady: boolean;
-  /** My own seat panels; the imposter sees all of them. */
+  /** My own seat panels only (the imposter included); every panel at the reveal. */
   panel: PanelView;
   cards: CardEntry[];
   submissions: Submission[];

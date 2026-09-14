@@ -7,21 +7,17 @@ import { SEAT_DUTIES } from "./copy";
 interface SeatPanelProps {
   seat: Seat;
   panel: PanelView;
-  /** Whether I hold this seat (the Changeling also sees seats they do not hold). */
-  held: boolean;
-  holders: string[];
   /** Actions for the seat, rendered under the panel. */
   children?: ReactNode;
 }
 
 /** One seat's private panel in a Frame with its sigil, plus whatever the seat may play. */
-export function SeatPanel({ seat, panel, held, holders, children }: SeatPanelProps): ReactElement {
-  const others = holders.length === 0 ? "no one" : holders.join(" and ");
+export function SeatPanel({ seat, panel, children }: SeatPanelProps): ReactElement {
   return (
     <Frame title={SEAT_TITLES[seat]} className="panel">
       <div className="panel-head">
         <SeatSigil seat={seat} size={48} decorative />
-        <p className="panel-duty">{held ? SEAT_DUTIES[seat] : `Held by ${others}. Not your seat, but you see it.`}</p>
+        <p className="panel-duty">{SEAT_DUTIES[seat]}</p>
       </div>
       <PanelBody seat={seat} panel={panel} />
       {children}
@@ -69,11 +65,12 @@ function PanelBody({ seat, panel }: { seat: Seat; panel: PanelView }): ReactElem
 }
 
 /** The one line the Changeling reads and the crew never does. */
-export function ChangelingNote({ size = 64 }: { size?: number }): ReactElement {
+export function ChangelingNote({ seats, size = 64 }: { seats: Seat[]; size?: number }): ReactElement {
+  const held = seats.map((seat) => `the ${SEAT_TITLES[seat]}`).join(" and ");
   return (
     <div className="changeling-note">
       <ChangelingMask size={size} decorative />
-      <p>You are the Changeling. You see everything. Lie well.</p>
+      <p>You are the Changeling. You hold {held} like anyone else. Lie well.</p>
     </div>
   );
 }

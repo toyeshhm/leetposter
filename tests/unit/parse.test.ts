@@ -4,6 +4,7 @@ import { assess, fillEmpty, parseLeetCodePaste, repairExponents, slugUrl, trimPa
 
 const twoSum = readFileSync("tests/fixtures/leetcode-two-sum.txt", "utf8");
 const median = readFileSync("tests/fixtures/leetcode-median-collapsed.txt", "utf8");
+const chunked = readFileSync("tests/fixtures/leetcode-chunked-palindrome-partial.txt", "utf8");
 
 describe("parseLeetCodePaste: two sum (Topics and Hints expanded)", () => {
   const { problem, confidence, warnings, source } = parseLeetCodePaste(twoSum);
@@ -14,33 +15,28 @@ describe("parseLeetCodePaste: two sum (Topics and Hints expanded)", () => {
     expect(source).toBe("parser");
   });
 
-  it("keeps the three statement paragraphs and appends the follow-up", () => {
+  it("keeps the three statement paragraphs, then the three example blocks verbatim, then the follow-up", () => {
     expect(problem.statement).toBe(
       [
         "You are given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
         "You may assume that each input would have exactly one solution, and you may not use the same element twice.",
         "You can return the answer in any order.",
+        [
+          "Example 1:",
+          "Input: nums = [2,7,11,15], target = 9",
+          "Output: [0,1]",
+          "Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].",
+          "",
+          "Example 2:",
+          "Input: nums = [3,2,4], target = 6",
+          "Output: [1,2]",
+          "",
+          "Example 3:",
+          "Input: nums = [3,3], target = 6",
+          "Output: [0,1]",
+        ].join("\n"),
         "Follow-up: Can you come up with an algorithm that is less than O(n2) time complexity?",
       ].join("\n\n"),
-    );
-  });
-
-  it("keeps the three example blocks verbatim without blank lines", () => {
-    expect(problem.examples).toBe(
-      [
-        "Example 1:",
-        "Input: nums = [2,7,11,15], target = 9",
-        "Output: [0,1]",
-        "Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].",
-        "",
-        "Example 2:",
-        "Input: nums = [3,2,4], target = 6",
-        "Output: [1,2]",
-        "",
-        "Example 3:",
-        "Input: nums = [3,3], target = 6",
-        "Output: [0,1]",
-      ].join("\n"),
     );
   });
 
@@ -77,11 +73,12 @@ describe("parseLeetCodePaste: median (Topics collapsed, no hints)", () => {
   });
 
   it("keeps the statement and both examples", () => {
-    expect(problem.statement).toBe(
-      "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be O(log (m+n)).",
-    );
-    expect(problem.examples.split("\n").filter((l) => l.startsWith("Example"))).toEqual(["Example 1:", "Example 2:"]);
-    expect(problem.examples).toContain("Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.");
+    expect(problem.statement.startsWith(
+      "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be O(log (m+n)).\n\nExample 1:\n",
+    )).toBe(true);
+    expect(problem.statement.split("\n").filter((l) => l.startsWith("Example"))).toEqual(["Example 1:", "Example 2:"]);
+    expect(problem.statement.endsWith("Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.")).toBe(true);
+    expect(problem.statement).not.toContain("Constraints");
   });
 
   it("keeps the constraints intact, with 1000 and 2000 untouched", () => {
@@ -99,12 +96,41 @@ describe("parseLeetCodePaste: median (Topics collapsed, no hints)", () => {
   });
 });
 
+describe("parseLeetCodePaste: chunked palindrome (Solved status line, Hint chip, no constraints)", () => {
+  const { problem, confidence, warnings } = parseLeetCodePaste(chunked);
+
+  it("finds the title past the status line and builds the url", () => {
+    expect(problem.title).toBe("Longest Chunked Palindrome Decomposition");
+    expect(problem.url).toBe("https://leetcode.com/problems/longest-chunked-palindrome-decomposition/");
+  });
+
+  it("starts the statement at the prose and carries all three examples to the last explanation", () => {
+    expect(problem.statement.startsWith("You are given a string text. You should split it to k substrings")).toBe(true);
+    expect(problem.statement.split("\n").filter((l) => l.startsWith("Example"))).toEqual(["Example 1:", "Example 2:", "Example 3:"]);
+    expect(problem.statement.endsWith('Explanation: We can split the string on "(a)(nt)(a)(pre)(za)(tep)(za)(pre)(a)(nt)(a)".')).toBe(true);
+    expect(problem.statement).not.toContain("Solved");
+  });
+
+  it("has no constraints, so confidence is low and the warnings say so", () => {
+    expect(problem.constraints).toBe("");
+    expect(problem.tags).toEqual([]);
+    expect(problem.hints).toEqual([]);
+    expect(confidence).toBe("low");
+    expect(warnings.some((w) => w.startsWith("No constraints found"))).toBe(true);
+  });
+
+  it("skips an Attempted status line the same way", () => {
+    const { problem: attempted } = parseLeetCodePaste(chunked.replace("\nSolved\n", "\nAttempted\n"));
+    expect(attempted.statement).toBe(problem.statement);
+  });
+});
+
 describe("parseLeetCodePaste: edge cases", () => {
   it("empty input is low confidence with everything missing", () => {
     const { problem, confidence, warnings } = parseLeetCodePaste("");
-    expect(problem).toEqual({ title: "", url: "", statement: "", examples: "", tags: [], hints: [], constraints: "" });
+    expect(problem).toEqual({ title: "", url: "", statement: "", tags: [], hints: [], constraints: "" });
     expect(confidence).toBe("low");
-    expect(warnings).toHaveLength(6);
+    expect(warnings).toHaveLength(5);
   });
 
   it("garbage input finds nothing", () => {
@@ -120,7 +146,7 @@ describe("parseLeetCodePaste: edge cases", () => {
     const { problem, confidence } = parseLeetCodePaste(text);
     expect(problem.title).toBe("Reverse Linked List");
     expect(problem.url).toBe("https://leetcode.com/problems/reverse-linked-list/");
-    expect(problem.statement).toBe("Given the head of a list, reverse it.");
+    expect(problem.statement).toBe("Given the head of a list, reverse it.\n\nExample 1:\nInput: head = [1,2]\nOutput: [2,1]");
     expect(problem.constraints).toBe("1 <= n <= 5000");
     expect(confidence).toBe("high");
   });
@@ -130,7 +156,7 @@ describe("parseLeetCodePaste: edge cases", () => {
     const { problem } = parseLeetCodePaste(text);
     expect(problem.tags).toEqual(["Math"]);
     expect(problem.hints).toEqual(["Think.", "Harder."]);
-    expect(problem.examples).toBe("");
+    expect(problem.statement).toBe("Foo bar.");
     expect(problem.constraints).toBe("1 <= n <= 10^9");
   });
 
@@ -144,7 +170,7 @@ describe("parseLeetCodePaste: edge cases", () => {
 
   it("a title with nothing after it, or a Constraints header with nothing under it, yields empty parts", () => {
     const bare = parseLeetCodePaste("1. Foo\nEasy\nTopics");
-    expect(bare.problem).toEqual({ title: "Foo", url: "https://leetcode.com/problems/foo/", statement: "", examples: "", tags: [], hints: [], constraints: "" });
+    expect(bare.problem).toEqual({ title: "Foo", url: "https://leetcode.com/problems/foo/", statement: "", tags: [], hints: [], constraints: "" });
     const headerOnly = parseLeetCodePaste("1. Foo\nFoo bar.\nConstraints:\n\n");
     expect(headerOnly.problem.statement).toBe("Foo bar.");
     expect(headerOnly.problem.constraints).toBe("");
@@ -187,17 +213,17 @@ describe("slugUrl", () => {
 
 describe("assess", () => {
   it("is high only when title, statement and constraints exist", () => {
-    const full = { title: "t", url: "u", statement: "s", examples: "", tags: [], hints: [], constraints: "c" };
+    const full = { title: "t", url: "u", statement: "s", tags: [], hints: [], constraints: "c" };
     expect(assess(full).confidence).toBe("high");
-    expect(assess(full).warnings).toHaveLength(3);
+    expect(assess(full).warnings).toHaveLength(2);
     expect(assess({ ...full, statement: "" }).confidence).toBe("low");
   });
 });
 
 describe("fillEmpty", () => {
-  const base = { title: "T", url: "https://leetcode.com/problems/t/", statement: "S", examples: "E", tags: ["a"], hints: ["h"], constraints: "C" };
-  const empty = { title: "", url: "", statement: "", examples: "", tags: [], hints: [], constraints: "" };
-  const full = { title: "T2", url: "https://x.test/", statement: "S2", examples: "E2", tags: ["b"], hints: ["h2"], constraints: "C2" };
+  const base = { title: "T", url: "https://leetcode.com/problems/t/", statement: "S", tags: ["a"], hints: ["h"], constraints: "C" };
+  const empty = { title: "", url: "", statement: "", tags: [], hints: [], constraints: "" };
+  const full = { title: "T2", url: "https://x.test/", statement: "S2", tags: ["b"], hints: ["h2"], constraints: "C2" };
 
   it("keeps every base field the overlay leaves empty", () => {
     expect(fillEmpty(base, empty)).toEqual(base);

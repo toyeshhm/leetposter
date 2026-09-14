@@ -6,12 +6,11 @@ export const parseBody = z.object({
   mode: z.enum(["auto", "llm"]).exactOptional(),
 });
 
-/** The seven fields the model is asked for. Empty strings/arrays mean "not in the text". */
+/** The six fields the model is asked for. Empty strings/arrays mean "not in the text". */
 export const modelProblem: z.ZodType<Problem> = z.object({
   title: z.string(),
   url: z.string(),
   statement: z.string(),
-  examples: z.string(),
   tags: z.array(z.string()),
   hints: z.array(z.string()),
   constraints: z.string(),

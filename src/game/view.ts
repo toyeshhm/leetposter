@@ -1,10 +1,10 @@
 import { GameError } from "./errors";
-import type { PanelView, PlayerView, RoomState, VoteRound, VoteRoundView } from "./types";
+import type { PanelView, PlayerView, RoomState, Seat, VoteRound, VoteRoundView } from "./types";
 import { buildElapsed } from "./util";
 
 /**
  * Project the full room state down to what ONE player may see. Strips every other player's
- * token and imposter flag, shows only this player's seat panels (all panels for the imposter),
+ * token and imposter flag, shows only this player's own seat panels (the imposter's too; every panel at the reveal),
  * hides vote targets until a round resolves, and computes clock fields from `now`.
  * Throws GameError("not-found") if the player is not in the room.
  */
@@ -13,15 +13,15 @@ export function personalize(state: RoomState, playerId: string, now: number): Pl
   if (me === undefined) throw new GameError("not-found", `player ${playerId} is not in hall ${state.code}`);
 
   const atReveal = state.phase === "reveal";
-  const seesAll = atReveal || me.isImposter;
+  const holds = (seat: Seat): boolean => atReveal || me.seats.includes(seat);
   const { problem, settings, clock } = state;
 
   const panel: PanelView = {
-    tags: problem !== null && (seesAll || me.seats.includes("tagger")) ? problem.tags : null,
-    hints: problem !== null && (seesAll || me.seats.includes("oracle")) ? problem.hints : null,
-    constraints: problem !== null && (seesAll || me.seats.includes("bounds")) ? problem.constraints : null,
-    title: problem !== null && (seesAll || me.seats.includes("runner")) ? problem.title : null,
-    url: problem !== null && (seesAll || me.seats.includes("runner")) ? problem.url : null,
+    tags: problem !== null && holds("tagger") ? problem.tags : null,
+    hints: problem !== null && holds("oracle") ? problem.hints : null,
+    constraints: problem !== null && holds("bounds") ? problem.constraints : null,
+    title: problem !== null && holds("runner") ? problem.title : null,
+    url: problem !== null && holds("runner") ? problem.url : null,
   };
 
   const votes = state.votes.map(toRoundView);
@@ -70,7 +70,7 @@ export function personalize(state: RoomState, playerId: string, now: number): Pl
       freezeUsed: p.freezeUsed,
       isHost: state.hostId === p.id,
       username: p.username,
-      isImposter: seesAll || p.id === playerId ? p.isImposter : null,
+      isImposter: atReveal || me.isImposter || p.id === playerId ? p.isImposter : null,
     })),
     settings,
     problem:
@@ -78,7 +78,6 @@ export function personalize(state: RoomState, playerId: string, now: number): Pl
         ? null
         : {
             statement: problem.statement,
-            examples: problem.examples,
             tagCount: problem.tags.length,
             hintCount: problem.hints.length,
           },
