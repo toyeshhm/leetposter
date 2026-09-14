@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactElement } from "react";
 import { Alegreya_Sans, IM_Fell_English } from "next/font/google";
 import "./globals.css";
@@ -28,6 +28,13 @@ export const metadata: Metadata = {
   // No title or description here: each page's own title and description flow into its og: and twitter: tags.
   openGraph: { type: "website", siteName: "Leetposter", url: "/" },
   twitter: { card: "summary_large_image" },
+};
+
+/* --bg from globals.css, resolved to sRGB. viewport-fit=cover lets the stone run under the notch; globals.css pads the safe area back. */
+export const viewport: Viewport = {
+  themeColor: "#14181a",
+  colorScheme: "dark",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">): ReactElement {

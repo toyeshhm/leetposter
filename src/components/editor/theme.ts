@@ -8,7 +8,7 @@ const chrome = EditorView.theme(
   {
     "&": { height: "100%", backgroundColor: "var(--surface)", color: "var(--ink)" },
     "&.cm-focused": { outline: "none" },
-    ".cm-scroller": { fontFamily: "var(--font-mono)", fontSize: "var(--text-sm)", lineHeight: "1.5", overflow: "auto" },
+    ".cm-scroller": { fontFamily: "var(--font-mono)", fontSize: "var(--text-code)", lineHeight: "1.5", overflow: "auto" },
     ".cm-content": { padding: "var(--space-3) 0", caretColor: "var(--accent)" },
     ".cm-line": { padding: "0 var(--space-3)" },
     ".cm-gutters": { backgroundColor: "var(--bg)", color: "var(--muted)", border: "none", borderRight: "var(--rule) solid var(--line)" },

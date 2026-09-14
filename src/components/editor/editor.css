@@ -23,8 +23,6 @@
 }
 .editor-bar .field-control {
   width: auto;
-  min-height: 2rem;
-  padding: var(--space-1) var(--space-2);
 }
 .editor-body {
   height: 50vh;
@@ -57,7 +55,7 @@
 .run-stdin,
 .run-out {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-code);
 }
 textarea.run-stdin {
   min-height: 4rem;

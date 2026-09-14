@@ -211,7 +211,8 @@ test("a tribunal from the Work: the ballot opens after the discussion, everyone 
   await withRoom(host.code, (s) => ({ ...s, clock: { ...s.clock, buildElapsedMs: s.settings.freezeOpensAfterMs } }));
 
   const desks = await newPages(browser, 3);
-  const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })).newPage();
+  // A phone-sized viewport with a thumb; isMobile (the meta viewport) is not supported in Firefox and the layout keys off width alone.
+  const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true })).newPage();
   const pages = [...desks, phone];
   try {
     await Promise.all(

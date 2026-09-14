@@ -132,6 +132,12 @@ e2e/*.spec.ts               Playwright: the 4-player game, the shared editor acr
 
 Local database for tests: `supabase start` (Docker), then point `.env.local` at the printed URL and key.
 
+## Devices and browsers
+
+The game is played on phones, tablets and laptops in Safari, Chrome and Firefox. `make test-e2e` runs the whole suite on Chromium and the game and shared-editor specs (`e2e/game.spec.ts`, `e2e/editor.spec.ts`) on WebKit and Firefox as well; the tribunal test also drives one phone-sized page. The screens were audited with Playwright's device descriptors (iPhone 14 in both orientations, iPad Mini, Pixel 7, a 1366 px Firefox and a 1920 px Chrome) for horizontal overflow, elements past the viewport edge, tap targets under 44 px and console errors.
+
+iOS notes: every editable control, the shared editor included, is at least 16 px on touch devices (`--text-code` in `globals.css`), since Safari zooms into anything smaller on focus. `<select>` is drawn by the app rather than the native menulist, which ignores `min-height` on WebKit. The viewport is `viewport-fit=cover` and the body pads the safe-area insets, so nothing sits under the notch or the home indicator. Nothing on the game screen is fixed or `100vh`, so the URL bar coming and going does not move the editor. The site is installable: `src/app/manifest.ts` is served at `/manifest.webmanifest` with the SVG, 180 px and 512 px icons. Playwright's Android emulation cannot type Enter into CodeMirror (the editor defers that key to the virtual keyboard's `beforeinput` on Android Chrome), so a real Android device is the only check for that path.
+
 ## Art direction
 
 Indie dark fantasy, medieval, hand-inked. Think a candlelit stone hall where a company of scribes argues over a manuscript. Woodcut and linocut linework, heavy black ink, one warm spot color. No parchment or cream page backgrounds. Every image, icon and ornament in this repo is original SVG drawn for this game. Details in `DESIGN.md` once the design pass lands.
