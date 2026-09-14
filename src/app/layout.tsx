@@ -20,7 +20,7 @@ const alegreya = Alegreya_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Changeling",
+  title: "Leetposter",
   description: "A social-deduction party game for programmers. One hard problem, forty minutes, one liar at the table.",
 };
 

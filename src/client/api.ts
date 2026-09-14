@@ -66,8 +66,8 @@ export function act(creds: Credentials, action: Action): Promise<PlayerView> {
 }
 
 /* Credentials live in localStorage, one entry per hall, so a second hall never evicts the first. */
-const key = (code: string): string => `changeling.credentials.${code}`;
-const PROBE_KEY = "changeling.probe";
+const key = (code: string): string => `leetposter.credentials.${code}`;
+const PROBE_KEY = "leetposter.probe";
 const credentials: z.ZodType<Credentials> = z.object({ code: z.string(), playerId: z.string(), token: z.string() });
 
 /** Call before taking a seat: without storage the room page could never find the seat again. */
@@ -76,7 +76,7 @@ export function assertStorage(): void {
     window.localStorage.setItem(PROBE_KEY, "1");
     window.localStorage.removeItem(PROBE_KEY);
   } catch (error: unknown) {
-    throw new Error("This browser blocks site storage; Changeling needs it to keep your seat.", { cause: error });
+    throw new Error("This browser blocks site storage; Leetposter needs it to keep your seat.", { cause: error });
   }
 }
 

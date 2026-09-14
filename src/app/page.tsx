@@ -41,7 +41,7 @@ export default function Home(): ReactElement {
           <HeroPlate size={960} />
         </div>
         <h1 id="wordmark" className={styles.wordmark}>
-          Changeling
+          Leetposter
         </h1>
         <p className={styles.lede}>Four to eight programmers, one hard problem, forty minutes, and one of you is lying.</p>
       </section>

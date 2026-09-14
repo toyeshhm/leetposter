@@ -1,8 +1,8 @@
-# Changeling
+# Leetposter
 
 A social-deduction party game for programmers. Four to eight friends on a voice call try to solve one hard algorithm problem together in 40 minutes. Each seat holds one channel of information about the problem. One of them is the Changeling, and lies.
 
-Working title. Never put "LeetCode" in the product name; say "LeetCode-style problems" in descriptive copy only.
+The traitor role is still called the Changeling in-game. Never put "LeetCode" (the registered mark) in the product name; "Leet"-prefixed names are tolerated in practice but not guaranteed.
 
 ## The game
 

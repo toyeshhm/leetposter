@@ -124,7 +124,7 @@ export default function DesignPage(): ReactElement {
   return (
     <main className="g-page">
       <header className="g-head">
-        <h1>Changeling</h1>
+        <h1>Leetposter</h1>
         <p>Every plate, token and primitive in the game, in every state. White-line woodcut on stone; one candle.</p>
       </header>
 

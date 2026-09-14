@@ -4,7 +4,7 @@ import { RoomScreen } from "@/components/game/RoomScreen";
 
 export async function generateMetadata({ params }: PageProps<"/room/[code]">): Promise<Metadata> {
   const { code } = await params;
-  return { title: `Hall ${code.toUpperCase()}, Changeling` };
+  return { title: `Hall ${code.toUpperCase()}, Leetposter` };
 }
 
 /** The whole game lives in the client screen; this page only unwraps the hall code. */

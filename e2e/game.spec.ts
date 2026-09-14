@@ -269,7 +269,7 @@ test("a stale token or corrupt storage falls back to the join form; an unknown h
     await expect(stale.getByText("2 of 8 seats taken.")).toBeVisible();
 
     await corrupt.context().addInitScript((code: string) => {
-      window.localStorage.setItem(`changeling.credentials.${code}`, "null");
+      window.localStorage.setItem(`leetposter.credentials.${code}`, "null");
     }, host.code);
     await corrupt.goto(`/room/${host.code}`);
     await expect(corrupt.getByRole("button", { name: "Join the hall" })).toBeVisible();

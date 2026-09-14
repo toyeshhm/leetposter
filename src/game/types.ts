@@ -1,5 +1,5 @@
 /**
- * Shared contract for Changeling. Every module codes against these types.
+ * Shared contract for Leetposter. Every module codes against these types.
  * Pure data only: no classes, no functions. Times are epoch milliseconds.
  */
 

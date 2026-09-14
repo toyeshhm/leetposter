@@ -83,7 +83,7 @@ export function act(request: APIRequestContext, creds: Credentials, action: Acti
 /** Put saved credentials in this page's localStorage and open the hall, as a returning player would. */
 export async function enterAs(page: Page, creds: Credentials): Promise<void> {
   await page.context().addInitScript((c: Credentials) => {
-    window.localStorage.setItem(`changeling.credentials.${c.code}`, JSON.stringify(c));
+    window.localStorage.setItem(`leetposter.credentials.${c.code}`, JSON.stringify(c));
   }, creds);
   await page.goto(`/room/${creds.code}`);
 }
