@@ -30,9 +30,13 @@ export function BuildingPhase({ view, clockOffset, act, busy }: BoardProps): Rea
       {view.me.ejected ? <Notice>You were cast out. You can watch the table, not act at it.</Notice> : null}
       <div className={cx("build-grid", inVote && "build-vote")}>
         <aside className="build-side" aria-label="Clock and table">
-          <BuildClock view={view} clockOffset={clockOffset} />
-          <Submissions view={view} />
-          <Roster view={view} />
+          <div className="build-clock">
+            <BuildClock view={view} clockOffset={clockOffset} />
+            <Submissions view={view} />
+          </div>
+          <div className="build-table">
+            <Roster view={view} />
+          </div>
         </aside>
         <section className="build-main" aria-label="Your seat and the record">
           <LastVerdict view={view} />

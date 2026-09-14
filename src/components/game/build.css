@@ -69,7 +69,8 @@
   margin-top: var(--space-6);
 }
 
-/* the work: side (clock, table), main (the file, seat, record), problem */
+/* the work: side (clock, submissions), main (the file, seat, record), problem, table (roster).
+   On a phone the roster goes last: nobody scrolls past four names to reach the file. */
 .build-grid {
   display: grid;
   gap: var(--space-8);
@@ -77,13 +78,22 @@
   grid-template-areas:
     "side"
     "main"
-    "problem";
+    "problem"
+    "table";
 }
+/* on a phone the aside dissolves so its two halves take their own rows */
 .build-side {
+  display: contents;
+}
+.build-clock {
   grid-area: side;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+}
+.build-table {
+  grid-area: table;
+  min-width: 0;
 }
 .build-main {
   grid-area: main;
@@ -101,7 +111,8 @@
   grid-template-areas:
     "main"
     "side"
-    "problem";
+    "problem"
+    "table";
 }
 @media (min-width: 56rem) {
   .build-grid {
@@ -111,7 +122,12 @@
     align-items: start;
     gap: var(--space-8) var(--space-6);
   }
+  /* wide: the aside is one sticky column again (clock, submissions, roster) */
   .build-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    grid-area: side;
     position: sticky;
     top: var(--space-4);
   }
