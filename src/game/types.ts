@@ -65,6 +65,10 @@ export interface Player {
   name: string;
   /** Secret. Never leaves the server except to its owner at join time. */
   token: string;
+  /** Supabase Auth user id when the player joined signed in; null for guests. */
+  userId: string | null;
+  /** Profile username captured at join time (so views stay pure); null for guests. */
+  username: string | null;
   /** Usually one seat. The runner seat is transferred on ejection, so a player may hold two. */
   seats: Seat[];
   isImposter: boolean;
@@ -171,6 +175,8 @@ export interface PublicPlayer {
   ejected: boolean;
   freezeUsed: boolean;
   isHost: boolean;
+  /** Public username when the player has an account; null for guests. */
+  username: string | null;
   /** Only present at the reveal, or for yourself, or (if you are the imposter) for everyone. */
   isImposter: boolean | null;
 }
@@ -239,6 +245,7 @@ export type GameErrorCode =
   | "too-few-players"
   | "already-played"
   | "invalid"
+  | "taken"
   | "ejected"
   | "freeze-unavailable"
   | "no-submissions-left";

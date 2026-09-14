@@ -107,11 +107,11 @@ describe("create", () => {
     const taken = await json<Credentials>(await create());
     codes.push(taken.code);
     let calls = 0;
-    const fresh = await createRoomHandler("Bob", () => (calls++ === 0 ? taken.code : newCode()));
+    const fresh = await createRoomHandler("Bob", null, () => (calls++ === 0 ? taken.code : newCode()));
     codes.push(fresh.code);
     expect(calls).toBe(2);
     expect(fresh.code).not.toBe(taken.code);
-    await expect(createRoomHandler("Bob", () => taken.code)).rejects.toThrow(/no free room code/);
+    await expect(createRoomHandler("Bob", null, () => taken.code)).rejects.toThrow(/no free room code/);
   });
 });
 

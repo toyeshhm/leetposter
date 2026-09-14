@@ -50,6 +50,11 @@ src/game/errors.ts     GameError with typed codes.
 src/server/supabase.ts server-only Supabase client from SUPABASE_URL / SUPABASE_KEY.
 src/server/store.ts    loadRoom / createRoom / withRoom(code, fn) with version retry.
 src/server/validate.ts zod schemas for every request body (Problem, Action, names, codes).
+src/server/auth.ts         bearerToken / requireUser / optionalUser: verify a Supabase access token, load the profile.
+src/server/profiles.ts     profiles table: username rules, findProfile, createProfile.
+src/server/results.ts      recordResults at the reveal (one game_results row per account holder), loadResults for the ledger.
+src/server/achievements.ts pure achievement rules over game_results rows; never stored.
+src/server/friends.ts      friendships table: list, request, accept, remove; FriendsPage with friends' recent halls.
 src/server/parse/leetcode.ts  deterministic line parser for a pasted LeetCode page -> Problem + warnings.
 src/server/parse/groq.ts      Groq fallback that fills whatever the parser left empty.
 src/server/parse/schema.ts    zod schemas for the request body and the model's answer.
@@ -60,21 +65,34 @@ src/app/api/rooms/[code]/join/route.ts    POST {name} -> {code, playerId, token}
 src/app/api/rooms/[code]/route.ts         GET, Authorization: Bearer <token> -> PlayerView (ticks first)
 src/app/api/rooms/[code]/act/route.ts     POST {token, action} -> PlayerView
 src/app/api/rooms/[code]/doc/route.ts     GET (bearer) -> {doc}; POST {doc} saves it, refused while the editor is locked
+src/app/api/account/route.ts              POST {username} claims a name after sign-up; GET -> {id, username, email}
+src/app/api/account/history/route.ts      GET -> {games}: the caller's recorded games, newest first
+src/app/api/account/achievements/route.ts GET -> {achievements}: earned + progress, computed on read
+src/app/api/friends/route.ts              GET -> FriendsPage; POST {username} sends a request
+src/app/api/friends/[username]/route.ts   DELETE: remove a friend or decline a request
+src/app/api/friends/[username]/accept/route.ts  POST: accept a request
 src/client/api.ts      fetch wrappers (ApiError) + localStorage credentials, keyed by hall code.
 src/client/useRoom.ts  polling hook: { view, error, clockOffset, send, busy }.
 src/client/docSync.ts     connectDoc: Yjs updates + y-protocols awareness over a Realtime broadcast channel.
 src/client/docPersist.ts  persistDoc: load the saved state, save 2 s after the last local edit and on unload.
-src/client/supabaseBrowser.ts browser Supabase client (publishable key), Realtime only.
+src/client/supabaseBrowser.ts browser Supabase client (publishable key): Realtime and Auth.
+src/client/session.ts     useSession: { status, userId, username, accessToken, error, signOut } from Supabase Auth.
 src/app/page.tsx                 landing: create or join.
 src/app/room/[code]/page.tsx     the whole game: lobby, reading, building, freeze, final vote, reveal.
 src/app/error.tsx                last-resort error boundary for the client screens.
+src/app/account/page.tsx         sign in / sign up / your seat.
+src/app/me/page.tsx              the ledger: your recorded games and the achievements grid.
+src/app/friends/page.tsx         friends, requests, and their recent halls.
 src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, languages, theme.
 src/components/lobby/*   the lobby: PasteBox (whole-page paste -> /api/parse), ProblemForm, SettingsForm, Roster.
+src/components/site/*    SiteHeader and SessionNav (signed-out link or @username + sign out).
+src/components/history/* HistoryScreen (game rows) and Marks (the achievements grid).
+src/components/friends/* FriendsScreen: friends list, incoming and outgoing requests, add by username.
 src/components/ui/*    primitives (Button, Field, Frame, Timer, ...).
 src/components/art/*   original SVG artwork as React components (sigils, mask, borders, hero).
-tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api.
-tests/integration/*.test.ts vitest against the real Supabase and Groq in .env.local. No mocks.
-e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the paste box.
+tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api (incl. achievements rules).
+tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends) and Groq in .env.local. No mocks.
+e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the paste box, sign-up + account seat, history, friends.
 ```
 
 **Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.
@@ -99,3 +117,9 @@ Local database for tests: `supabase start` (Docker), then point `.env.local` at 
 ## Art direction
 
 Indie dark fantasy, medieval, hand-inked. Think a candlelit stone hall where a company of scribes argues over a manuscript. Woodcut and linocut linework, heavy black ink, one warm spot color. No parchment or cream page backgrounds. Every image, icon and ornament in this repo is original SVG drawn for this game. Details in `DESIGN.md` once the design pass lands.
+
+## Accounts (optional)
+
+Nobody needs an account to play. Signing up (username + email + password through Supabase Auth) lets the app remember your games. When a hall you joined while signed in reaches the reveal, the server writes one `game_results` row for you (seats, whether you were the Changeling, won, why, cards played and how many were altered). Achievements are computed from those rows, never stored. Friends are `friendships` rows (request, accept); your friends page shows their recent halls. All three tables have RLS with no policies: only the server reads and writes them, after verifying the caller's Supabase access token.
+
+Routes: `POST /api/account` (create profile after sign-up), `GET /api/account` (me), `GET /api/account/history`, `GET /api/account/achievements`, `GET|POST /api/friends`, `POST /api/friends/[username]/accept`, `DELETE /api/friends/[username]`. Pages: `/account`, `/me`, `/friends`.

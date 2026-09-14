@@ -1,11 +1,16 @@
 import type { ReactElement } from "react";
 import { CartographerSigil, ChangelingMask, HeraldSigil, HeroPlate, OracleSigil, WardenSigil, type ArtProps } from "@/components/art";
 import { Entry } from "@/components/lobby/Entry";
+import { SiteHeader } from "@/components/site/SiteHeader";
 import { Divider } from "@/components/ui";
 import { cx } from "@/components/ui/cx";
 import styles from "./page.module.css";
 
-const BEATS: { name: string; Art: (props: ArtProps) => ReactElement; text: string }[] = [
+const BEATS: {
+  name: string;
+  Art: (props: ArtProps) => ReactElement;
+  text: string;
+}[] = [
   {
     name: "The deal",
     Art: CartographerSigil,
@@ -19,7 +24,7 @@ const BEATS: { name: string; Art: (props: ArtProps) => ReactElement; text: strin
   {
     name: "The building",
     Art: WardenSigil,
-    text: "Forty minutes in a shared editor of your choosing. The Warden holds the constraints and declares bounds. Every card played goes on the record.",
+    text: "Forty minutes in the hall's shared editor. The Warden holds the constraints and declares bounds. Every card played goes on the record.",
   },
   {
     name: "The verdict",
@@ -35,48 +40,51 @@ const BEATS: { name: string; Art: (props: ArtProps) => ReactElement; text: strin
 
 export default function Home(): ReactElement {
   return (
-    <main className={styles.page}>
-      <section className={styles.hero} aria-labelledby="wordmark">
-        <div className={styles.plate}>
-          <HeroPlate size={960} />
-        </div>
-        <h1 id="wordmark" className={styles.wordmark}>
-          Leetposter
-        </h1>
-        <p className={styles.lede}>Four to eight programmers, one hard problem, forty minutes, and one of you is lying.</p>
-      </section>
+    <>
+      <SiteHeader />
+      <main className={styles.page}>
+        <section className={styles.hero} aria-labelledby="wordmark">
+          <div className={styles.plate}>
+            <HeroPlate size={960} />
+          </div>
+          <h1 id="wordmark" className={styles.wordmark}>
+            Leetposter
+          </h1>
+          <p className={styles.lede}>Four to eight programmers, one hard problem, forty minutes, and one of you is lying.</p>
+        </section>
 
-      <section aria-label="Enter a hall">
-        <Entry />
-      </section>
+        <section aria-label="Enter a hall">
+          <Entry />
+        </section>
 
-      <Divider>How a round works</Divider>
+        <Divider>How a round works</Divider>
 
-      <ol className={styles.beats}>
-        {BEATS.map(({ name, Art, text }, i) => (
-          <li key={name} className={styles.beat}>
-            <Art size={64} decorative />
-            <div>
-              <h2 className={styles.beatName}>
-                <span className={cx(styles.beatIndex, "tabular")}>{i + 1}</span> {name}
-              </h2>
-              <p className="muted">{text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+        <ol className={styles.beats}>
+          {BEATS.map(({ name, Art, text }, i) => (
+            <li key={name} className={styles.beat}>
+              <Art size={64} decorative />
+              <div>
+                <h2 className={styles.beatName}>
+                  <span className={cx(styles.beatIndex, "tabular")}>{i + 1}</span> {name}
+                </h2>
+                <p className="muted">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
 
-      <section className={styles.truth} aria-labelledby="truth">
-        <h2 id="truth">The truth rule</h2>
-        <p>
-          Cards are the record, and at the reveal every card is laid next to the truth. The crew fill every card truthfully. Voice is free for
-          everyone: speculate, hedge, be wrong. That is the honest players&apos; cover.
-        </p>
-        <p>
-          The Changeling holds a seat like anyone else, sees every panel, and may lie on any card and in any sentence. The one thing never faked is
-          the verdict.
-        </p>
-      </section>
-    </main>
+        <section className={styles.truth} aria-labelledby="truth">
+          <h2 id="truth">The truth rule</h2>
+          <p>
+            Cards are the record, and at the reveal every card is laid next to the truth. The crew fill every card truthfully. Voice is free for everyone:
+            speculate, hedge, be wrong. That is the honest players&apos; cover.
+          </p>
+          <p>
+            The Changeling holds a seat like anyone else, sees every panel, and may lie on any card and in any sentence. The one thing never faked is the
+            verdict.
+          </p>
+        </section>
+      </main>
+    </>
   );
 }

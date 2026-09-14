@@ -14,6 +14,7 @@ export function Roster({ view }: { view: PlayerView }): ReactElement {
         {view.players.map((p) => (
           <li key={p.id} className="roster-row" data-ejected={p.ejected}>
             <span className="roster-name">{p.name}</span>
+            {p.username === null ? null : <span className="roster-note">as @{p.username}</span>}
             {p.id === view.me.id ? <span className="roster-note">you</span> : null}
             {p.isHost ? <span className="roster-note">host</span> : null}
             {p.seats.map((seat) => (

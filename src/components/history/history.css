@@ -1,0 +1,119 @@
+/* The ledger: a player's halls and achievements. Tokens from globals.css. */
+.history-page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-16);
+}
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.history-title {
+  font-size: var(--text-2xl);
+}
+.games {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.game {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-top: var(--rule) solid var(--line);
+}
+.game:last-child {
+  border-bottom: var(--rule) solid var(--line);
+}
+.game-when,
+.game-seats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.game-when {
+  font-variant-numeric: tabular-nums;
+}
+.game-role {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-caps: small-caps;
+}
+.game-true {
+  color: var(--success-ink);
+}
+.game-lie {
+  color: var(--danger-ink);
+}
+.game-cards {
+  font-size: var(--text-sm);
+}
+@media (min-width: 56rem) {
+  .game {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    grid-template-areas:
+      "when seats"
+      "when outcome"
+      "when cards";
+  }
+  .game-when {
+    grid-area: when;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+  .game-seats {
+    grid-area: seats;
+  }
+  .game-outcome {
+    grid-area: outcome;
+  }
+  .game-cards {
+    grid-area: cards;
+  }
+}
+.marks {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-6) var(--space-4);
+}
+.mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+.mark-name {
+  font-size: var(--text-lg);
+}
+.mark-text {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.mark-earned,
+.mark-progress {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-variant-caps: small-caps;
+  font-variant-numeric: tabular-nums;
+}
+.mark-earned {
+  color: var(--accent);
+}
+/* not yet: the plate goes to ink at half strength and loses its amber */
+.mark-unearned .plate {
+  color: var(--muted);
+  opacity: 0.45;
+  --art-spot: var(--muted);
+}
+.mark-unearned .mark-name {
+  color: var(--muted);
+}

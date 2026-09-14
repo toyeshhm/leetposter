@@ -69,6 +69,7 @@ export function personalize(state: RoomState, playerId: string, now: number): Pl
       ejected: p.ejected,
       freezeUsed: p.freezeUsed,
       isHost: state.hostId === p.id,
+      username: p.username,
       isImposter: seesAll || p.id === playerId ? p.isImposter : null,
     })),
     settings,

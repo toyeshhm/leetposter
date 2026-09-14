@@ -3,7 +3,7 @@ import { SEAT_TITLES } from "@/components/art";
 import { cx } from "@/components/ui/cx";
 import type { Card, CardEntry, Problem, Seat } from "@/game/types";
 import { CardBody } from "./CardsLog";
-import { norm } from "./copy";
+import { hintAsWritten, norm, tagIsTrue } from "./copy";
 
 interface SeatTruthProps {
   seat: Seat;
@@ -79,14 +79,13 @@ function Mark({ ok, yes, no }: { ok: boolean; yes: string; no: string }): ReactE
 function CardVerdict({ card, problem }: { card: Card; problem: Problem }): ReactElement {
   switch (card.kind) {
     case "tags": {
-      const truth = problem.tags.map(norm);
       const missed = problem.tags.filter((t) => !card.tags.some((d) => norm(d) === norm(t)));
       return (
         <>
           <p className="reveal-tags">
             <span>Declared</span>
             {card.tags.map((tag, i) => {
-              const ok = truth.includes(norm(tag));
+              const ok = tagIsTrue(problem, tag);
               return (
                 <span key={`${String(i)}-${tag}`} className={cx("reveal-tag", ok ? "reveal-true" : "reveal-lie")}>
                   {tag}
@@ -101,7 +100,7 @@ function CardVerdict({ card, problem }: { card: Card; problem: Problem }): React
     }
     case "hint": {
       const truth = problem.hints[card.index];
-      const ok = truth !== undefined && norm(truth) === norm(card.text);
+      const ok = hintAsWritten(problem, card);
       return (
         <>
           <p>

@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type SyntheticEvent, type ReactElement } from "react";
 import { assertStorage, createRoom, errorMessage, joinRoom, saveCredentials } from "@/client/api";
+import { useSession } from "@/client/session";
 import { Button, Field, Frame, Notice } from "@/components/ui";
 import { errorProp } from "./util";
 import "./lobby.css";
@@ -10,9 +11,21 @@ import "./lobby.css";
 const CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ]{5}$/;
 const NAME_MAX = 24;
 
-function HallForm({ mode }: { mode: "create" | "join" }): ReactElement {
+interface HallFormProps {
+  mode: "create" | "join";
+  /** The signed-in username, prefilled as the name; null for guests. */
+  username: string | null;
+  /** Sent with the request so the seat is attached to the account. */
+  accessToken: string | null;
+  /** True until the browser knows whether it is signed in: a seat taken before that would be a guest's. */
+  sessionLoading: boolean;
+}
+
+function HallForm({ mode, username, accessToken, sessionLoading }: HallFormProps): ReactElement {
   const router = useRouter();
-  const [name, setName] = useState("");
+  // Null until the player types: the signed-in username shows until then, no effect needed.
+  const [typed, setTyped] = useState<string | null>(null);
+  const name = typed ?? username ?? "";
   const [code, setCode] = useState("");
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -30,7 +43,8 @@ function HallForm({ mode }: { mode: "create" | "join" }): ReactElement {
     try {
       // Probe storage before the seat exists on the server, or a blocked browser leaves a ghost at the table.
       assertStorage();
-      const creds = mode === "create" ? await createRoom(trimmed) : await joinRoom(code, trimmed);
+      const token = accessToken ?? undefined;
+      const creds = mode === "create" ? await createRoom(trimmed, token) : await joinRoom(code, trimmed, token);
       saveCredentials(creds);
       router.push(`/room/${creds.code}`);
     } catch (e: unknown) {
@@ -54,7 +68,7 @@ function HallForm({ mode }: { mode: "create" | "join" }): ReactElement {
           maxLength={NAME_MAX}
           value={name}
           onChange={(e) => {
-            setName(e.target.value);
+            setTyped(e.target.value);
           }}
           disabled={busy}
           {...errorProp(nameError)}
@@ -70,14 +84,19 @@ function HallForm({ mode }: { mode: "create" | "join" }): ReactElement {
             maxLength={5}
             value={code}
             onChange={(e) => {
-              setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 5));
+              setCode(
+                e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z]/g, "")
+                  .slice(0, 5),
+              );
             }}
             disabled={busy}
             {...errorProp(codeError)}
           />
         ) : null}
         <div className="entry-actions">
-          <Button type="submit" variant={mode === "create" ? "primary" : "secondary"} loading={busy}>
+          <Button type="submit" variant={mode === "create" ? "primary" : "secondary"} loading={busy} disabled={sessionLoading}>
             {mode === "create" ? "Open the hall" : "Take a seat"}
           </Button>
         </div>
@@ -89,10 +108,11 @@ function HallForm({ mode }: { mode: "create" | "join" }): ReactElement {
 
 /** The two ways in: open a new hall, or join one by code. */
 export function Entry(): ReactElement {
+  const session = useSession();
   return (
     <div className="entry">
-      <HallForm mode="create" />
-      <HallForm mode="join" />
+      <HallForm mode="create" username={session.username} accessToken={session.accessToken} sessionLoading={session.status === "loading"} />
+      <HallForm mode="join" username={session.username} accessToken={session.accessToken} sessionLoading={session.status === "loading"} />
     </div>
   );
 }

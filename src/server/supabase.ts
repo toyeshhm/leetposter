@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { RoomState } from "@/game/types";
 
-/** Minimal schema for the one table we own: rooms(code, state jsonb, version, doc). */
+/** Minimal schema for the tables we own (supabase/migrations). */
 export interface Database {
   public: {
     Tables: {
@@ -10,6 +10,52 @@ export interface Database {
         Insert: { code: string; state: RoomState; version: number };
         Update: { state?: RoomState; version?: number; updated_at?: string; doc?: string };
         Relationships: [];
+      };
+      profiles: {
+        Row: { id: string; username: string; created_at: string };
+        Insert: { id: string; username: string };
+        Update: { username?: string };
+        Relationships: [];
+      };
+      game_results: {
+        Row: {
+          id: string;
+          user_id: string;
+          code: string;
+          played_at: string;
+          seats: string[];
+          was_imposter: boolean;
+          won: boolean;
+          reason: string;
+          cards_played: number;
+          cards_altered: number;
+          ejected: boolean;
+          players: number;
+        };
+        Insert: {
+          user_id: string;
+          code: string;
+          played_at?: string;
+          seats: string[];
+          was_imposter: boolean;
+          won: boolean;
+          reason: string;
+          cards_played: number;
+          cards_altered: number;
+          ejected: boolean;
+          players: number;
+        };
+        Update: Record<string, never>;
+        Relationships: [{ foreignKeyName: "game_results_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }];
+      };
+      friendships: {
+        Row: { requester: string; addressee: string; status: "pending" | "accepted"; created_at: string };
+        Insert: { requester: string; addressee: string; status: "pending" | "accepted" };
+        Update: { status?: "pending" | "accepted" };
+        Relationships: [
+          { foreignKeyName: "friendships_requester_fkey"; columns: ["requester"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "friendships_addressee_fkey"; columns: ["addressee"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
       };
     };
     Views: Record<string, never>;

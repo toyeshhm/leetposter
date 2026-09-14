@@ -53,7 +53,8 @@ export const action: z.ZodType<Action> = z.discriminatedUnion("type", [
   z.object({ type: z.literal("tick") }),
 ]);
 
-export const nameBody = z.object({ name: playerName });
+/** `name` may be left out by a signed-in player: the route falls back to the username. */
+export const nameBody = z.object({ name: playerName.exactOptional() });
 export const actBody = z.object({ token, action });
 
 const seat = z.enum(SEATS);
@@ -74,6 +75,8 @@ export const roomState: z.ZodType<RoomState> = z.object({
       id: z.string(),
       name: z.string(),
       token: z.string(),
+      userId: z.string().nullable(),
+      username: z.string().nullable(),
       seats: z.array(seat),
       isImposter: z.boolean(),
       ejected: z.boolean(),

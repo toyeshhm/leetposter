@@ -33,6 +33,8 @@ export function player(i: number): Player {
     id: `p${String(i)}`,
     name: `P${String(i)}`,
     token: `t${String(i)}`,
+    userId: null,
+    username: null,
     seats: [],
     isImposter: false,
     ejected: false,

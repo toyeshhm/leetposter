@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Action, PlayerView } from "@/game/types";
+import type { Achievement, GameResultRow } from "@/server/achievements";
+import type { FriendsPage } from "@/server/friends";
 
 export interface Credentials {
   code: string;
@@ -28,7 +30,8 @@ export function errorMessage(e: unknown): string {
 
 const failureBody = z.object({ code: z.string(), message: z.string() });
 
-async function call<T>(path: string, init: RequestInit, token?: string): Promise<T> {
+/** One authed JSON call; every route wrapper below and the account pages go through it. */
+export async function call<T>(path: string, init: RequestInit, token?: string): Promise<T> {
   const headers: Record<string, string> = { "content-type": "application/json" };
   if (token !== undefined) headers.authorization = `Bearer ${token}`;
   let res: Response;
@@ -45,12 +48,23 @@ async function call<T>(path: string, init: RequestInit, token?: string): Promise
   throw new ApiError("http", `The hall did not answer properly (${String(res.status)} ${res.statusText}).`);
 }
 
-export function createRoom(name: string): Promise<Credentials> {
-  return call<Credentials>("/api/rooms", { method: "POST", body: JSON.stringify({ name }) });
+/** `accessToken` is the signed-in account's Supabase token: the seat is then attached to the account. */
+export function createRoom(name: string, accessToken?: string): Promise<Credentials> {
+  return call<Credentials>("/api/rooms", { method: "POST", body: JSON.stringify({ name }) }, accessToken);
 }
 
-export function joinRoom(code: string, name: string): Promise<Credentials> {
-  return call<Credentials>(`/api/rooms/${encodeURIComponent(code)}/join`, { method: "POST", body: JSON.stringify({ name }) });
+export function joinRoom(code: string, name: string, accessToken?: string): Promise<Credentials> {
+  return call<Credentials>(`/api/rooms/${encodeURIComponent(code)}/join`, { method: "POST", body: JSON.stringify({ name }) }, accessToken);
+}
+
+/** The signed-in account behind an access token. */
+export function fetchAccount(accessToken: string): Promise<{ id: string; username: string; email?: string }> {
+  return call<{ id: string; username: string; email?: string }>("/api/account", { method: "GET" }, accessToken);
+}
+
+/** Claim a username for a freshly signed-up account. */
+export function createAccount(username: string, accessToken: string): Promise<{ id: string; username: string }> {
+  return call<{ id: string; username: string }>("/api/account", { method: "POST", body: JSON.stringify({ username }) }, accessToken);
 }
 
 /** The token travels in the Authorization header, never in the URL (logs, history, Referer). */
@@ -73,6 +87,29 @@ export function loadDoc(creds: Credentials): Promise<{ doc: string | null }> {
 /** Save the full editor state. `keepalive` lets the request outlive a closing tab (64 KiB cap in browsers). */
 export function saveDoc(creds: Credentials, doc: string, keepalive: boolean): Promise<{ ok: true }> {
   return call<{ ok: true }>(`/api/rooms/${encodeURIComponent(creds.code)}/doc`, { method: "POST", body: JSON.stringify({ doc }), keepalive }, creds.token);
+}
+
+/** The signed-in player's recorded games, newest first. `token` is the Supabase access token. */
+export function fetchHistory(token: string): Promise<{ games: GameResultRow[] }> {
+  return call<{ games: GameResultRow[] }>("/api/account/history", { method: "GET" }, token);
+}
+
+export function fetchAchievements(token: string): Promise<{ achievements: Achievement[] }> {
+  return call<{ achievements: Achievement[] }>("/api/account/achievements", { method: "GET" }, token);
+}
+
+/* Friends. Every call answers with the whole page again, so the screen just replaces its state. */
+export function fetchFriends(token: string): Promise<FriendsPage> {
+  return call<FriendsPage>("/api/friends", { method: "GET" }, token);
+}
+export function requestFriend(token: string, username: string): Promise<FriendsPage> {
+  return call<FriendsPage>("/api/friends", { method: "POST", body: JSON.stringify({ username }) }, token);
+}
+export function acceptFriend(token: string, username: string): Promise<FriendsPage> {
+  return call<FriendsPage>(`/api/friends/${encodeURIComponent(username)}/accept`, { method: "POST" }, token);
+}
+export function removeFriend(token: string, username: string): Promise<FriendsPage> {
+  return call<FriendsPage>(`/api/friends/${encodeURIComponent(username)}`, { method: "DELETE" }, token);
 }
 
 /* Credentials live in localStorage, one entry per hall, so a second hall never evicts the first. */

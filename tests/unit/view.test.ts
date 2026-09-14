@@ -19,6 +19,8 @@ function player(id: string, seats: Player["seats"], extra: Partial<Player> = {})
     id,
     name: id.toUpperCase(),
     token: `token-${id}`,
+    userId: null,
+    username: null,
     seats,
     isImposter: false,
     ejected: false,
@@ -85,6 +87,15 @@ describe("personalize", () => {
     for (const p of state.players) expect(json).not.toContain(p.token);
     expect(json).not.toContain('"isImposter":true');
     expect(json).not.toContain("token");
+  });
+
+  it("shows an account player's username to everyone but never the user id", () => {
+    const state = makeState({ players: [player("a", ["tagger"], { userId: "11111111-2222-3333-4444-555555555555", username: "ada_l" }), player("b", ["oracle"])] });
+    const view = personalize(state, "b", T0);
+    expect(view.players.map((p) => p.username)).toEqual(["ada_l", null]);
+    const json = JSON.stringify(view);
+    expect(json).not.toContain("11111111-2222-3333-4444-555555555555");
+    expect(json).not.toContain("userId");
   });
 
   it("shows crew only their own imposter flag and panel", () => {

@@ -12,6 +12,7 @@ export function Roster({ players, meId }: { players: PublicPlayer[]; meId: strin
         {players.map((p) => (
           <li key={p.id}>
             <span className="lobby-name">{p.name}</span>
+            {p.username === null ? null : <span className="muted">as @{p.username}</span>}
             {p.isHost ? <span className="muted">host</span> : null}
             {p.id === meId ? <span className="muted">you</span> : null}
           </li>

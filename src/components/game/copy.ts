@@ -1,4 +1,4 @@
-import type { Outcome, Phase, ReportCategory, Seat } from "@/game/types";
+import type { Card, Outcome, Phase, Problem, ReportCategory, Seat } from "@/game/types";
 
 /** Phase names in the game's voice. */
 export const PHASE_NAMES: Record<Phase, string> = {
@@ -60,4 +60,28 @@ export function clockTime(at: number): string {
 /** Whitespace- and case-insensitive text for comparing a card against the truth. */
 export function norm(text: string): string {
   return text.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Whether a declared tag is one of the true tags. */
+export function tagIsTrue(problem: Problem, tag: string): boolean {
+  return problem.tags.some((t) => norm(t) === norm(tag));
+}
+
+/** Whether a hint card reads as the true hint at its index. */
+export function hintAsWritten(problem: Problem, card: { index: number; text: string }): boolean {
+  const truth = problem.hints[card.index];
+  return truth !== undefined && norm(truth) === norm(card.text);
+}
+
+/** A card whose content differs from the truth. Bounds are free text and reports are the judge's word, so neither is ever altered. */
+export function cardAltered(problem: Problem, card: Card): boolean {
+  switch (card.kind) {
+    case "tags":
+      return card.tags.some((t) => !tagIsTrue(problem, t));
+    case "hint":
+      return !hintAsWritten(problem, card);
+    case "bound":
+    case "report":
+      return false;
+  }
 }

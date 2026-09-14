@@ -1,0 +1,61 @@
+/* Site shell: the wordmark and the account corner. Layout only; tokens from globals.css. */
+.site-head {
+  width: min(100% - 2 * var(--space-6), 72rem);
+  margin: 0 auto;
+  padding: var(--space-4) 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.site-wordmark {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-decoration: none;
+}
+.site-nav {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+}
+.site-user {
+  color: var(--accent);
+}
+.site-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: var(--rule);
+  text-underline-offset: 0.18em;
+}
+.site-link:hover {
+  color: var(--accent);
+}
+
+/* /account */
+.account {
+  width: min(100% - 2 * var(--space-6), 40rem);
+  margin: 0 auto;
+  padding: var(--space-8) 0 var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.account-switch {
+  display: flex;
+  gap: var(--space-4);
+}
+.account-links {
+  display: flex;
+  gap: var(--space-4);
+}

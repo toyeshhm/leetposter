@@ -2,12 +2,16 @@
 import Link from "next/link";
 import { useState, type ReactElement } from "react";
 import { assertStorage, errorMessage, joinRoom } from "@/client/api";
+import { useSession } from "@/client/session";
 import { Button, Field, Frame, Notice } from "@/components/ui";
 import { storeCredentials } from "./credentialsStore";
 
 /** Shown at /room/[code] when this browser holds no seat in the hall (yet, or any more: `reason` says why). */
 export function JoinForm({ code, reason }: { code: string; reason: string | null }): ReactElement {
-  const [name, setName] = useState("");
+  const session = useSession();
+  // Null until the player types: the signed-in username shows until then, no effect needed.
+  const [typed, setTyped] = useState<string | null>(null);
+  const name = typed ?? session.username ?? "";
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -16,7 +20,7 @@ export function JoinForm({ code, reason }: { code: string; reason: string | null
     setError(null);
     try {
       assertStorage();
-      storeCredentials(await joinRoom(code, name.trim()));
+      storeCredentials(await joinRoom(code, name.trim(), session.accessToken ?? undefined));
     } catch (failure: unknown) {
       setError(errorMessage(failure));
     } finally {
@@ -39,8 +43,17 @@ export function JoinForm({ code, reason }: { code: string; reason: string | null
             void join();
           }}
         >
-          <Field label="Your name" value={name} maxLength={24} autoComplete="nickname" autoFocus onChange={(e) => { setName(e.target.value); }} />
-          <Button type="submit" variant="primary" loading={busy} disabled={name.trim() === ""}>
+          <Field
+            label="Your name"
+            value={name}
+            maxLength={24}
+            autoComplete="nickname"
+            autoFocus
+            onChange={(e) => {
+              setTyped(e.target.value);
+            }}
+          />
+          <Button type="submit" variant="primary" loading={busy} disabled={name.trim() === "" || session.status === "loading"}>
             Join the hall
           </Button>
           {notice === null ? null : <Notice kind="error">{notice}</Notice>}
