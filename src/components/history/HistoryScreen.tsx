@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactElement } from "react";
-import { errorMessage, fetchAchievements, fetchHistory } from "@/client/api";
+import { call, errorMessage, fetchAchievements, fetchHistory } from "@/client/api";
 import { useSession } from "@/client/session";
 import { ChangelingMask } from "@/components/art";
 import { outcomeWords } from "@/components/game/copy";
@@ -10,10 +10,14 @@ import { Badge, Divider, Frame, Notice } from "@/components/ui";
 import { cx } from "@/components/ui/cx";
 import { SEATS, type Outcome, type Seat } from "@/game/types";
 import type { Achievement, GameResultRow } from "@/server/achievements";
+import type { LeaderboardPage } from "@/server/ratings";
 import { MARKS } from "./Marks";
 import "./history.css";
 
-type Loaded = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; games: GameResultRow[]; achievements: Achievement[] };
+type Loaded =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; games: GameResultRow[]; achievements: Achievement[]; ratings: LeaderboardPage["ratings"] };
 
 /** The signed-in player's record of games and achievements. */
 export function HistoryScreen(): ReactElement {
@@ -24,9 +28,9 @@ export function HistoryScreen(): ReactElement {
   useEffect(() => {
     if (token === null) return;
     let live = true;
-    Promise.all([fetchHistory(token), fetchAchievements(token)])
-      .then(([h, a]) => {
-        if (live) setLoaded({ status: "ready", games: h.games, achievements: a.achievements });
+    Promise.all([fetchHistory(token), fetchAchievements(token), call<LeaderboardPage>("/api/leaderboard?board=overall", { method: "GET" }, token)])
+      .then(([h, a, l]) => {
+        if (live) setLoaded({ status: "ready", games: h.games, achievements: a.achievements, ratings: l.ratings });
       })
       .catch((error: unknown) => {
         if (live) setLoaded({ status: "error", message: errorMessage(error) });
@@ -49,6 +53,17 @@ export function HistoryScreen(): ReactElement {
   return (
     <div className="history">
       <h1 className="history-title">{session.username ?? "Your"} record</h1>
+      {loaded.ratings === null ? null : (
+        <p className="history-elo" aria-label="Your ratings">
+          <span>Overall {String(loaded.ratings.overall.rating)}</span>
+          <span>Crew {String(loaded.ratings.crew.rating)}</span>
+          <span>Changeling {String(loaded.ratings.changeling.rating)}</span>
+          <span className="muted">
+            {String(loaded.ratings.overall.games)} {loaded.ratings.overall.games === 1 ? "hall" : "halls"} rated
+          </span>
+          <Link href="/leaderboard">Leaderboard</Link>
+        </p>
+      )}
       <Divider>The halls</Divider>
       <Games games={loaded.games} />
       <Divider>Achievements</Divider>

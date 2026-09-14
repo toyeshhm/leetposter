@@ -1,3 +1,4 @@
+import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import type { RoomState } from "@/game/types";
 
@@ -48,6 +49,12 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [{ foreignKeyName: "game_results_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }];
       };
+      ratings: {
+        Row: { user_id: string; ladder: "overall" | "crew" | "changeling"; rating: number; games: number; wins: number; updated_at: string };
+        Insert: { user_id: string; ladder: "overall" | "crew" | "changeling"; rating: number; games: number; wins: number; updated_at?: string };
+        Update: { rating?: number; games?: number; wins?: number; updated_at?: string };
+        Relationships: [{ foreignKeyName: "ratings_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }];
+      };
       friendships: {
         Row: { requester: string; addressee: string; status: "pending" | "accepted"; created_at: string };
         Insert: { requester: string; addressee: string; status: "pending" | "accepted" };
@@ -75,3 +82,9 @@ if (url === undefined || url === "" || key === undefined || key === "") {
 }
 
 export const supabase = createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+
+/** A PostgREST answer as data, or an Error naming the query. */
+export function unwrap<T>(what: string, res: PostgrestSingleResponse<T>): T {
+  if (res.error !== null) throw new Error(`${what}: ${res.error.message}`);
+  return res.data;
+}

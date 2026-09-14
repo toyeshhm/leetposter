@@ -19,9 +19,15 @@ const alegreya = Alegreya_Sans({
   display: "swap",
 });
 
+const DESCRIPTION = "Four to eight programmers, one hard problem, forty minutes, and one of you is lying.";
+
 export const metadata: Metadata = {
-  title: "Leetposter",
-  description: "A social-deduction party game for programmers. One hard problem, forty minutes, one liar at the table.",
+  metadataBase: new URL("https://leetposter.vercel.app"),
+  title: { default: "Leetposter", template: "%s | Leetposter" },
+  description: DESCRIPTION,
+  // No title or description here: each page's own title and description flow into its og: and twitter: tags.
+  openGraph: { type: "website", siteName: "Leetposter", url: "/" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">): ReactElement {

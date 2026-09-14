@@ -1,15 +1,18 @@
 import { cardAltered } from "@/components/game/copy";
 import type { Player, RoomState } from "@/game/types";
 import type { GameResultRow } from "@/server/achievements";
+import { rateHall, type Ladder, type Ratings } from "@/server/elo";
 import { log } from "@/server/log";
+import { loadRatings, UNRATED, upsertRatings, type LadderRow } from "@/server/ratings";
 import { supabase } from "@/server/supabase";
 
 const HISTORY_LIMIT = 50;
 
 /**
- * Record one game_results row per player who holds an account, once a hall has reached the reveal.
- * Idempotent (unique user_id + code). Guests are skipped. Never throws into the game path: log and return.
- * This is the one place a database failure is swallowed; the game itself was already saved.
+ * Record one game_results row per player who holds an account, once a hall has reached the reveal,
+ * then rate the hall. Idempotent (unique user_id + code): a hall whose rows already exist is not rated
+ * again. Guests are skipped. A refused results row is logged and swallowed (the game itself was already
+ * saved); a ratings failure throws to actHandler, which logs it.
  */
 export async function recordResults(state: RoomState): Promise<void> {
   const { problem, outcome } = state;
@@ -33,8 +36,25 @@ export async function recordResults(state: RoomState): Promise<void> {
     ];
   });
   if (rows.length === 0) return;
-  const { error } = await supabase.from("game_results").upsert(rows, { onConflict: "user_id,code" });
-  if (error !== null) log.error("results.failed", { code: state.code, error: error.message });
+  const { data, error } = await supabase.from("game_results").upsert(rows, { onConflict: "user_id,code", ignoreDuplicates: true }).select("user_id");
+  if (error !== null) {
+    log.error("results.failed", { code: state.code, error: error.message });
+    return;
+  }
+  if (data.length === 0) return;
+  const current = await loadRatings(rows.map((r) => r.user_id));
+  const ladders = (userId: string | null): Record<Ladder, LadderRow> => (userId === null ? UNRATED : (current.get(userId) ?? UNRATED));
+  const elo = (r: Record<Ladder, LadderRow>): Ratings => ({ overall: r.overall.rating, crew: r.crew.rating, changeling: r.changeling.rating });
+  const changes = rateHall(
+    state.players.map((p) => ({ userId: p.userId, isImposter: p.isImposter, rating: elo(ladders(p.userId)) })),
+    outcome.winner,
+  );
+  await upsertRatings(
+    changes.map((c) => {
+      const before = ladders(c.userId)[c.ladder];
+      return { user_id: c.userId, ladder: c.ladder, rating: c.rating, games: before.games + 1, wins: before.wins + (c.won ? 1 : 0) };
+    }),
+  );
 }
 
 /** Seats a player held at any point: their seats now, plus any seat they played a card from (the Herald seat moves on ejection). */

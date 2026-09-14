@@ -1,7 +1,6 @@
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { z } from "zod";
 import { GameError } from "@/game/errors";
-import { supabase } from "@/server/supabase";
+import { supabase, unwrap } from "@/server/supabase";
 
 /** Usernames as the profiles table constrains them. Routes parse the body and the path segment with this. */
 export const username = z.string().regex(/^[a-z0-9_]{3,20}$/, "3 to 20 lowercase letters, digits or underscores");
@@ -26,12 +25,6 @@ export interface FriendHall {
 /** What every /api/friends route answers with: the lists plus the friends' recent halls. */
 export interface FriendsPage extends FriendsList {
   recent: FriendHall[];
-}
-
-/** A PostgREST answer as data, or an Error naming the query. */
-function unwrap<T>(what: string, res: PostgrestSingleResponse<T>): T {
-  if (res.error !== null) throw new Error(`${what}: ${res.error.message}`);
-  return res.data;
 }
 
 async function profileId(name: string): Promise<string> {

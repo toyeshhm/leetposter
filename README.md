@@ -61,6 +61,8 @@ src/server/profiles.ts     profiles table: username rules, findProfile, createPr
 src/server/results.ts      recordResults at the reveal (one game_results row per account holder), loadResults for the ledger.
 src/server/achievements.ts pure achievement rules over game_results rows; never stored.
 src/server/friends.ts      friendships table: list, request, accept, remove; FriendsPage with friends' recent halls.
+src/server/elo.ts          pure Elo (K = 32, guests at 1200): rateHall(players, winner) -> new ratings per account and ladder.
+src/server/ratings.ts      ratings table: loadRatings, upsertRatings, leaderboard(board, me) for the five boards.
 src/server/parse/leetcode.ts  deterministic line parser for a pasted LeetCode page -> Problem + warnings.
 src/server/parse/groq.ts      Groq fallback that fills whatever the parser left empty.
 src/server/parse/schema.ts    zod schemas for the request body and the model's answer.
@@ -79,6 +81,7 @@ src/app/api/account/achievements/route.ts GET -> {achievements}: earned + progre
 src/app/api/friends/route.ts              GET -> FriendsPage; POST {username} sends a request
 src/app/api/friends/[username]/route.ts   DELETE: remove a friend or decline a request
 src/app/api/friends/[username]/accept/route.ts  POST: accept a request
+src/app/api/leaderboard/route.ts          GET ?board=overall|crew|changeling|solves|changeling-wins (optional bearer) -> {board, rows, me, ratings}
 src/client/api.ts      fetch wrappers (ApiError) + localStorage credentials, keyed by hall code.
 src/client/useRoom.ts  polling hook: { view, error, clockOffset, send, busy }.
 src/client/docSync.ts     connectDoc: Yjs updates + y-protocols awareness over a Realtime broadcast channel.
@@ -91,16 +94,18 @@ src/app/error.tsx                last-resort error boundary for the client scree
 src/app/account/page.tsx         sign in / sign up / your seat.
 src/app/me/page.tsx              the ledger: your recorded games and the achievements grid.
 src/app/friends/page.tsx         friends, requests, and their recent halls.
+src/app/leaderboard/page.tsx     the five boards, for anyone to read.
 src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, languages, theme.
 src/components/lobby/*   the lobby: PasteBox (whole page or title/number -> /api/parse), ProblemForm, SettingsForm, Roster.
 src/components/site/*    SiteHeader and SessionNav (signed-out link or @username + sign out).
 src/components/history/* HistoryScreen (game rows) and Marks (the achievements grid).
 src/components/friends/* FriendsScreen: friends list, incoming and outgoing requests, add by username.
+src/components/leaderboard/* LeaderboardScreen: the board switcher and the ranked table.
 src/components/ui/*    primitives (Button, Field, Frame, Timer, ...).
 src/components/art/*   original SVG artwork as React components (sigils, mask, borders, hero).
 tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api (incl. achievements rules).
-tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends), Groq in .env.local, and leetcode.com (lookup). No mocks.
-e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the problem box (lookup and paste), sign-up + account seat, history, friends.
+tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends, ratings), Groq in .env.local, and leetcode.com (lookup). No mocks.
+e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the problem box (lookup and paste), sign-up + account seat, history, friends, leaderboard.
 ```
 
 **Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404/502; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.
@@ -128,6 +133,8 @@ Indie dark fantasy, medieval, hand-inked. Think a candlelit stone hall where a c
 
 ## Accounts (optional)
 
-Nobody needs an account to play. Signing up (email + password through Supabase Auth, then a username on the "Choose your name" step) lets the app remember your games. A signed-in account with no name yet (a sign-up that never reached that step) is sent back to it by the header, plays as a guest until then, and gets 404 `not-found` from `GET /api/account` where every other account route answers 401. When a hall you joined while signed in reaches the reveal, the server writes one `game_results` row for you (seats, whether you were the Changeling, won, why, cards played and how many were altered). Achievements are computed from those rows, never stored. Friends are `friendships` rows (request, accept); your friends page shows their recent halls. All three tables have RLS with no policies: only the server reads and writes them, after verifying the caller's Supabase access token.
+Nobody needs an account to play. Signing up (email + password through Supabase Auth, then a username on the "Choose your name" step) lets the app remember your games. A signed-in account with no name yet (a sign-up that never reached that step) is sent back to it by the header, plays as a guest until then, and gets 404 `not-found` from `GET /api/account` where every other account route answers 401. When a hall you joined while signed in reaches the reveal, the server writes one `game_results` row for you (seats, whether you were the Changeling, won, why, cards played and how many were altered). Achievements are computed from those rows, never stored. Friends are `friendships` rows (request, accept); your friends page shows their recent halls. All four tables have RLS with no policies: only the server reads and writes them, after verifying the caller's Supabase access token.
 
-Routes: `POST /api/account` (choose the name after sign-up), `GET /api/account` (me; 404 `not-found` until the name is chosen), `GET /api/account/history`, `GET /api/account/achievements`, `GET|POST /api/friends`, `POST /api/friends/[username]/accept`, `DELETE /api/friends/[username]`. Pages: `/account`, `/me`, `/friends`.
+**Ladders.** The same reveal rates the hall: one match, the Changeling against the crew as a body, Elo with K = 32. Everyone starts at 1200 and a guest always weighs 1200. Each crew member rates against the Changeling's overall rating; the Changeling rates against the mean of the crew's overall ratings. Three `ratings` rows per account, one per ladder: overall (every hall), crew (halls as crew), changeling (halls in the mask), each with its games and wins. A hall is rated once: if its `game_results` rows already exist the ratings stand. `/leaderboard` shows five boards: the three ladders, plus two counts folded from `game_results`, solves (crew wins on an accepted submission) and changeling wins. Ranks are competition ranks (1, 2, 2, 4); the top fifty are listed and a signed-in player sees their own line wherever they stand. `/me` opens with the three ratings.
+
+Routes: `POST /api/account` (choose the name after sign-up), `GET /api/account` (me; 404 `not-found` until the name is chosen), `GET /api/account/history`, `GET /api/account/achievements`, `GET|POST /api/friends`, `POST /api/friends/[username]/accept`, `DELETE /api/friends/[username]`, `GET /api/leaderboard?board=<board>` (bearer optional; `me` and `ratings` are null for a guest). Pages: `/account`, `/me`, `/friends`, `/leaderboard`.
