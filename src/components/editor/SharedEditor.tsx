@@ -12,6 +12,7 @@ import { persistDoc } from "@/client/docPersist";
 import { connectDoc } from "@/client/docSync";
 import { Notice } from "@/components/ui";
 import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_NAMES, languageExtension, parseLanguage, type Language } from "./languages";
+import { RunPanel } from "./RunPanel";
 import { editorTheme } from "./theme";
 import "./editor.css";
 
@@ -21,6 +22,8 @@ export interface SharedEditorProps {
   readOnly: boolean;
   /** Shown above the editor while `readOnly`. */
   reason: string | null;
+  /** The Run panel under the file; off at the reveal. */
+  showRun: boolean;
   /** Called once the saved state is in. Pass a stable function: it is an effect dependency. */
   onReady?: () => void;
 }
@@ -52,10 +55,11 @@ function cursorColor(name: string): { color: string; colorLight: string } {
  * One CodeMirror over one Y.Text ("code") per hall, with the language in a Y.Map ("meta") so the
  * picker syncs too. Realtime carries edits between open tabs; the server keeps the last saved state.
  */
-export function SharedEditor({ creds, playerName, readOnly, reason, onReady }: SharedEditorProps): ReactElement {
+export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onReady }: SharedEditorProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const metaRef = useRef<Y.Map<string> | null>(null);
+  const textRef = useRef<Y.Text | null>(null);
   const lock = useRef(new Compartment());
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
   const [ready, setReady] = useState(false);
@@ -69,6 +73,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, onReady }: S
     const text = doc.getText("code");
     const meta = doc.getMap<string>("meta");
     metaRef.current = meta;
+    textRef.current = text;
     const awareness = new Awareness(doc);
     awareness.setLocalStateField("user", { name: playerName, ...cursorColor(playerName) });
     const languages = new Compartment();
@@ -123,6 +128,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, onReady }: S
       doc.destroy();
       viewRef.current = null;
       metaRef.current = null;
+      textRef.current = null;
     };
   }, [creds, playerName, onReady]);
 
@@ -156,6 +162,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, onReady }: S
       {reason === null ? null : <p className="editor-reason">{reason}</p>}
       {fault === null ? null : <Notice kind="error">{fault}</Notice>}
       <div ref={host} className="editor-body" data-locked={readOnly} aria-busy={!ready} />
+      {showRun ? <RunPanel language={language} getCode={() => textRef.current?.toJSON() ?? ""} /> : null}
     </section>
   );
 }

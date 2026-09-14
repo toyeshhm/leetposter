@@ -43,6 +43,10 @@ The host does not fill the form by hand. One box, "Problem", takes either a whol
 
 The honest caveat: the lookup uses LeetCode's undocumented, unauthenticated GraphQL endpoint, which is LeetCode's to change. It may stop working, or Cloudflare may block the server's network. A short text then answers 502 ("LeetCode did not answer. Paste the page instead."), and a pasted page still works through the parser. Either way every field stays editable before "Set the problem".
 
+## Running code
+
+Under the shared file sits a Run panel. It runs the file as it stands on the machine of whoever pressed Run, with the Input box as stdin, and shows stdout, stderr and the time taken. Python runs in the browser through Pyodide (`src/client/pyRunner.ts`), fetched from the jsDelivr CDN on the first Run, about 10 MB once per page, then kept in a Web Worker for the next runs. JavaScript runs in a second small worker with `readline()`, `require("fs").readFileSync` and `console.log` stubbed. A run is cut off after 10 s and its worker thrown away. Nothing is synced: every player runs on their own machine and sees their own output. C++, Java, Go and Rust are not runnable; they need a judge, which the hall does not have. The panel is there while the editor is read-only (a frozen hall can still test code) and gone at the reveal.
+
 ## Architecture
 
 Next.js 16 (App Router, TypeScript strict) on Vercel. Supabase Postgres holds one row per room: `rooms(code, state jsonb, version, doc text)`; `doc` is the shared editor's last saved Yjs state. All game logic is a pure reducer over `RoomState`. Route handlers load the row, apply the action, save with optimistic concurrency on `version`. Clients poll their personalized view every 1.5 s (`ponytail:` upgrade to Realtime if it ever matters). The shared editor is a Yjs document: edits and carets travel peer to peer over one Supabase Realtime broadcast channel per hall, and the full state is saved to the row 2 s after the last local edit so a reload or a late joiner starts from it.
@@ -86,6 +90,7 @@ src/client/api.ts      fetch wrappers (ApiError) + localStorage credentials, key
 src/client/useRoom.ts  polling hook: { view, error, clockOffset, send, busy }.
 src/client/docSync.ts     connectDoc: Yjs updates + y-protocols awareness over a Realtime broadcast channel.
 src/client/docPersist.ts  persistDoc: load the saved state, save 2 s after the last local edit and on unload.
+src/client/pyRunner.ts    runCode: Python (Pyodide from the CDN) or JavaScript in a Blob-URL worker, 10 s cap, typed messages.
 src/client/supabaseBrowser.ts browser Supabase client (publishable key): Realtime and Auth.
 src/client/session.ts     useSession: { status, userId, username, accessToken, error, signOut } from Supabase Auth.
 src/app/page.tsx                 landing: create or join.
@@ -95,7 +100,7 @@ src/app/account/page.tsx         sign in / sign up / your seat.
 src/app/me/page.tsx              the ledger: your recorded games and the achievements grid.
 src/app/friends/page.tsx         friends, requests, and their recent halls.
 src/app/leaderboard/page.tsx     the five boards, for anyone to read.
-src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, languages, theme.
+src/components/editor/*  SharedEditor (CodeMirror + yCollab), the client-only Editor wrapper, RunPanel, languages, theme.
 src/components/lobby/*   the lobby: PasteBox (whole page or title/number -> /api/parse), ProblemForm, SettingsForm, Roster.
 src/components/site/*    SiteHeader and SessionNav (signed-out link or @username + sign out).
 src/components/history/* HistoryScreen (game rows) and Marks (the achievements grid).
@@ -105,7 +110,7 @@ src/components/ui/*    primitives (Button, Field, Frame, Timer, ...).
 src/components/art/*   original SVG artwork as React components (sigils, mask, borders, hero).
 tests/unit/*.test.ts        vitest, 100% statements+branches on src/game, src/server and src/app/api (incl. achievements rules).
 tests/integration/*.test.ts vitest against the real Supabase (rooms, doc, auth, history, friends, ratings), Groq in .env.local, and leetcode.com (lookup). No mocks.
-e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the problem box (lookup and paste), sign-up + account seat, history, friends, leaderboard.
+e2e/*.spec.ts               Playwright: the 4-player game, the shared editor across two tabs, the Run panel (real Pyodide from the CDN), the problem box (lookup and paste), sign-up + account seat, history, friends, leaderboard.
 ```
 
 **Errors.** Route handlers map `GameError` to `{code, message}` with 400/401/404/502; anything else is 500 and logged through `src/server/log.ts` (one structured logger, `console.error` only there). No silently swallowed exceptions.

@@ -23,5 +23,5 @@ export function Editor({ view }: { view: PlayerView }): ReactElement | null {
   const creds = useCredentials(view.code);
   if (creds === undefined || creds === null) return null;
   const reason = lockReason(view);
-  return <SharedEditor creds={creds} playerName={view.players.find((p) => p.id === view.me.id)?.name ?? "someone"} readOnly={reason !== null} reason={reason} />;
+  return <SharedEditor creds={creds} playerName={view.players.find((p) => p.id === view.me.id)?.name ?? "someone"} readOnly={reason !== null} reason={reason} showRun={view.phase !== "reveal"} />;
 }

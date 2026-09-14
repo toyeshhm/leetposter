@@ -28,6 +28,7 @@
   /* type: fixed rem scale, product register */
   --font-display: var(--font-fell), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-ui: var(--font-alegreya), "Gill Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;

@@ -39,3 +39,47 @@
 .editor-body[aria-busy="true"] {
   opacity: 0.6;
 }
+
+/* the run panel: one row under the file until opened */
+.run > summary {
+  cursor: pointer;
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule) solid var(--line);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.run-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+.run-stdin,
+.run-out {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+textarea.run-stdin {
+  min-height: 4rem;
+}
+.run-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+.run-note {
+  font-size: var(--text-sm);
+}
+.run-out {
+  max-height: 40vh;
+  padding: var(--space-3);
+  border: var(--rule) solid var(--line);
+  background-color: var(--surface);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+}
+.run-err {
+  color: var(--danger-ink);
+}
