@@ -1,0 +1,30 @@
+Rating	ID	Title	Title ZH	Title Slug	Contest Slug	Problem Index
+1913.6704728453	1373	Maximum Sum BST in Binary Tree	二叉搜索子树的最大键值和	maximum-sum-bst-in-binary-tree	biweekly-contest-21	Q4
+1913.4834168162	3356	Zero Array Transformation II	零数组变换 II	zero-array-transformation-ii	weekly-contest-424	Q3
+1912.8455659711	1671	Minimum Number of Removals to Make Mountain Array	得到山形数组的最少删除次数	minimum-number-of-removals-to-make-mountain-array	biweekly-contest-40	Q4
+1912.8440554296	1898	Maximum Number of Removable Characters	可移除字符的最大数目	maximum-number-of-removable-characters	weekly-contest-245	Q2
+1912.3257370029	4002	Count Valid Sequences	统计有效序列数目	count-valid-sequences	weekly-contest-512	Q3
+1912.1926699881	2680	Maximum OR	最大或值	maximum-or	biweekly-contest-104	Q3
+1912.0829958001	1147	Longest Chunked Palindrome Decomposition	段式回文	longest-chunked-palindrome-decomposition	weekly-contest-148	Q4
+1911.8282317986	2296	Design a Text Editor	设计一个文本编辑器	design-a-text-editor	weekly-contest-296	Q4
+1911.7063530593	2049	Count Nodes With the Highest Score	统计最高分的节点数目	count-nodes-with-the-highest-score	weekly-contest-264	Q3
+1911.1959516695	873	Length of Longest Fibonacci Subsequence	最长的斐波那契子序列的长度	length-of-longest-fibonacci-subsequence	weekly-contest-94	Q4
+1909.5535861652	2585	Number of Ways to Earn Points	获得分数的方法数	number-of-ways-to-earn-points	weekly-contest-335	Q4
+1909.4931160071	3298	Count Substrings That Can Be Rearranged to Contain a String II	统计重新排列后包含另一个字符串的子字符串数目 II	count-substrings-that-can-be-rearranged-to-contain-a-string-ii	weekly-contest-416	Q4
+1909.4189035523	991	Broken Calculator	坏了的计算器	broken-calculator	weekly-contest-123	Q3
+1908.9411092109	3067	Count Pairs of Connectable Servers in a Weighted Tree Network	在带权树网络中统计可连接服务器对数目	count-pairs-of-connectable-servers-in-a-weighted-tree-network	biweekly-contest-125	Q3
+1908.8920524591	3728	Stable Subarrays With Equal Boundary and Interior Sum	边界与内部和相等的稳定子数组	stable-subarrays-with-equal-boundary-and-interior-sum	weekly-contest-473	Q3
+1908.4326375714	4007	Widest Possible Fence	栅栏的最宽宽度	widest-possible-fence	biweekly-contest-188	Q2
+1908.3866125757	1124	Longest Well-Performing Interval	表现良好的最长时间段	longest-well-performing-interval	weekly-contest-145	Q3
+1904.6714229335	3081	Replace Question Marks in String to Minimize Its Value	替换字符串中的问号使分数最小	replace-question-marks-in-string-to-minimize-its-value	biweekly-contest-126	Q3
+1904.5020747926	3122	Minimum Number of Operations to Satisfy Conditions	使矩阵满足条件的最少操作次数	minimum-number-of-operations-to-satisfy-conditions	weekly-contest-394	Q3
+1904.2279434479	2608	Shortest Cycle in a Graph	图中的最短环	shortest-cycle-in-a-graph	biweekly-contest-101	Q4
+1903.1973989877	2602	Minimum Operations to Make All Array Elements Equal	使数组元素全部相等的最少操作次数	minimum-operations-to-make-all-array-elements-equal	weekly-contest-338	Q3
+1900.8434122725	1665	Minimum Initial Energy to Finish Tasks	完成所有任务的最少初始能量	minimum-initial-energy-to-finish-tasks	weekly-contest-216	Q4
+1899.6213866649	823	Binary Trees With Factors	带因子的二叉树	binary-trees-with-factors	weekly-contest-81	Q4
+1898.8339532179	2901	Longest Unequal Adjacent Groups Subsequence II	最长相邻不相等子序列 II	longest-unequal-adjacent-groups-subsequence-ii	biweekly-contest-115	Q3
+1897.7992384398	3250	Find the Count of Monotonic Pairs I	单调数组对的数目 I	find-the-count-of-monotonic-pairs-i	weekly-contest-410	Q3
+1897.5516652727	1878	Get Biggest Three Rhombus Sums in a Grid	矩阵中最大的三个菱形和	get-biggest-three-rhombus-sums-in-a-grid	biweekly-contest-53	Q3
+1897.3309169423	780	Reaching Points	到达终点	reaching-points	weekly-contest-71	Q3
+1897.1863301576	2360	Longest Cycle in a Graph	图中的最长环	longest-cycle-in-a-graph	weekly-contest-304	Q4
+1896.7975214446	878	Nth Magical Number	第 N 个神奇数字	nth-magical-number	weekly-contest-95	Q3

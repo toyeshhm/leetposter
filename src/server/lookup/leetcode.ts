@@ -4,6 +4,8 @@ import type { Problem } from "@/game/types";
 import { log } from "@/server/log";
 import { assess } from "@/server/parse/leetcode";
 import type { ParsedProblem } from "@/server/parse/types";
+import { acRateFrom, estimateRating } from "@/server/rating/estimate";
+import { lookupZerotrac } from "@/server/rating/zerotrac";
 import { htmlToText, splitContent } from "./html";
 
 /** What a lookup turns into: the parser's shape plus the problem's LeetCode number. */
@@ -16,7 +18,7 @@ const ENDPOINT = "https://leetcode.com/graphql";
 const TIMEOUT_MS = 15_000;
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 const SEARCH = `query s($f:QuestionListFilterInput){questionList(categorySlug:"", limit:5, skip:0, filters:$f){data{questionFrontendId title titleSlug}}}`;
-const DETAIL = `query q($slug:String!){question(titleSlug:$slug){questionFrontendId title titleSlug content hints topicTags{name}}}`;
+const DETAIL = `query q($slug:String!){question(titleSlug:$slug){questionFrontendId title titleSlug difficulty stats content hints topicTags{name}}}`;
 const PROBLEM_URL = /leetcode\.com\/problems\/([a-z0-9-]+)/i;
 
 const hit = z.object({ questionFrontendId: z.string(), title: z.string(), titleSlug: z.string() });
@@ -24,7 +26,9 @@ const searchReply = z.object({ data: z.object({ questionList: z.object({ data: z
 const detailReply = z.object({
   data: z.object({
     // `question` is null for an unknown slug; `content` is null when the problem sits behind the paywall.
-    question: hit.extend({ content: z.string().nullable(), hints: z.array(z.string()), topicTags: z.array(z.object({ name: z.string() })) }).nullable(),
+    question: hit
+      .extend({ difficulty: z.string(), stats: z.string(), content: z.string().nullable(), hints: z.array(z.string()), topicTags: z.array(z.object({ name: z.string() })) })
+      .nullable(),
   }),
 });
 
@@ -68,13 +72,19 @@ export async function lookupLeetCode(query: string, endpoint = ENDPOINT): Promis
   if (question === null) throw new GameError("not-found", `LeetCode has no problem called ${q}.`);
   if (question.content === null) throw new GameError("not-found", `LeetCode keeps ${question.title} behind its paywall. Paste the page instead.`);
   const { statement, constraints } = splitContent(htmlToText(question.content));
+  const tags = question.topicTags.map((t) => t.name);
+  // zerotrac rated the contest problems themselves; everything older or off-contest falls to the heuristic.
+  const rating =
+    (await lookupZerotrac(question.titleSlug)) ??
+    estimateRating({ difficulty: question.difficulty, acRate: acRateFrom(question.stats), tags, constraints });
   const problem: Problem = {
     title: question.title,
     url: `https://leetcode.com/problems/${question.titleSlug}/`,
     statement,
-    tags: question.topicTags.map((t) => t.name),
+    tags,
     hints: question.hints.map((h) => htmlToText(h)),
     constraints,
+    rating,
   };
   return { problem, ...assess(problem), source: "leetcode", number: question.questionFrontendId };
 }

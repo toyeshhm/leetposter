@@ -30,6 +30,11 @@ export function slugUrl(title: string): string {
   return `https://leetcode.com/problems/${slug}/`;
 }
 
+/** The difficulty chip from a pasted page, or null when the paste has none (the rating heuristic asks). */
+export function difficultyIn(text: string): string | null {
+  return text.split(/\r?\n/).map((l) => l.trim()).find((l) => DIFFICULTY.has(l)) ?? null;
+}
+
 /** A title, a number or a link rather than a whole page: short, and none of a page's section headings. */
 export const isQuery = (text: string): boolean => text.length < 200 && !/Example|Constraints/.test(text);
 
