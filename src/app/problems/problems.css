@@ -1,0 +1,52 @@
+/* /problems: the table comes from leaderboard.css; the statement styles are the game's, restated
+   here so a bank page does not have to pull in the whole game stylesheet. */
+.problems-difficulty {
+  font-size: var(--text-sm);
+}
+.problems-tags {
+  font-size: var(--text-sm);
+}
+.problems-meta {
+  margin-top: calc(-1 * var(--space-4));
+  font-size: var(--text-sm);
+}
+.problems-lore {
+  font-style: italic;
+}
+.problem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 72ch;
+}
+.problem-statement {
+  max-width: 72ch;
+  white-space: pre-wrap;
+}
+.problem-examples {
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  background-color: var(--surface);
+  background-image: var(--tx-grain);
+}
+.problems-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.problems-hints > summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+}
+.problems-hint-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-6);
+}
+@media (max-width: 40rem) {
+  .problems-tags {
+    display: none;
+  }
+}

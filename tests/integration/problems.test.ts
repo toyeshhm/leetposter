@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs";
 import { afterAll, describe, expect, it } from "vitest";
 import { GET as detailGet } from "@/app/api/problems/[id]/route";
 import { GET as testsGet } from "@/app/api/problems/[id]/tests/route";
@@ -61,11 +62,11 @@ function bankProblemFor(id: string, rating: number): Problem {
   return { title: "A hall problem", url: "https://example.test/x", statement: "Solve it.", tags: [], hints: [], constraints: "", bankId: id, rating };
 }
 /** A hall sitting at a bank problem. Under four players the solo host holds every seat, the Herald's included. */
-async function hallOn(bankId: string, rating: number, players = 1, signedIn = false): Promise<Credentials[]> {
+async function hallOn(bankId: string, rating: number, players = 1, signedInJoiners = 0): Promise<Credentials[]> {
   const host = await createRoomHandler("Ada", null);
   codes.push(host.code);
   const crew = [host];
-  for (let i = 1; i < players; i++) crew.push(await joinHandler(host.code, `P${String(i)}`, signedIn ? await newUser() : null));
+  for (let i = 1; i < players; i++) crew.push(await joinHandler(host.code, `P${String(i)}`, i <= signedInJoiners ? await newUser() : null));
   await actHandler(host.code, host.token, { type: "setProblem", problem: bankProblemFor(bankId, rating) });
   await actHandler(host.code, host.token, { type: "setSettings", settings: { readMs: 0 } });
   await actHandler(host.code, host.token, { type: "start" });
@@ -82,9 +83,13 @@ async function stateOf(code: string): Promise<RoomState> {
 }
 
 describe("the bank index", () => {
-  it("lists every problem, hardest last, and spoils nothing", () => {
+  it("lists every problem file on disk, hardest last, and spoils nothing", () => {
     const all = problemIndex({});
-    expect(all).toHaveLength(BANK.length);
+    // Against the directory, never against BANK: bank/index.ts is generated, and comparing the
+    // index to itself is how 64 authored problems sat unreachable without a test noticing.
+    const onDisk = readdirSync("src/problems/bank").filter((f) => f.endsWith(".json"));
+    expect(all).toHaveLength(onDisk.length);
+    expect(new Set(all.map((p) => `${p.id}.json`))).toEqual(new Set(onDisk));
     expect(all.map((p) => p.rating)).toEqual([...all.map((p) => p.rating)].sort((a, b) => a - b));
     // A summary is the card in the list: never the statement, the samples, the tests or the solutions.
     expect(Object.keys(all[0] ?? {}).sort()).toEqual(["cluster", "difficulty", "id", "rating", "tags", "title"]);
@@ -108,7 +113,7 @@ describe("the bank index", () => {
 
   it("answers the route, and refuses a band outside the ladder or a tag the bank does not use", async () => {
     const { problems } = await json<{ problems: ProblemSummary[] }>(await indexGet(new Request("http://x/api/problems")));
-    expect(problems).toHaveLength(BANK.length);
+    expect(problems).toHaveLength(readdirSync("src/problems/bank").filter((f) => f.endsWith(".json")).length);
     const banded = await json<{ problems: ProblemSummary[] }>(await indexGet(new Request(`http://x/api/problems?min=800&max=${String(easiest.rating + 1)}`)));
     expect(banded.problems.every((p) => p.rating <= easiest.rating)).toBe(true);
     await fail(await indexGet(new Request("http://x/api/problems?min=10")), 400, "invalid");
@@ -206,12 +211,15 @@ describe("a problem's own rating", () => {
   });
 
   it("rates against the crew's own ratings, and a hall the problem holds counts as an attempt but not a solve", async () => {
-    const [host] = await hallOn(hardest.id, hardest.rating, 5, true);
+    // Six seats: a guest host, four signed in, a guest tail. Only one of them is the Changeling, so
+    // whichever seat it falls on the crew still holds both a guest and an account — the two sides of
+    // the lookup are covered every run, not four runs in five.
+    const [host] = await hallOn(hardest.id, hardest.rating, 6, 4);
     if (host === undefined) throw new Error("host");
     const played = await stateOf(host.code);
     const crew = played.players.filter((p) => !p.isImposter);
-    // Four of the five seats are signed in, so the crew is looked up in ratings, not assumed.
     expect(crew.some((p) => p.userId !== null)).toBe(true);
+    expect(crew.some((p) => p.userId === null)).toBe(true);
 
     const held: RoomState = { ...played, outcome: { winner: "imposter", reason: "final-vote" } };
     await problemAfterHall(held);
