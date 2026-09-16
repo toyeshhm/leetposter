@@ -5,6 +5,8 @@ import { Button, Field, TextareaField } from "@/components/ui";
 import { REPORT_CATEGORIES } from "@/game/types";
 import type { ReportCategory, Seat } from "@/game/types";
 import type { BoardProps } from "./BuildingPhase";
+import type { JudgeVerdict } from "./Judge";
+import { JudgeAction } from "./JudgePanel";
 import { CATEGORY_WORDS, norm } from "./copy";
 import { freezeReason } from "./select";
 
@@ -145,18 +147,28 @@ function SubmitPanel({ view, act, busy }: Omit<BoardProps, "clockOffset">): Reac
   const [confirming, setConfirming] = useState(false);
   const [category, setCategory] = useState<ReportCategory>("wrong-answer");
   const [failingCase, setFailingCase] = useState("");
+  const bankId = view.problem?.bankId ?? null;
   if (!view.canSubmit) {
     return <p className="action action-done">{view.submissionsLeft === 0 ? "No submissions left." : "The judge is closed to you right now."}</p>;
   }
   const reject = async (): Promise<void> => {
     if (await act({ type: "submit", verdict: "rejected", category, failingCase: failingCase.trim() })) setFailingCase("");
   };
+  const judged = (verdict: JudgeVerdict): void => {
+    if (verdict.verdict === "rejected") {
+      setCategory(verdict.category);
+      setFailingCase(verdict.failingCase);
+    }
+  };
   return (
     <div className="action">
       <p className="action-lead">
-        {view.submissionsLeft} of {view.settings.maxSubmissions} submissions left. Record the verdict exactly as the judge gave it.
+        {view.submissionsLeft} of {view.settings.maxSubmissions} submissions left.{" "}
+        {bankId === null ? "Record the verdict exactly as the judge gave it." : "The Judge in the Hall runs the file against every test and records what it finds."}
       </p>
-      {confirming ? (
+      {bankId !== null ? (
+        <JudgeAction bankId={bankId} code={view.code} act={act} busy={busy} onJudged={judged} />
+      ) : confirming ? (
         <div className="action-confirm">
           <p>The judge accepted it? This ends the round.</p>
           <div className="action-row">
