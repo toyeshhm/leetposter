@@ -16,7 +16,9 @@ const io = z.object({ input: z.string().min(1), output: z.string().min(1) });
 /**
  * One bank problem. Statements are plain text with line breaks; examples are inside the statement
  * as "Example k:" blocks (Input / Output / Explanation), exactly like a LeetCode paste, so the game
- * renders them the same way. Tests are stdin/stdout pairs; the reference solution must pass them all.
+ * renders them the same way. The hidden tests live apart, in src/problems/tests (what the Judge in
+ * the Hall runs) and src/problems/stress (the full max-constraint set, local, for the checker): a
+ * static import of the stress set is 800 MB and neither a bundle nor a test worker survives it.
  */
 export interface BankIo {
   input: string;
@@ -42,11 +44,16 @@ export interface BankProblem {
   rating: number;
   timeLimitMs: number;
   samples: BankIo[];
-  tests: BankIo[];
   solution: BankCode;
   brute: BankCode;
   cluster: string;
 }
+
+/** A problem's hidden tests, held in its own file and read only when the Judge asks for them. */
+export const bankTests: z.ZodType<{ id: string; tests: BankIo[] }> = z.object({
+  id: z.string().regex(/^[a-z0-9-]{3,60}$/),
+  tests: z.array(io).min(8),
+});
 
 export const bankProblem: z.ZodType<BankProblem> = z.object({
   id: z.string().regex(/^[a-z0-9-]{3,60}$/),
@@ -66,7 +73,6 @@ export const bankProblem: z.ZodType<BankProblem> = z.object({
   /** Time limit for the in-browser judge (Pyodide is 3 to 5x slower than CPython). */
   timeLimitMs: z.number().int().min(1000).max(20000),
   samples: z.array(io).min(1).max(3),
-  tests: z.array(io).min(8).max(25),
   solution: z.object({ language: z.literal("python"), code: z.string().min(20) }),
   /** An independent, deliberately simple solution used only to cross-check the tests. */
   brute: z.object({ language: z.literal("python"), code: z.string().min(20) }),

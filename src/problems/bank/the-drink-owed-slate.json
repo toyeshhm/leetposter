@@ -1,0 +1,46 @@
+{
+  "id": "the-drink-owed-slate",
+  "title": "The Slate Behind the Bar",
+  "lore": "Ada keeps the slate behind the bar, one chalk line for every drink owed. She will not wipe it until every scribe at the table is square, and she would rather the Company carried as few drinks as possible getting there.",
+  "statement": "Ada keeps a slate of drinks owed. The slate has n lines; line i reads that scribe u_i owes scribe v_i exactly a_i drinks. Scribes are named, not numbered, and a pair may appear on many lines, in either direction.\n\nOnly the net matters. If Ada owes Brin five drinks and Brin owes Ada two, then Ada owes Brin three and nothing else is outstanding.\n\nThe table settles before the candle dies. A settling is any number of handovers; one handover carries some positive number of drinks from one named scribe to another, and after all of them every scribe named on the slate must be square, that is, owe nothing and be owed nothing. Any pair may hand over drinks, whatever the slate says about who owes whom.\n\nPrint the least total number of drinks that change hands in a settling, and the number of distinct scribes named on the slate who are already square before anything is carried.\n\nExample 1:\nInput:\n4\nada brin 5\nbrin ada 2\ncass dov 7\ndov cass 7\nOutput:\n3 2\nExplanation: Ada owes Brin five and is owed two, so her net is three drinks owed; Brin is owed three. Cass and Dov cancel exactly and are already square, so the count is two. Ada hands Brin three drinks and the slate is clean.\n\nExample 2:\nInput:\n3\nada brin 4\nbrin cass 4\ncass ada 4\nOutput:\n0 3\nExplanation: A cycle of favours going all the way round the table cancels itself. Nothing needs to be carried and all three are square.\n\nExample 3:\nInput:\n2\nada brin 1000000000\nada cass 1000000000\nOutput:\n2000000000 0\nExplanation: Ada owes two billion drinks in total, Brin and Cass are owed a billion each, and no one on the slate is square.",
+  "inputFormat": "The first line contains an integer n, the number of lines on the slate. Each of the next n lines contains two names u_i and v_i and an integer a_i: scribe u_i owes scribe v_i exactly a_i drinks.",
+  "outputFormat": "Print one line with two integers separated by a space: the least total number of drinks that change hands, and the number of distinct scribes named on the slate whose net is already zero.",
+  "constraints": "1 <= n <= 2 * 10^5\nu_i and v_i are strings of 1 to 6 lowercase English letters\nu_i != v_i\n1 <= a_i <= 10^9\nThe total of all a_i can reach 2 * 10^14",
+  "tags": [
+    "hashing",
+    "greedy",
+    "math",
+    "implementation"
+  ],
+  "hints": [
+    "The individual lines do not matter once they are read. Keep one running net per scribe: subtract a_i from u_i and add it to v_i.",
+    "A scribe with a positive net is owed that many drinks and must receive at least that many, and one carried drink can only help one of them, so the total is at least the sum of the positive nets. Handing every creditor exactly what they are owed reaches that sum, so it is the answer.",
+    "The names are the awkward part: look them up in a dictionary rather than scanning a list, and remember the running total passes 2 * 10^9 easily."
+  ],
+  "difficulty": "easy",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "cluster": "the-drink-owed",
+  "samples": [
+    {
+      "input": "4\nada brin 5\nbrin ada 2\ncass dov 7\ndov cass 7\n",
+      "output": "3 2\n"
+    },
+    {
+      "input": "3\nada brin 4\nbrin cass 4\ncass ada 4\n",
+      "output": "0 3\n"
+    },
+    {
+      "input": "2\nada brin 1000000000\nada cass 1000000000\n",
+      "output": "2000000000 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    bal = {}\n    p = 1\n    for _ in range(n):\n        u = data[p]\n        v = data[p + 1]\n        a = int(data[p + 2])\n        p += 3\n        bal[u] = bal.get(u, 0) - a\n        bal[v] = bal.get(v, 0) + a\n    total = 0\n    zeros = 0\n    for b in bal.values():\n        if b > 0:\n            total += b\n        elif b == 0:\n            zeros += 1\n    sys.stdout.write(str(total) + \" \" + str(zeros) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nnames = []\nfor i in range(n):\n    names.append(data[1 + 3 * i])\n    names.append(data[2 + 3 * i])\nuniq = sorted(set(names))\nbal = [0] * len(uniq)\nfor i in range(n):\n    u = bisect_left(uniq, data[1 + 3 * i])\n    v = bisect_left(uniq, data[2 + 3 * i])\n    a = int(data[3 + 3 * i])\n    bal[u] -= a\n    bal[v] += a\ntotal = 0\nzeros = 0\nfor b in bal:\n    if b > 0:\n        total += b\n    elif b == 0:\n        zeros += 1\nprint(total, zeros)\n"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "dov-forgot-the-link-ring",
+  "title": "The Chain That Closed",
+  "lore": "Dov never noted which hall the chain began at, so the Hall hangs it as a ring and argues about the sigils instead. A few of them are still legible.",
+  "statement": "Because nobody knows where the chain began, the n halls are hung as a ring: hall 1 beside hall 2, hall 2 beside hall 3, and so on to hall n, which is beside hall 1.\n\nEvery hall carries a sigil, written as a number between 1 and m. Two halls that are neighbours in the ring must not carry the same sigil. The sigils of k halls are still legible; the rest have worn away.\n\nCount the ways to give every hall a sigil so that the k legible sigils are unchanged and no two neighbours share a sigil. Print the count modulo 998244353.\n\nExample 1:\nInput:\n3 3 0\nOutput:\n6\nExplanation: Three halls in a ring, three sigils, no two neighbours alike. Every hall must differ from both others, so the answer is the six orderings of the three sigils.\n\nExample 2:\nInput:\n4 3 2\n1 1\n3 1\nOutput:\n4\nExplanation: Halls 1 and 3 both carry sigil 1. Hall 2 and hall 4 are each neighbours of both of them and of nothing else, so each takes sigil 2 or sigil 3 freely.\n\nExample 3:\nInput:\n4 2 2\n1 1\n2 1\nOutput:\n0\nExplanation: Halls 1 and 2 are neighbours in the ring and both are legible with sigil 1.",
+  "inputFormat": "The first line contains three integers n, m and k: the number of halls in the ring, the number of sigils, and the number of legible halls. Each of the next k lines contains two integers p and v, meaning hall p is legible and carries sigil v. The halls p are all different.",
+  "outputFormat": "Print one integer: the number of sigil assignments, modulo 998244353.",
+  "constraints": "3 <= n <= 2 * 10^5\n1 <= m <= 10^8\n0 <= k <= n\n1 <= p <= n, and the p are all different\n1 <= v <= m",
+  "tags": [
+    "combinatorics",
+    "math",
+    "dp"
+  ],
+  "hints": [
+    "With no legible hall this is just the proper colourings of a cycle, which is (m - 1)^n + (-1)^n (m - 1).",
+    "With at least one legible hall the ring falls into arcs: each arc runs from one legible hall to the next one clockwise, its two ends are fixed, and the arcs share nothing, so the answer is the product over arcs. A single legible hall gives one arc of n steps that returns to itself.",
+    "For an arc of L steps with both ends fixed, let a_L count the fillings whose two ends carry the same sigil and b_L the fillings whose ends differ. Then a_0 = 1, b_0 = 0, a_(t+1) = b_t and b_(t+1) = (m - 1) a_t + (m - 2) b_t. The arcs have L summing to n, so running the recurrence is linear overall. Since m reaches 10^8, never loop over sigils.",
+    "The recurrence closes: a_L = ((m - 1)^L + (m - 1) (-1)^L) / m and b_L = ((m - 1)^L - (-1)^L) / m, so one modular power per arc is enough. Note m stays below the modulus, so dividing by m is a safe modular inverse."
+  ],
+  "difficulty": "hard",
+  "rating": 1800,
+  "timeLimitMs": 4000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\nMOD = 998244353\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    k = int(data[2])\n    base = (m - 1) % MOD\n    if k == 0:\n        tail = base if n % 2 == 0 else MOD - base\n        print((pow(base, n, MOD) + tail) % MOD)\n        return\n    pts = []\n    idx = 3\n    for _ in range(k):\n        pts.append((int(data[idx]), int(data[idx + 1])))\n        idx += 2\n    pts.sort()\n    inv_m = pow(m % MOD, MOD - 2, MOD)\n    ans = 1\n    for i in range(k):\n        p1, v1 = pts[i]\n        p2, v2 = pts[(i + 1) % k]\n        length = (p2 - p1) % n\n        if length == 0:\n            length = n\n        t = pow(base, length, MOD)\n        s = 1 if length % 2 == 0 else MOD - 1\n        if v1 == v2:\n            cnt = (t + base * s) % MOD * inv_m % MOD\n        else:\n            cnt = (t - s) % MOD * inv_m % MOD\n        ans = ans * cnt % MOD\n        if ans == 0:\n            break\n    print(ans % MOD)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nMOD = 998244353\n\ndef same_ends(length, m):\n    # fillings of an arc of the given length whose two ends carry the same sigil x:\n    # a = ways to land back on x, b = ways to land on anything else\n    a = 1\n    b = 0\n    for _ in range(length):\n        a, b = b % MOD, (a * (m - 1) + b * (m - 2)) % MOD\n    return a\n\ndef other_ends(length, m):\n    # ends carry two fixed different sigils x and y: track landing on x, on y, on neither\n    on_x = 1\n    on_y = 0\n    on_other = 0\n    for _ in range(length):\n        on_x, on_y, on_other = (\n            (on_y + on_other) % MOD,\n            (on_x + on_other) % MOD,\n            ((on_x + on_y) * (m - 2) + on_other * (m - 3)) % MOD,\n        )\n    return on_y\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nk = int(data[2])\npts = []\nidx = 3\nfor _ in range(k):\n    pts.append((int(data[idx]), int(data[idx + 1])))\n    idx += 2\npts.sort()\nif n <= 8 and m <= 5:\n    from itertools import product\n    fixed = dict(pts)\n    total = 0\n    for asg in product(range(1, m + 1), repeat=n):\n        if any(asg[i] == asg[(i + 1) % n] for i in range(n)):\n            continue\n        if all(asg[p - 1] == v for p, v in fixed.items()):\n            total += 1\n    print(total % MOD)\nelif k == 0:\n    print(m % MOD * same_ends(n, m) % MOD)\nelse:\n    ans = 1\n    for i in range(k):\n        p1, v1 = pts[i]\n        p2, v2 = pts[(i + 1) % k]\n        length = (p2 - p1) % n\n        if length == 0:\n            length = n\n        ans = ans * (same_ends(length, m) if v1 == v2 else other_ends(length, m)) % MOD\n    print(ans)\n"
+  },
+  "cluster": "dov-forgot-the-link",
+  "samples": [
+    {
+      "input": "3 3 0\n",
+      "output": "6\n"
+    },
+    {
+      "input": "4 3 2\n1 1\n3 1\n",
+      "output": "4\n"
+    },
+    {
+      "input": "4 2 2\n1 1\n2 1\n",
+      "output": "0\n"
+    }
+  ]
+}

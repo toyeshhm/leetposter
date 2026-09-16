@@ -1,0 +1,46 @@
+{
+  "id": "the-tribunal-conclave",
+  "title": "The Order of the Tribunal",
+  "lore": "The Hall has a rule for the order in which seats leave: nobody is cast out unless most of those still seated hold a card against them. Brin reads the cards in a monotone and asks how many orders are possible.",
+  "statement": "A Hall has n seats numbered 1 to n. Seat i holds a card listing the seats it suspects; a seat never lists itself.\n\nThe Tribunal runs n - 1 rounds. In each round exactly one seat still at the table is cast out, and a seat may be cast out only if strictly more than half of the OTHER seats still at the table list it on their cards. Cards never change, but seats that have already been cast out no longer count.\n\nWhen only one seat remains the Tribunal ends. Two Tribunals are different if the sequence of seats cast out differs. Count the number of different complete Tribunals.\n\nExample 1:\nInput:\n3\n2 2 3\n1 3\n1 2\nOutput:\n2\nExplanation: With three seats a seat needs two of the other two to list it. Seat 2 is listed by seats 1 and 3, seat 3 by seats 1 and 2, seat 1 by nobody. Cast out 2, then only seat 3 is listed by the remaining seat 1, so 3 follows. Cast out 3 first and 2 follows. The two sequences are (2, 3) and (3, 2).\n\nExample 2:\nInput:\n2\n0\n0\nOutput:\n0\nExplanation: Nobody lists anybody, so the first round cannot happen.\n\nExample 3:\nInput:\n4\n3 2 3 4\n3 1 3 4\n3 1 2 4\n3 1 2 3\nOutput:\n24\nExplanation: Everyone lists everyone else, so any seat can leave in any round and all 4 * 3 * 2 orders of the first three departures are possible.",
+  "inputFormat": "The first line contains n. Line i of the next n lines contains k_i followed by k_i distinct seat numbers, the seats listed on the card of seat i.",
+  "outputFormat": "Print one integer: the number of different complete Tribunals. The count fits in 64 bits; print it exactly.",
+  "constraints": "2 <= n <= 18\n0 <= k_i <= n - 1\nThe seats listed on a card are distinct and never include the card's own seat",
+  "tags": [
+    "dp",
+    "bitmasks",
+    "combinatorics"
+  ],
+  "hints": [
+    "Whether a seat can be cast out next depends only on the set of seats still at the table, not on the order in which the others left.",
+    "With n at most 18 there are at most 2^18 possible sets of remaining seats; store each set as a bitmask and count the ways to reach it.",
+    "Precompute for each seat the bitmask of seats that list it; then the number of accusers still seated is the popcount of that mask AND the remaining set.",
+    "Process masks from the full table downwards, and for each mask add its count to every mask obtained by removing a seat that satisfies 2 * accusers > remaining - 1."
+  ],
+  "difficulty": "hard",
+  "rating": 1800,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "3\n2 2 3\n1 3\n1 2\n",
+      "output": "2\n"
+    },
+    {
+      "input": "2\n0\n0\n",
+      "output": "0\n"
+    },
+    {
+      "input": "4\n3 2 3 4\n3 1 3 4\n3 1 2 4\n3 1 2 3\n",
+      "output": "24\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); pos = 1\n    sus = [0] * n  # sus[i] = bitmask of seats that suspect i\n    for i in range(n):\n        k = int(data[pos]); pos += 1\n        for _ in range(k):\n            j = int(data[pos]) - 1; pos += 1\n            sus[j] |= 1 << i\n    full = (1 << n) - 1\n    dp = [0] * (1 << n)\n    dp[full] = 1\n    answer = 0\n    bits = [1 << i for i in range(n)]\n    for mask in range(full, 0, -1):\n        cur = dp[mask]\n        if cur == 0:\n            continue\n        r = mask.bit_count()\n        if r == 1:\n            answer += cur\n            continue\n        threshold = r - 1\n        for i in range(n):\n            b = bits[i]\n            if mask & b and 2 * (mask & sus[i]).bit_count() > threshold:\n                dp[mask ^ b] += cur\n    print(answer)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom functools import lru_cache\nsys.setrecursionlimit(10000)\ndata = sys.stdin.read().split()\nn = int(data[0]); pos = 1\nsuspects = []\nfor i in range(n):\n    k = int(data[pos]); pos += 1\n    suspects.append(set(int(v) for v in data[pos:pos + k])); pos += k\n@lru_cache(maxsize=None)\ndef ways(remaining):\n    if len(remaining) == 1:\n        return 1\n    total = 0\n    for seat in remaining:\n        accusers = sum(1 for other in remaining if other != seat and seat in suspects[other - 1])\n        if 2 * accusers > len(remaining) - 1:\n            total += ways(remaining - frozenset([seat]))\n    return total\nprint(ways(frozenset(range(1, n + 1))))\n"
+  },
+  "cluster": "the-tribunal"
+}

@@ -1,0 +1,46 @@
+{
+  "id": "the-seal-band",
+  "title": "Where the Band Begins",
+  "lore": "The wax was poured in a band around the rim of the cup, so the impression has no beginning until a reader picks one. Cass says this is a prefix sum, and is of course not trusted.",
+  "statement": "A band carries n marks arranged in a ring and numbered 1 to n clockwise; each mark is a press ( or a lift ). A reader picks a start p and reads all n marks clockwise from there: p, p+1, ..., n, 1, ..., p-1.\n\nA reading is sound if the number of lifts never exceeds the number of presses at any point of the reading, and the two are equal at the end. A start p is sound if reading from p is sound.\n\nCount the sound starts and name the smallest of them.\n\nExample 1:\n\nInput:\n4\n))((\nOutput:\n1 3\nExplanation: Starting at mark 3 the reading is ( ( ) ), which is sound. Starting at 1, 2 or 4 the first mark read is a lift, or the reading dips below zero later, so 3 is the only sound start.\n\nExample 2:\n\nInput:\n6\n()()()\nOutput:\n3 1\nExplanation: Starts 1, 3 and 5 each read three presses and lifts in alternation. Starts 2, 4 and 6 begin with a lift.\n\nExample 3:\n\nInput:\n3\n(()\nOutput:\n0 0\nExplanation: The band holds two presses and one lift, so no reading can ever end level.",
+  "inputFormat": "The first line contains one integer n, the number of marks on the band.\nThe second line contains a string of n characters, each one ( or ), the marks in clockwise order starting at mark 1.",
+  "outputFormat": "One line with two integers: the number of sound starts, and the smallest sound start. Print 0 0 if there is no sound start.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery character of the band is ( or )",
+  "tags": [
+    "prefix-sums",
+    "math",
+    "implementation",
+    "strings"
+  ],
+  "hints": [
+    "If the band does not hold as many presses as lifts, no reading ends level and the answer is 0 0. Assume from here that it does.",
+    "Write P_k for the balance of the first k marks, with P_0 = 0. Reading from mark k+1 and wrapping around, the balance after some marks is P_j - P_k for j ahead of k, and P_n - P_k + P_j = P_j - P_k for j behind it, because P_n = 0.",
+    "So the start k+1 is sound exactly when P_k is the smallest value in P_0 ... P_(n-1). Checking each of the n starts by walking the whole band is O(n^2) and n runs to 2 * 10^5, so find the minimum once and count how many positions attain it."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4\n))((\n",
+      "output": "1 3\n"
+    },
+    {
+      "input": "6\n()()()\n",
+      "output": "3 1\n"
+    },
+    {
+      "input": "3\n(()\n",
+      "output": "0 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = data[1].decode()\n    # A start is sound exactly when the prefix balance just before it is the smallest of all.\n    best = 0\n    count = 0\n    first = 1\n    bal = 0\n    for k in range(n):\n        if bal < best:\n            best = bal\n            count = 0\n            first = k + 1\n        if bal == best:\n            count += 1\n        bal += 1 if s[k] == \"(\" else -1\n    if bal != 0:\n        sys.stdout.write(\"0 0\\n\")\n        return\n    sys.stdout.write(\"%d %d\\n\" % (count, first))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\n# Different route: the resetting scan finds one sound start (if the ring is level overall), and\n# from a sound start every other sound start sits exactly where the running balance returns to 0.\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = data[1]\nv = [1 if c == \"(\" else -1 for c in s]\nif sum(v) != 0:\n    print(0, 0)\nelse:\n    start = 0\n    tank = 0\n    for i in range(n):\n        tank += v[i]\n        if tank < 0:\n            start = i + 1\n            tank = 0\n    starts = [start]\n    b = 0\n    for t in range(n - 1):\n        b += v[(start + t) % n]\n        if b == 0:\n            starts.append((start + t + 1) % n)\n    print(len(starts), min(x + 1 for x in starts))\n"
+  },
+  "cluster": "the-seal"
+}

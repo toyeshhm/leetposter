@@ -1,0 +1,47 @@
+{
+  "id": "the-reckoning-lastseat",
+  "title": "The Last One Standing",
+  "lore": "Every seat holds a card against at most one other, and nobody may be cast out while their accuser is still at the table. Ada asks the only question that matters at this hour: in how many ways can each seat be the one left standing.",
+  "statement": "The Hall has n seats, numbered 1 to n. Seat i names its accuser p_i, another seat; p_i = 0 means seat i has no accuser. The accusations contain no cycle, so they form a forest.\n\nThe Reckoning runs n rounds and casts out exactly one seat in each round. There is no skip, so in the end every seat has been cast out. Seat i may be cast out only after seat p_i has been cast out. The seat cast out in round n is the last one standing.\n\nTwo Reckonings are different if the sequence of n seats cast out differs.\n\nFor each seat x, count the Reckonings in which x is the last one standing. Print each count modulo 998244353.\n\nExample 1:\nInput:\n3\n0 1 1\nOutput:\n0\n1\n1\nExplanation: Seat 1 accuses nobody and must go first, since seats 2 and 3 both wait on it. The two Reckonings are (1, 2, 3) and (1, 3, 2), and each leaves a different seat standing last.\n\nExample 2:\nInput:\n3\n0 1 2\nOutput:\n0\n0\n1\nExplanation: Seat 2 waits on seat 1 and seat 3 waits on seat 2, so the only Reckoning is (1, 2, 3).\n\nExample 3:\nInput:\n4\n0 0 1 1\nOutput:\n0\n2\n3\n3\nExplanation: Seats 1 and 2 have no accuser and seats 3 and 4 both wait on seat 1. There are eight Reckonings in all: two of them end with seat 2, three end with seat 3 and three end with seat 4. None can end with seat 1, because seats 3 and 4 would still be waiting on it.",
+  "inputFormat": "The first line contains an integer n, the number of seats. The second line contains n integers p_1, ..., p_n, where p_i is the accuser of seat i, or 0 if seat i has no accuser.",
+  "outputFormat": "Print n lines. Line i contains the number of Reckonings in which seat i is the last one standing, taken modulo 998244353.",
+  "constraints": "1 <= n <= 10^5\n0 <= p_i <= n\np_i != i\nThe accusations contain no cycle, so they form a forest",
+  "tags": [
+    "trees",
+    "combinatorics",
+    "math",
+    "dfs"
+  ],
+  "hints": [
+    "A seat can be last only if nobody accuses it, because an accuser must be cast out before the seat it accuses. Every seat with an accuser pointing at it answers 0.",
+    "The number of complete Reckonings of a forest on n seats is n! divided by the product over all seats v of sz_v, the number of seats in v's subtree (v itself and everything hanging below it).",
+    "The Reckonings ending with x are exactly the complete Reckonings of the forest with x deleted, each with x written at the end. Deleting a leaf lowers the subtree size of every strict ancestor of x by one and changes nothing else.",
+    "So for a leaf x the answer is (n-1)! * inverse(product of all sz_v) * product over strict ancestors a of x of sz_a * inverse(sz_a - 1). Carry that product down from the roots in one pass, precompute the inverses of 1..n, and use an explicit stack, because the forest can be a path of 100000 seats."
+  ],
+  "difficulty": "hard",
+  "rating": 2500,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "3\n0 1 1\n",
+      "output": "0\n1\n1\n"
+    },
+    {
+      "input": "3\n0 1 2\n",
+      "output": "0\n0\n1\n"
+    },
+    {
+      "input": "4\n0 0 1 1\n",
+      "output": "0\n2\n3\n3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 998244353\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    par = [0] * (n + 1)\n    head = [0] * (n + 1)\n    nxt = [0] * (n + 1)\n    roots = []\n    for i in range(1, n + 1):\n        p = int(data[i])\n        par[i] = p\n        if p == 0:\n            roots.append(i)\n        else:\n            nxt[i] = head[p]\n            head[p] = i\n\n    # one pass down from the roots gives an order where every parent comes first\n    order = []\n    stack = roots[:]\n    while stack:\n        v = stack.pop()\n        order.append(v)\n        c = head[v]\n        while c:\n            stack.append(c)\n            c = nxt[c]\n\n    size = [1] * (n + 1)\n    for v in reversed(order):\n        p = par[v]\n        if p:\n            size[p] += size[v]\n\n    inv = [1] * (n + 2)\n    for i in range(2, n + 2):\n        inv[i] = (MOD - (MOD // i) * inv[MOD % i]) % MOD\n\n    prod = 1\n    for v in range(1, n + 1):\n        prod = prod * size[v] % MOD\n    fact = 1\n    for i in range(2, n):\n        fact = fact * i % MOD\n    base = fact * pow(prod, MOD - 2, MOD) % MOD\n\n    weight = [0] * (n + 1)\n    for v in order:\n        p = par[v]\n        weight[v] = 1 if p == 0 else weight[p] * size[p] % MOD * inv[size[p] - 1] % MOD\n\n    out = []\n    for v in range(1, n + 1):\n        out.append(0 if head[v] else base * weight[v] % MOD)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import permutations\nfrom math import factorial\n\nMOD = 998244353\n\ndata = sys.stdin.read().split()\nn = int(data[0])\npar = [0] * (n + 1)\nkids = [[] for _ in range(n + 1)]\nroots = []\nfor i in range(1, n + 1):\n    par[i] = int(data[i])\n    if par[i] == 0:\n        roots.append(i)\n    else:\n        kids[par[i]].append(i)\n\n# an order in which every seat comes after its accuser\ntop = []\nstack = roots[:]\nwhile stack:\n    v = stack.pop()\n    top.append(v)\n    stack.extend(kids[v])\n\nif n <= 8:\n    tally = [0] * (n + 1)\n    for perm in permutations(range(1, n + 1)):\n        when = [0] * (n + 1)\n        for t, v in enumerate(perm):\n            when[v] = t\n        if all(par[v] == 0 or when[par[v]] < when[v] for v in range(1, n + 1)):\n            tally[perm[-1]] += 1\n    print(\"\\n\".join(str(tally[v] % MOD) for v in range(1, n + 1)))\nelif n <= 1200:\n    # drop one seat, rebuild every subtree size from scratch, apply the forest count\n    out = []\n    f = factorial(n - 1) % MOD\n    for x in range(1, n + 1):\n        if kids[x]:\n            out.append(0)\n            continue\n        size = [1] * (n + 1)\n        for v in reversed(top):\n            if v != x and par[v] and par[v] != x:\n                size[par[v]] += size[v]\n        prod = 1\n        for v in range(1, n + 1):\n            if v != x:\n                prod = prod * size[v] % MOD\n        out.append(f * pow(prod, MOD - 2, MOD) % MOD)\n    print(\"\\n\".join(map(str, out)))\nelse:\n    size = [1] * (n + 1)\n    for v in reversed(top):\n        if par[v]:\n            size[par[v]] += size[v]\n    prod = 1\n    for v in range(1, n + 1):\n        prod = prod * size[v] % MOD\n    f = 1\n    for i in range(2, n):\n        f = f * i % MOD\n    base = f * pow(prod, MOD - 2, MOD) % MOD\n    cache = {}\n    weight = [0] * (n + 1)\n    out = [0] * (n + 1)\n    for v in top:\n        p = par[v]\n        if p == 0:\n            weight[v] = 1\n        else:\n            s = size[p]\n            r = cache.get(s)\n            if r is None:\n                r = s * pow(s - 1, MOD - 2, MOD) % MOD\n                cache[s] = r\n            weight[v] = weight[p] * r % MOD\n        if not kids[v]:\n            out[v] = base * weight[v] % MOD\n    print(\"\\n\".join(str(out[v]) for v in range(1, n + 1)))\n"
+  },
+  "cluster": "the-reckoning"
+}

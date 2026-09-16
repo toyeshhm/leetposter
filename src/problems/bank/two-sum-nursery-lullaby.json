@@ -1,0 +1,47 @@
+{
+  "id": "two-sum-nursery-lullaby",
+  "title": "The Closest Lullaby",
+  "lore": "The Company hunted for two cards summing to the Judge's number and found none. Ada asked instead how close the roll could come, and how many pairs came that close.",
+  "statement": "The Company keeps a roll of n cards. Card i shows the integer a_i, and the Judge's number for the night is S.\n\nNo two cards need sum to S exactly. For an unordered pair of distinct cards i and j the miss of that pair is |a_i + a_j - S|.\n\nLet d be the smallest miss over all n * (n - 1) / 2 unordered pairs. Print d and the number of unordered pairs whose miss is exactly d.\n\nExample 1:\nInput:\n5 10\n1 2 3 4 9\nOutput:\n0 1\nExplanation: The pair 1 and 9 sums to exactly 10, so the smallest miss is 0, and it is the only pair that sums to 10.\n\nExample 2:\nInput:\n4 7\n1 1 5 5\nOutput:\n1 4\nExplanation: The sums are 2, 6, 6, 6, 6 and 10. The closest to 7 is 6, which misses by 1, and each of the two cards showing 1 makes such a pair with each of the two cards showing 5, so four pairs miss by 1.\n\nExample 3:\nInput:\n5 0\n-5 -2 1 3 4\nOutput:\n1 3\nExplanation: The pairs (-5, 4) and (-2, 1) both sum to -1 and the pair (-2, 3) sums to 1. All three miss by 1, and no pair sums to 0.\n",
+  "inputFormat": "The first line contains two integers n and S, the number of cards and the Judge's number. The second line contains n integers a_1, ..., a_n, the value on each card.",
+  "outputFormat": "Print two integers on one line: the smallest miss d over all unordered pairs of distinct cards, and the number of unordered pairs whose miss equals d.",
+  "constraints": "2 <= n <= 2 * 10^5\n-10^9 <= a_i <= 10^9\n-2 * 10^9 <= S <= 2 * 10^9",
+  "tags": [
+    "sorting",
+    "two-pointers",
+    "hashing",
+    "binary-search"
+  ],
+  "hints": [
+    "Sort the values first: once the roll is sorted, the pair sums behave predictably as you move either end inward.",
+    "Walk one index from the left and one from the right; when the current sum is below S nothing to the left of the left index can help, and when it is above S nothing to the right of the right index can help, so each index moves at most n times in total.",
+    "The sweep finds d but not the count, because it never visits every pair. Once d is known, the pairs that achieve it are exactly the pairs summing to S - d together with the pairs summing to S + d, and pairs of a given sum can be counted from the value counts alone.",
+    "When counting the pairs of a fixed sum T, walk the distinct values v once and add count[v] * count[T - v] for v < T - v, plus count[v] * (count[v] - 1) / 2 when 2v = T, and remember that d = 0 means S - d and S + d are the same target and must not be counted twice."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "5 10\n1 2 3 4 9\n",
+      "output": "0 1\n"
+    },
+    {
+      "input": "4 7\n1 1 5 5\n",
+      "output": "1 4\n"
+    },
+    {
+      "input": "5 0\n-5 -2 1 3 4\n",
+      "output": "1 3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = int(data[1])\n    a = sorted(int(x) for x in data[2:2 + n])\n    lo = 0\n    hi = n - 1\n    best = abs(a[0] + a[1] - s)\n    while lo < hi:\n        t = a[lo] + a[hi]\n        d = t - s\n        if d < 0:\n            d = -d\n        if d < best:\n            best = d\n        if t == s:\n            break\n        if t < s:\n            lo += 1\n        else:\n            hi -= 1\n    cnt = Counter(a)\n\n    def pairs_with_sum(target: int) -> int:\n        tot = 0\n        for v, c in cnt.items():\n            w = target - v\n            if w < v:\n                continue\n            if w == v:\n                tot += c * (c - 1) // 2\n            else:\n                cw = cnt.get(w)\n                if cw is not None:\n                    tot += c * cw\n        return tot\n\n    total = pairs_with_sum(s - best)\n    if best > 0:\n        total += pairs_with_sum(s + best)\n    sys.stdout.write(\"%d %d\\n\" % (best, total))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left, bisect_right\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = int(data[1])\na = [int(x) for x in data[2:2 + n]]\nif n <= 1500:\n    # exhaustive: every unordered pair\n    best = None\n    cntpairs = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            d = a[i] + a[j] - s\n            if d < 0:\n                d = -d\n            if best is None or d < best:\n                best = d\n                cntpairs = 1\n            elif d == best:\n                cntpairs += 1\n    print(best, cntpairs)\nelse:\n    # same answer by binary search on the sorted roll instead of a sweep\n    b = sorted(a)\n    best = None\n    for i in range(n):\n        need = s - b[i]\n        pos = bisect_left(b, need)\n        for k in range(pos - 2, pos + 3):\n            if 0 <= k < n and k != i:\n                d = b[i] + b[k] - s\n                if d < 0:\n                    d = -d\n                if best is None or d < best:\n                    best = d\n\n    def count(target):\n        tot = 0\n        for i in range(n):\n            w = target - b[i]\n            lo = bisect_left(b, w, i + 1)\n            hi = bisect_right(b, w, i + 1)\n            tot += hi - lo\n        return tot\n\n    total = count(s - best)\n    if best > 0:\n        total += count(s + best)\n    print(best, total)\n"
+  },
+  "cluster": "two-sum-nursery"
+}

@@ -1,0 +1,47 @@
+{
+  "id": "the-company-delegation",
+  "title": "The Delegation",
+  "lore": "The Hall must send a delegation to the Judge, and it has to be neighbours who go, since nobody else can be made to agree on the way. Some seats are worth less than an empty chair.",
+  "statement": "The round table has n seats numbered 0 to n - 1 clockwise, and seat n - 1 and seat 0 are neighbours. The scribe in seat i is worth w_i to the delegation, and a worth may be negative.\n\nA delegation is an arc: a block of consecutive seats around the table. Because the table is round, an arc may run past seat n - 1 and on into seat 0. The delegation must hold at least A and at most B seats, and its worth is the sum of the worths of the seats in it.\n\nPrint the greatest worth a delegation can have.\n\nExample 1:\nInput:\n5 2 3\n3 -2 4 -1 2\nOutput:\n5\nExplanation: Seats 4 and 0 form an arc of two seats worth 2 + 3 = 5. The arcs 0, 1, 2 and 2, 3, 4 are worth 5 as well, and nothing of two or three seats is worth more.\n\nExample 2:\nInput:\n4 1 1\n-5 -1 -7 -3\nOutput:\n-1\nExplanation: The delegation holds exactly one seat and every seat is a loss. Seat 1 loses the least.\n\nExample 3:\nInput:\n6 4 4\n1 2 3 4 5 6\nOutput:\n18\nExplanation: Exactly four seats must go, and seats 2, 3, 4, 5 are worth 3 + 4 + 5 + 6 = 18.",
+  "inputFormat": "The first line contains three integers n, A and B: the number of seats and the smallest and largest size of a delegation. The second line contains n integers w_0, w_1, ..., w_(n-1), the worth of each seat.",
+  "outputFormat": "One integer: the greatest worth of a delegation.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= A <= B <= n\n-10^9 <= w_i <= 10^9",
+  "tags": [
+    "prefix-sums",
+    "queue",
+    "sliding-window",
+    "implementation"
+  ],
+  "hints": [
+    "Trying every start and every length is n * (B - A + 1) work, which for n = 2 * 10^5 and a wide band of sizes is far too slow. One pass over the seats has to serve every allowed length at once.",
+    "Cut the circle open: write the seats out twice in a row. Every arc is then a block of consecutive positions in an array of length 2n that starts at one of the first n positions, and no arc is longer than n.",
+    "With prefix sums P, the arc that ends just before position e and holds L seats is worth P[e] - P[e - L]. For a fixed e you want the smallest P[s] over s in [e - B, e - A], intersected with the starts that are still inside the first copy of the table.",
+    "Both ends of that window of starts only move forward as e grows, so keep the candidate starts in a double-ended queue whose prefix sums increase: push each new start after dropping the ones at the back that are not smaller, and drop from the front the starts that have fallen out of the window. Watch the negative worths: the answer can be negative and must not be seeded with zero."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 5000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); A = int(data[1]); B = int(data[2])\n    lim = n + B\n    pref = [0] * (lim + 1)\n    total = 0\n    for i in range(lim):\n        total += int(data[3 + (i % n)])\n        pref[i + 1] = total\n    best = -(1 << 62)\n    window = deque()\n    last = n - 1\n    for e in range(A, n + B):\n        s = e - A\n        if s <= last:\n            ps = pref[s]\n            while window and pref[window[-1]] >= ps:\n                window.pop()\n            window.append(s)\n        low = e - B\n        while window[0] < low:\n            window.popleft()\n        v = pref[e] - pref[window[0]]\n        if v > best:\n            best = v\n    print(best)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nimport heapq\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); A = int(data[1]); B = int(data[2])\n    a = [int(x) for x in data[3:3 + n]]\n    if n <= 400:\n        best = None\n        for s in range(n):\n            run = 0\n            for length in range(1, B + 1):\n                run += a[(s + length - 1) % n]\n                if length >= A and (best is None or run > best):\n                    best = run\n        print(best)\n        return\n    lim = n + B\n    pref = [0] * (lim + 1)\n    for i in range(lim):\n        pref[i + 1] = pref[i] + a[i % n]\n    heap = []\n    best = None\n    for e in range(A, n + B):\n        s = e - A\n        if s <= n - 1:\n            heapq.heappush(heap, (pref[s], s))\n        low = e - B\n        while heap[0][1] < low:\n            heapq.heappop(heap)\n        v = pref[e] - heap[0][0]\n        if best is None or v > best:\n            best = v\n    print(best)\n\nmain()\n"
+  },
+  "samples": [
+    {
+      "input": "5 2 3\n3 -2 4 -1 2\n",
+      "output": "5\n"
+    },
+    {
+      "input": "4 1 1\n-5 -1 -7 -3\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "6 4 4\n1 2 3 4 5 6\n",
+      "output": "18\n"
+    }
+  ],
+  "cluster": "the-company"
+}

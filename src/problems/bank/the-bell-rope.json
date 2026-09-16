@@ -1,0 +1,46 @@
+{
+  "id": "the-bell-rope",
+  "title": "The Queue at the Rope",
+  "lore": "One bell, one rope, and a queue of heralds who all mean to ring it. The bell is in no hurry.",
+  "statement": "The Hall has one bell and one rope. Herald i reaches the rope at minute t_i and waits there until his ring has been heard.\n\nThe bell needs c minutes of rest between rings: if a ring is heard at minute x, no ring can be heard before minute x + c. Heralds ring in the order they reached the rope, and two heralds who reached it in the same minute ring in order of their numbers, the smaller number first. A herald whose turn comes while the bell is still resting rings at the first minute the bell is ready.\n\nPrint, for each herald, the minute at which his ring is heard.\n\nExample 1:\nInput:\n4 5\n10 12 12 30\nOutput:\n10\n15\n20\n30\nExplanation: Herald 1 reaches the rope at minute 10 and rings at once, so the bell rests until minute 15. Heralds 2 and 3 both arrive at minute 12, so herald 2 rings at 15 and herald 3 at 20. Herald 4 arrives at minute 30, by which time the bell has been ready since minute 25.\n\nExample 2:\nInput:\n3 1\n7 7 7\nOutput:\n7\n8\n9\nExplanation: All three arrive in the same minute and ring in order of their numbers, one minute apart.\n\nExample 3:\nInput:\n2 1000000000\n1000000000 1\nOutput:\n1000000001\n1\nExplanation: Herald 2 reached the rope first, at minute 1, and his ring is heard then. Herald 1 arrives at minute 1000000000, one minute before the bell is ready again, and waits for it.",
+  "inputFormat": "The first line contains two integers n and c, the number of heralds and the rest the bell needs between rings.\nThe second line contains n integers t_1, ..., t_n, the minute at which each herald reaches the rope.",
+  "outputFormat": "Print n lines. Line i is the minute at which herald i's ring is heard. The answers can exceed 2^31.",
+  "constraints": "1 <= n <= 10^5\n1 <= c <= 10^9\n1 <= t_i <= 10^9\nThe minutes are given in no particular order and need not be distinct",
+  "tags": [
+    "sorting",
+    "implementation",
+    "simulation"
+  ],
+  "hints": [
+    "The heralds are numbered in the order they are listed, not in the order they reach the rope, so the first thing to settle is the order in which the rings happen.",
+    "Once the arrivals are in time order, each ring is heard either at the minute its herald arrived or at the first minute the bell is ready, whichever is later.",
+    "One running value, the earliest minute the bell may ring again, carries the whole night. Sort once: hunting for the next-earliest arrival n times over is 10^10 comparisons at n = 10^5.",
+    "Print the answers back in the order the heralds were numbered, not in the order they rang."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "4 5\n10 12 12 30\n",
+      "output": "10\n15\n20\n30\n"
+    },
+    {
+      "input": "3 1\n7 7 7\n",
+      "output": "7\n8\n9\n"
+    },
+    {
+      "input": "2 1000000000\n1000000000 1\n",
+      "output": "1000000001\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    c = int(data[1])\n    t = [int(v) for v in data[2:2 + n]]\n    order = sorted(range(n), key=lambda i: (t[i], i))\n    ans = [0] * n\n    ready = 0\n    for i in order:\n        ti = t[i]\n        x = ti if ti > ready else ready\n        ans[i] = x\n        ready = x + c\n    sys.stdout.write(\"\\n\".join(map(str, ans)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import heapq\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nc = int(data[1])\nwaiting = []\nfor i in range(n):\n    heapq.heappush(waiting, (int(data[2 + i]), i))\nans = [0] * n\nfree = 0\nwhile waiting:\n    t, i = heapq.heappop(waiting)\n    x = max(t, free)\n    ans[i] = x\n    free = x + c\nprint(\"\\n\".join(str(v) for v in ans))\n"
+  },
+  "cluster": "the-bell"
+}

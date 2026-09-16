@@ -1,0 +1,48 @@
+{
+  "id": "the-north-gate-quarters",
+  "title": "Quarters Claimed Twice",
+  "lore": "The yard was measured by the Warden, and then measured by the Warden again, and every claim sheet was filed both times. What the Company wants is the ground that two sheets claim at once.",
+  "statement": "The yard outside the North Gate is a grid of stones. The stone in column x and row y is written (x, y).\n\nThe Warden filed n claim sheets. Sheet i claims every stone (x, y) with x1_i <= x <= x2_i and y1_i <= y <= y2_i, a solid rectangle of the yard.\n\nFor every unordered pair of sheets, count the stones claimed by both of them. Print the sum of that count over all n(n-1)/2 pairs. The answer fits in a signed 64-bit integer but can be as large as about 2 * 10^18.\n\nExample 1:\nInput:\n3\n1 1 2 2\n2 2 3 3\n1 1 3 3\nOutput:\n9\nExplanation: Sheets 1 and 2 share the single stone (2, 2). Sheet 3 claims the whole three by three yard, so it shares all four stones of sheet 1 and all four stones of sheet 2. The total is 1 + 4 + 4 = 9.\n\nExample 2:\nInput:\n2\n1 1 1000 1000\n2000 2000 3000 3000\nOutput:\n0\nExplanation: The two rectangles are far apart and share no stone.\n\nExample 3:\nInput:\n3\n5 5 5 5\n5 5 5 5\n5 5 5 5\nOutput:\n3\nExplanation: All three sheets claim the same single stone, and the three pairs of sheets each share it once.",
+  "inputFormat": "The first line contains one integer n, the number of claim sheets.\nEach of the next n lines contains four integers x1_i, y1_i, x2_i, y2_i describing sheet i: the columns x1_i to x2_i and the rows y1_i to y2_i, all inclusive.",
+  "outputFormat": "Print a single integer, the sum over all unordered pairs of sheets of the number of stones both sheets claim.",
+  "constraints": "2 <= n <= 2 * 10^4\n1 <= x1_i <= x2_i <= 10^5\n1 <= y1_i <= y2_i <= 10^5",
+  "tags": [
+    "segment-tree",
+    "geometry",
+    "math",
+    "combinatorics",
+    "sorting"
+  ],
+  "hints": [
+    "Stop thinking about pairs. A stone claimed by c sheets is claimed by exactly c(c-1)/2 pairs, so the answer is the sum of c(c-1)/2 over every stone of the yard, and nothing else about the pairs matters.",
+    "c(c-1)/2 = (c^2 - c)/2, so all you need at any moment is the sum of c and the sum of c^2 over a whole column of the yard. Sweep the columns from left to right: sheet i adds 1 to the rows y1_i..y2_i at column x1_i and takes it away again at column x2_i + 1.",
+    "Between two consecutive events nothing changes, so evaluate (sum of c^2 minus sum of c) / 2 once and multiply it by the number of columns until the next event.",
+    "A segment tree over the rows can hold both sums under a range add: adding v to a segment of length L sends S2 to S2 + 2 v S1 + v^2 L and S1 to S1 + v L. Keep the pending add of each node, rebuild a node from its two children plus its own pending add without ever pushing it down, and read S1 and S2 off the root."
+  ],
+  "difficulty": "hard",
+  "rating": 2600,
+  "timeLimitMs": 6000,
+  "cluster": "the-north-gate",
+  "samples": [
+    {
+      "input": "3\n1 1 2 2\n2 2 3 3\n1 1 3 3\n",
+      "output": "9\n"
+    },
+    {
+      "input": "2\n1 1 1000 1000\n2000 2000 3000 3000\n",
+      "output": "0\n"
+    },
+    {
+      "input": "3\n5 5 5 5\n5 5 5 5\n5 5 5 5\n",
+      "output": "3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    top = 1\n    xs: dict[int, list[tuple[int, int, int]]] = {}\n    for i in range(n):\n        x1 = int(data[1 + 4 * i])\n        y1 = int(data[2 + 4 * i])\n        x2 = int(data[3 + 4 * i])\n        y2 = int(data[4 + 4 * i])\n        if y2 > top:\n            top = y2\n        xs.setdefault(x1, []).append((y1, y2, 1))\n        xs.setdefault(x2 + 1, []).append((y1, y2, -1))\n    size = top\n    total = [0] * (4 * size)\n    square = [0] * (4 * size)\n    pending = [0] * (4 * size)\n\n    # A stone under c sheets belongs to c(c-1)/2 pairs, so the sweep needs the sum of c and of\n    # c^2 over the rows. The tree keeps both under a range add, with each node's pending add\n    # held at the node and never pushed down.\n    def update(node: int, lo: int, hi: int, l: int, r: int, v: int) -> None:\n        if r < lo or hi < l:\n            return\n        if l <= lo and hi <= r:\n            span = hi - lo + 1\n            square[node] += 2 * v * total[node] + v * v * span\n            total[node] += v * span\n            pending[node] += v\n            return\n        mid = (lo + hi) // 2\n        left = 2 * node\n        right = left + 1\n        update(left, lo, mid, l, r, v)\n        update(right, mid + 1, hi, l, r, v)\n        p = pending[node]\n        inner = total[left] + total[right]\n        span = hi - lo + 1\n        total[node] = inner + p * span\n        square[node] = square[left] + square[right] + 2 * p * inner + p * p * span\n\n    answer = 0\n    keys = sorted(xs)\n    for idx in range(len(keys) - 1):\n        x = keys[idx]\n        for y1, y2, v in xs[x]:\n            update(1, 1, size, y1, y2, v)\n        answer += (square[1] - total[1]) // 2 * (keys[idx + 1] - x)\n    sys.stdout.write(str(answer) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Every pair's overlapping rectangle, straight from the definition. Quadratic, so the\n# largest tests here hold 4500 sheets rather than the 2 * 10^4 the statement allows.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nrects = []\nfor i in range(n):\n    rects.append((int(data[1 + 4 * i]), int(data[2 + 4 * i]), int(data[3 + 4 * i]), int(data[4 + 4 * i])))\ntotal = 0\nfor i in range(n):\n    ax1, ay1, ax2, ay2 = rects[i]\n    for j in range(i + 1, n):\n        bx1, by1, bx2, by2 = rects[j]\n        w = (ax2 if ax2 < bx2 else bx2) - (ax1 if ax1 > bx1 else bx1) + 1\n        if w <= 0:\n            continue\n        h = (ay2 if ay2 < by2 else by2) - (ay1 if ay1 > by1 else by1) + 1\n        if h > 0:\n            total += w * h\nprint(total)\n"
+  }
+}

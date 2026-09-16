@@ -1,0 +1,42 @@
+{
+  "title": "Tearing the Ledger",
+  "lore": "When the candle is out the ledger is torn into pages and each page is sealed on its own. A page that owes too much or claims too much breaks its seal, and the Company would rather know in advance how many ways there are to avoid that.",
+  "statement": "The night's ledger has n entries a_1, a_2, ..., a_n. Each entry is an integer: points won, or a penalty written as a negative number.\n\nThe Company will tear the ledger into pages. A tearing splits the entries into one or more contiguous, non-empty pages that together cover the whole ledger in order. A tearing is acceptable if the sum of the entries on every page lies between L and R inclusive.\n\nCount the acceptable tearings. Since the count can be very large, print it modulo 998244353.\n\nExample 1:\nInput:\n4 1 3\n1 2 -1 3\nOutput:\n4\nExplanation: The acceptable tearings are [1] [2] [-1 3], [1] [2 -1] [3], [1 2] [-1 3] and [1 2 -1] [3]. The tearing [1] [2] [-1] [3] is not acceptable because the page [-1] sums to less than L, and the single page [1 2 -1 3] sums to 5, more than R.\n\nExample 2:\nInput:\n3 0 5\n5 -5 5\nOutput:\n3\nExplanation: The acceptable tearings are [5] [-5 5], [5 -5] [5] and [5 -5 5]. The tearing [5] [-5] [5] is not acceptable because the middle page sums to -5.",
+  "inputFormat": "The first line contains three integers n, L and R.\nThe second line contains n integers a_1, ..., a_n.",
+  "outputFormat": "Print one integer: the number of acceptable tearings modulo 998244353.",
+  "constraints": "1 <= n <= 2 * 10^5\n-10^9 <= a_i <= 10^9\n-10^14 <= L <= R <= 10^14",
+  "tags": [
+    "dp",
+    "fenwick",
+    "prefix-sums",
+    "binary-search"
+  ],
+  "hints": [
+    "Let f(i) be the number of acceptable tearings of the first i entries with f(0) = 1; then f(i) is the sum of f(j) over all j < i such that entries j+1 to i form a page whose sum is between L and R.",
+    "With prefix sums P, the page condition is P_i - R <= P_j <= P_i - L, so f(i) is the sum of f(j) over prefixes whose value lies in a range that depends only on P_i.",
+    "The prefix values are not sorted, so compress all n + 1 of them and keep a Fenwick tree indexed by compressed value; after computing f(i), add it at the position of P_i, and answer the range for f(i+1) with two binary searches and two prefix queries."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 5000,
+  "id": "the-ledger-pages",
+  "samples": [
+    {
+      "input": "4 1 3\n1 2 -1 3\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 0 5\n5 -5 5\n",
+      "output": "3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left, bisect_right\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    lo_bound = int(data[1])\n    hi_bound = int(data[2])\n    mod = 998244353\n    prefix = [0] * (n + 1)\n    s = 0\n    for i in range(n):\n        s += int(data[3 + i])\n        prefix[i + 1] = s\n    vals = sorted(set(prefix))\n    m = len(vals)\n    pos = {v: i + 1 for i, v in enumerate(vals)}\n    tree = [0] * (m + 1)\n    i = pos[0]\n    while i <= m:\n        tree[i] += 1\n        i += i & -i\n    ways = 0\n    for k in range(1, n + 1):\n        p = prefix[k]\n        lo = bisect_left(vals, p - hi_bound)\n        hi = bisect_right(vals, p - lo_bound)\n        ways = 0\n        if hi > lo:\n            i = hi\n            while i > 0:\n                ways += tree[i]\n                i -= i & -i\n            i = lo\n            while i > 0:\n                ways -= tree[i]\n                i -= i & -i\n            ways %= mod\n        if ways:\n            i = pos[p]\n            while i <= m:\n                tree[i] += ways\n                i += i & -i\n    print(ways % mod)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nlo_bound = int(data[1])\nhi_bound = int(data[2])\na = [int(x) for x in data[3:3 + n]]\nMOD = 998244353\nways = [0] * (n + 1)\nways[0] = 1\nfor i in range(1, n + 1):\n    page_sum = 0\n    total = 0\n    for j in range(i - 1, -1, -1):\n        page_sum += a[j]\n        if lo_bound <= page_sum <= hi_bound:\n            total += ways[j]\n    ways[i] = total % MOD\nprint(ways[n])\n"
+  },
+  "cluster": "the-ledger"
+}

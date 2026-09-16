@@ -1,0 +1,45 @@
+{
+  "id": "the-oracle-aliases",
+  "title": "The Oracle's Aliases",
+  "lore": "Every scribe in the Hall signs under several names. Brin the Oracle gives them up two at a time, and the Company would like to know exactly when it could have known.",
+  "statement": "There are n names, numbered 1 to n. Each name belongs to exactly one scribe, and a scribe may sign under several names. The Oracle reads m hints in order; hint t states that names x_t and y_t belong to the same scribe. Hints never contradict each other, and a hint may repeat something the Company already knew.\n\nAfter hearing the first t hints, the Company knows that names u and v belong to the same scribe exactly when this follows from those t hints, by chaining any number of them together.\n\nAnswer q questions. Question j names u_j and v_j: print the smallest t such that after the first t hints the Company knows u_j and v_j belong to the same scribe. If u_j = v_j the answer is 0. If the Company never learns it, print -1.\n\nExample 1:\nInput:\n5 4 4\n1 2\n3 4\n2 3\n1 4\n1 4\n2 5\n4 4\n1 2\nOutput:\n3\n-1\n0\n1\nExplanation: After hints 1 and 2 the Company knows {1, 2} and {3, 4}. Hint 3 joins them, so 1 and 4 are known to be the same scribe after 3 hints; hint 4 adds nothing. Name 5 is never mentioned.\n\nExample 2:\nInput:\n3 3 2\n1 1\n2 3\n2 3\n1 3\n3 2\nOutput:\n-1\n2\nExplanation: Hint 1 says nothing new and hint 3 repeats hint 2. Names 2 and 3 are joined by hint 2; name 1 stays alone.\n\nExample 3:\nInput:\n2 1 1\n1 2\n2 1\nOutput:\n1\nExplanation: The single hint answers the single question.",
+  "inputFormat": "The first line contains three integers n, m and q: the number of names, hints and questions.\nEach of the next m lines contains two integers x_t and y_t, the t-th hint.\nEach of the next q lines contains two integers u_j and v_j, the j-th question.",
+  "outputFormat": "q lines. Line j is the smallest number of hints after which the Company knows u_j and v_j are the same scribe, 0 if u_j = v_j, or -1 if it never knows.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= m <= 2 * 10^5\n1 <= q <= 2 * 10^5\n1 <= x_t, y_t <= n\n1 <= u_j, v_j <= n",
+  "tags": [
+    "dsu",
+    "trees"
+  ],
+  "hints": [
+    "Merge the names with a disjoint set union in hint order, but remember for every link the hint at which it was made.",
+    "If you always hang the smaller group under the larger one and never compress the paths, every chain from a name to its root has at most log n links, and the link times increase going up.",
+    "For a question, climb from u and from v, each step advancing the one whose next link is older; the two walks meet at their lowest common ancestor and the last link crossed is the answer.",
+    "Keep a second, path-compressed structure only for finding roots while merging, so the linked forest stays intact for the questions."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n, m, q = int(data[0]), int(data[1]), int(data[2])\n    # Path-compressed DSU, used only to find roots while merging.\n    root = list(range(n + 1))\n    # The merge forest: link[v] is the root v was hung under, when[v] the hint that did it.\n    link = list(range(n + 1))\n    when = [m + 1] * (n + 1)\n    size = [1] * (n + 1)\n\n    def find(x: int) -> int:\n        r = x\n        while root[r] != r:\n            r = root[r]\n        while root[x] != r:\n            root[x], x = r, root[x]\n        return r\n\n    pos = 3\n    for t in range(1, m + 1):\n        a = find(int(data[pos]))\n        b = find(int(data[pos + 1]))\n        pos += 2\n        if a == b:\n            continue\n        if size[a] < size[b]:\n            a, b = b, a\n        root[b] = a\n        link[b] = a\n        when[b] = t\n        size[a] += size[b]\n\n    out = []\n    for _ in range(q):\n        u = int(data[pos])\n        v = int(data[pos + 1])\n        pos += 2\n        last = 0\n        # Link times strictly increase towards the root, so always climb the older link;\n        # the two walks meet at the lowest common ancestor and the last link crossed is the answer.\n        while u != v:\n            if when[u] < when[v]:\n                last = when[u]\n                u = link[u]\n            elif when[v] <= m:\n                last = when[v]\n                v = link[v]\n            else:\n                last = -1\n                break\n        out.append(last)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, m, q = int(data[0]), int(data[1]), int(data[2])\npos = 3\nhints = []\nfor _ in range(m):\n    hints.append((int(data[pos]), int(data[pos + 1])))\n    pos += 2\nquestions = []\nfor _ in range(q):\n    questions.append((int(data[pos]), int(data[pos + 1])))\n    pos += 2\n\nlabel = list(range(n + 1))\nmembers = {v: [v] for v in range(1, n + 1)}\nanswer = [0 if u == v else -1 for u, v in questions]\npending = [j for j in range(q) if answer[j] == -1]\nfor t, (x, y) in enumerate(hints, start=1):\n    a, b = label[x], label[y]\n    if a == b:\n        continue\n    if len(members[a]) < len(members[b]):\n        a, b = b, a\n    for v in members.pop(b):\n        label[v] = a\n        members[a].append(v)\n    still = []\n    for j in pending:\n        u, v = questions[j]\n        if label[u] == label[v]:\n            answer[j] = t\n        else:\n            still.append(j)\n    pending = still\nprint(\"\\n\".join(map(str, answer)))\n"
+  },
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "5 4 4\n1 2\n3 4\n2 3\n1 4\n1 4\n2 5\n4 4\n1 2\n",
+      "output": "3\n-1\n0\n1\n"
+    },
+    {
+      "input": "3 3 2\n1 1\n2 3\n2 3\n1 3\n3 2\n",
+      "output": "-1\n2\n"
+    },
+    {
+      "input": "2 1 1\n1 2\n2 1\n",
+      "output": "1\n"
+    }
+  ]
+}

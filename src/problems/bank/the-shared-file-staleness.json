@@ -1,0 +1,46 @@
+{
+  "id": "the-shared-file-staleness",
+  "title": "How Far Back the Save Is",
+  "lore": "The Hall keeps every version of the shared file but will not spend a candle storing all of them. A version nobody saved has to be rebuilt by replaying the edits above it, and the Herald replays nothing cheerfully.",
+  "statement": "The Hall keeps every version of the shared file. There are n versions, numbered 1 to n. Version 1 is the file as the night began. For every i >= 2, version i was made by applying one edit to version p_i, and p_i < i, so the versions form a tree rooted at version 1.\n\nThe Company will mark some versions as saved. A version that is not saved has to be rebuilt by replaying edits downwards from a saved one, so version v can be rebuilt exactly when some version on the path from version 1 down to v, version v itself included, is saved and lies at most K edits above v. A saved version is therefore no help to anything except itself and its own descendants.\n\nAt most B versions may be marked as saved. Print the smallest K for which every one of the n versions can be rebuilt.\n\nExample 1:\nInput:\n4 2\n1 2 2\nOutput:\n1\nExplanation: Versions 3 and 4 both branched from version 2, which branched from version 1. With K = 1 the Company saves versions 1 and 2, which is two saves: version 1 and version 2 are saved outright, and versions 3 and 4 sit one edit below version 2. With K = 0 all four versions would have to be saved.\n\nExample 2:\nInput:\n5 2\n1 2 3 4\nOutput:\n2\nExplanation: The versions form a chain 1, 2, 3, 4, 5. With two saves the best staleness is 2: save versions 1 and 3, and then versions 2, 4 and 5 are one, one and two edits below a saved version. K = 1 would need versions 1, 3 and 5, which is three saves.\n\nExample 3:\nInput:\n2 2\n1\nOutput:\n0\nExplanation: Two versions and a budget of two, so both are saved and nothing has to be replayed at all.",
+  "inputFormat": "The first line contains two integers n and B.\nThe second line contains n - 1 integers p_2, p_3, ..., p_n, where version i branched from version p_i.",
+  "outputFormat": "Print one integer: the smallest K for which at most B saved versions are enough for every version to be rebuilt.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= B <= n\n1 <= p_i < i",
+  "tags": [
+    "trees",
+    "greedy",
+    "binary-search",
+    "graphs"
+  ],
+  "hints": [
+    "For a fixed K the fewest saves needed is a single number, and it never goes up when K goes up, so the answer can be searched for.",
+    "For a fixed K, walk the versions from the newest to version 1 and carry, for each version, the distance down to the deepest version in its subtree that still cannot be rebuilt. Version 1 always has to be saved.",
+    "A saved version covers only its own descendants, so when that carried distance reaches K the version you are standing on is the last candidate that can still cover the deepest one, and saving it is forced. Saving only when forced is optimal, and it clears the whole subtree at once."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "cluster": "the-shared-file",
+  "samples": [
+    {
+      "input": "4 2\n1 2 2\n",
+      "output": "1\n"
+    },
+    {
+      "input": "5 2\n1 2 3 4\n",
+      "output": "2\n"
+    },
+    {
+      "input": "2 2\n1\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    budget = int(data[1])\n    par = [0] * (n + 1)\n    for i in range(2, n + 1):\n        par[i] = int(data[i])\n    depth = [0] * (n + 1)\n    hi = 0\n    for i in range(2, n + 1):\n        d = depth[par[i]] + 1\n        depth[i] = d\n        if d > hi:\n            hi = d\n\n    def saves(k: int) -> int:\n        h = [0] * (n + 1)\n        cnt = 0\n        for v in range(n, 1, -1):\n            hv = h[v]\n            if hv == k:\n                cnt += 1\n                if cnt > budget:\n                    return cnt\n            else:\n                p = par[v]\n                if hv + 1 > h[p]:\n                    h[p] = hv + 1\n        return cnt + 1\n\n    lo = 0\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if saves(mid) <= budget:\n            hi = mid\n        else:\n            lo = mid + 1\n    print(lo)\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Tries K = 0, 1, 2, ... and for each one solves the subtree problem with a table instead of the\n# reference's greedy. Cheap only while the answer is small, which is what the hidden tests keep to.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nbudget = int(data[1])\npar = [0] * (n + 1)\nfor i in range(2, n + 1):\n    par[i] = int(data[i])\n\n\ndef mincost(k):\n    # f[v][j] = fewest saved versions inside the subtree of v when the nearest saved strict\n    # ancestor of v sits j edits above it; j = k + 1 means there is none within reach.\n    top = k + 1\n    acc = [[0] * (top + 2) for _ in range(n + 1)]\n    root = 0\n    for v in range(n, 0, -1):\n        av = acc[v]\n        fv = [0] * (top + 2)\n        for j in range(1, top + 1):\n            best = 1 + av[1]\n            if j <= k:\n                alt = av[j + 1]\n                if alt < best:\n                    best = alt\n            fv[j] = best\n        if v == 1:\n            root = fv[top]\n        else:\n            ap = acc[par[v]]\n            for j in range(1, top + 1):\n                ap[j] += fv[j]\n    return root\n\n\nans = 0\nfor k in range(0, n):\n    if mincost(k) <= budget:\n        ans = k\n        break\nprint(ans)\n"
+  }
+}

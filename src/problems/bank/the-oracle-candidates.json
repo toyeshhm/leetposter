@@ -1,0 +1,42 @@
+{
+  "id": "the-oracle-candidates",
+  "title": "The Oracle's Candidates",
+  "lore": "The answer is a whole number and Brin narrows it down one hint at a time, never contradicting herself. The Warden says it is at most a thousand; the Warden is not on the hint cards.",
+  "statement": "The answer to tonight's riddle is an integer between 1 and m. The Oracle reads n hints in order, each of one of three kinds:\n\nG x: the answer is at least x.\nL x: the answer is at most x.\nN x: the answer is not x.\n\nEvery hint is true of the answer, so at least one integer in [1, m] is consistent with all the hints at every moment. A candidate is an integer in [1, m] that is consistent with every hint read so far. After each hint, print the number of candidates.\n\nExample 1:\nInput:\n6 10\nN 4\nG 3\nN 4\nL 7\nN 9\nG 5\nOutput:\n9\n7\n7\n4\n4\n3\nExplanation: After N 4 nine of the ten integers remain. G 3 removes 1 and 2, leaving 3, 5, 6, 7, 8, 9, 10. Repeating N 4 changes nothing. L 7 leaves 3, 5, 6, 7. N 9 was already ruled out by L 7. G 5 leaves 5, 6, 7.\n\nExample 2:\nInput:\n4 5\nN 2\nN 3\nL 4\nG 4\nOutput:\n4\n3\n2\n1\nExplanation: The candidates are {1, 3, 4, 5}, then {1, 4, 5}, then {1, 4}, then {4}.",
+  "inputFormat": "The first line contains two integers n and m. Each of the next n lines contains a letter (G, L or N) and an integer x, describing one hint.",
+  "outputFormat": "Print n lines. Line i contains the number of candidates after the first i hints.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= m <= 10^9\n1 <= x <= m\nThe hints are all true of a single fixed answer in [1, m]",
+  "tags": [
+    "binary-search",
+    "prefix-sums",
+    "heap"
+  ],
+  "hints": [
+    "The G and L hints alone leave a range [lo, hi]; lo only ever rises and hi only ever falls, so the number of candidates is the size of the range minus the N values currently inside it.",
+    "An N value inside the range stays counted until the range moves past it, and once the range has passed a value it never comes back; a value named twice must be counted once.",
+    "Store the excluded values in a min-heap and a max-heap; whenever lo rises, pop and discard every value below it, and whenever hi falls, pop everything above it, so each value is discarded at most once per heap.",
+    "Alternatively work offline: lo over time is a nondecreasing array, so a binary search finds the first hint at which lo exceeds an N value (and likewise for hi), and a difference array adds the value's contribution over the hints during which it is inside the range."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "6 10\nN 4\nG 3\nN 4\nL 7\nN 9\nG 5\n",
+      "output": "9\n7\n7\n4\n4\n3\n"
+    },
+    {
+      "input": "4 5\nN 2\nN 3\nL 4\nG 4\n",
+      "output": "4\n3\n2\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    lo = [1] * (n + 1)\n    hi = [m] * (n + 1)\n    kinds = data[2:2 + 2 * n:2]\n    xs = list(map(int, data[3:3 + 2 * n:2]))\n    for i in range(1, n + 1):\n        l = lo[i - 1]\n        h = hi[i - 1]\n        kind = kinds[i - 1]\n        x = xs[i - 1]\n        if kind == b\"G\":\n            if x > l:\n                l = x\n        elif kind == b\"L\":\n            if x < h:\n                h = x\n        lo[i] = l\n        hi[i] = h\n    neg_hi = [-h for h in hi]\n    diff = [0] * (n + 2)\n    seen = set()\n    for i in range(1, n + 1):\n        if kinds[i - 1] != b\"N\":\n            continue\n        x = xs[i - 1]\n        if x in seen:\n            continue\n        seen.add(x)\n        if x < lo[i] or x > hi[i]:\n            continue\n        death = min(bisect_right(lo, x), bisect_right(neg_hi, -x))\n        diff[i] += 1\n        diff[death] -= 1\n    out = []\n    excluded = 0\n    for i in range(1, n + 1):\n        excluded += diff[i]\n        out.append(hi[i] - lo[i] + 1 - excluded)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, m = int(data[0]), int(data[1])\nlo, hi = 1, m\nexcluded = set()\npos = 2\nfor _ in range(n):\n    kind, x = data[pos], int(data[pos + 1])\n    pos += 2\n    if kind == \"G\":\n        lo = max(lo, x)\n    elif kind == \"L\":\n        hi = min(hi, x)\n    else:\n        excluded.add(x)\n    excluded = {v for v in excluded if lo <= v <= hi}\n    print(hi - lo + 1 - len(excluded))\n"
+  }
+}

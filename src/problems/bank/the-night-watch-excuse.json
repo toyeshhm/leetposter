@@ -1,0 +1,47 @@
+{
+  "id": "the-night-watch-excuse",
+  "title": "One Watchman Excused",
+  "lore": "One watchman has asked to be let off before the candle is lit. The Company will excuse exactly one of them, and it would rather the night stayed guarded.",
+  "statement": "The Hall is guarded all night by n watches. Watch i covers every hour h with s_i <= h < e_i, so its watchman is already gone during hour e_i itself. An hour is guarded when at least one watch covers it.\n\nExactly one watch will be cancelled. The remaining n - 1 watches stand exactly as written, and the Company picks the watch to cancel so that as many hours as possible stay guarded.\n\nPrint the number of guarded hours left after the best choice.\n\nExample 1:\nInput:\n3\n0 5\n4 9\n12 15\nOutput:\n9\nExplanation: All three watches together guard 12 hours. Cancelling the first loses hours 0 to 3 and cancelling the second loses hours 5 to 8, four hours either way, while cancelling the third loses only hours 12, 13 and 14.\n\nExample 2:\nInput:\n2\n0 10\n2 4\nOutput:\n10\nExplanation: The second watch lies inside the first, so excusing its watchman leaves every hour still guarded.\n\nExample 3:\nInput:\n4\n1 3\n3 5\n5 7\n7 9\nOutput:\n6\nExplanation: The four watches meet end to end and share no hour, so whichever watchman is excused the Hall loses his two hours out of eight.",
+  "inputFormat": "The first line contains one integer n, the number of watches.\nEach of the next n lines contains two integers s_i and e_i, the hour watch i begins and the hour it ends.",
+  "outputFormat": "Print a single integer, the largest number of hours that stay guarded when exactly one watch is cancelled.",
+  "constraints": "2 <= n <= 2 * 10^5\n0 <= s_i < e_i <= 10^9",
+  "tags": [
+    "sorting",
+    "intervals",
+    "heap",
+    "implementation"
+  ],
+  "hints": [
+    "Cancelling a watch costs the Hall exactly the hours that no other watch covers, so the answer is the total guarded length minus the smallest such private loss. Recomputing the union n times is n^2 work and the bound forbids it.",
+    "Cut the night at every hour named in the input. Between two neighbouring cuts the set of watches on duty never changes, and there are fewer than 2n such stretches, so every length in the problem is a sum over them.",
+    "Sweep the stretches in order and keep the watches on duty in a heap keyed by the hour they end, pushing each watch when its beginning hour is passed and popping the ones that have already ended. The size of the heap is the number of watchmen standing.",
+    "A stretch counts towards the total whenever the heap is not empty, and when the heap holds exactly one watch that watch is the only one covering the stretch, so add the stretch's length to that watch's private total."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "3\n0 5\n4 9\n12 15\n",
+      "output": "9\n"
+    },
+    {
+      "input": "2\n0 10\n2 4\n",
+      "output": "10\n"
+    },
+    {
+      "input": "4\n1 3\n3 5\n5 7\n7 9\n",
+      "output": "6\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    watches = []\n    marks = set()\n    for i in range(n):\n        s = int(data[1 + 2 * i])\n        e = int(data[2 + 2 * i])\n        watches.append((s, e, i))\n        marks.add(s)\n        marks.add(e)\n    watches.sort()\n    cuts = sorted(marks)\n    # Between two neighbouring cuts the set of watches on duty never changes. The heap holds\n    # the watches on duty keyed by the hour they end, so its size is the depth and, when the\n    # depth is one, its top is the only watch covering that stretch.\n    alone = [0] * n\n    heap = []\n    covered = 0\n    p = 0\n    for k in range(len(cuts) - 1):\n        x = cuts[k]\n        y = cuts[k + 1]\n        while p < n and watches[p][0] <= x:\n            heappush(heap, (watches[p][1], watches[p][2]))\n            p += 1\n        while heap and heap[0][0] <= x:\n            heappop(heap)\n        if heap:\n            covered += y - x\n            if len(heap) == 1:\n                alone[heap[0][1]] += y - x\n    sys.stdout.write(str(covered - min(alone)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Cut the night at every hour named in the input and count, for every elementary stretch, how\n# many watches cover it. A stretch covered exactly once is private to the one watch covering\n# it, so one prefix sum over the privately covered length answers every watch at once. Nothing\n# here knows about a heap, and it runs at the full bound.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = [0] * n\ne = [0] * n\nmarks = set()\nfor i in range(n):\n    s[i] = int(data[1 + 2 * i])\n    e[i] = int(data[2 + 2 * i])\n    marks.add(s[i])\n    marks.add(e[i])\ncuts = sorted(marks)\nat = {v: i for i, v in enumerate(cuts)}\nm = len(cuts) - 1\ndiff = [0] * (m + 1)\nfor i in range(n):\n    diff[at[s[i]]] += 1\n    diff[at[e[i]]] -= 1\ncovered = 0\nprivate = [0] * (m + 1)\ndepth = 0\nfor k in range(m):\n    depth += diff[k]\n    width = cuts[k + 1] - cuts[k]\n    if depth > 0:\n        covered += width\n    private[k + 1] = private[k] + (width if depth == 1 else 0)\nloss = min(private[at[e[i]]] - private[at[s[i]]] for i in range(n))\nprint(covered - loss)\n"
+  },
+  "cluster": "the-night-watch"
+}

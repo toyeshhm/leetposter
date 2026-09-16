@@ -1,0 +1,44 @@
+{
+  "id": "the-cartographer-drips",
+  "title": "Ink Drips on the Strip",
+  "lore": "Cass drew the corridor as a strip of n cells, knocked the inkwell over it m times, and still claims the map is mostly legible. The Warden wants a number.",
+  "statement": "The corridor is drawn as a strip of n cells numbered 1 to n from left to right. Ink dripped onto the strip m times; the i-th drip covered every cell from l_i to r_i inclusive.\nA cell is legible if it was covered by at most k drips.\n\nPrint the number of legible cells and the length of the longest run of consecutive legible cells (0 if no cell is legible).\n\nExample 1:\nInput:\n6 3 1\n1 4\n3 6\n2 2\nOutput:\n3 2\nExplanation: The cells are covered 1, 2, 2, 2, 1, 1 times. Cells 1, 5 and 6 are legible, and cells 5 and 6 form the longest run.\n\nExample 2:\nInput:\n4 2 0\n1 4\n2 3\nOutput:\n0 0\nExplanation: Every cell was covered at least once and k is 0, so nothing is legible.\n\nExample 3:\nInput:\n7 2 1\n1 3\n5 7\nOutput:\n7 7\nExplanation: No cell was covered more than once, so the whole strip is one legible run.",
+  "inputFormat": "The first line contains three integers n, m and k. Each of the next m lines contains two integers l_i and r_i, the leftmost and rightmost cell covered by the i-th drip.",
+  "outputFormat": "One line with two integers: the number of legible cells and the length of the longest run of consecutive legible cells.",
+  "constraints": "1 <= n <= 10^5\n1 <= m <= 10^5\n0 <= k <= m\n1 <= l_i <= r_i <= n",
+  "tags": [
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "Adding one to every cell of every drip touches up to n cells per drip, which is far too slow when both n and m reach 10^5.",
+    "A drip from l to r can be recorded with just two marks, plus one at position l and minus one at position r + 1, so that a single running sum from left to right recovers the coverage of every cell.",
+    "Once every cell's coverage is known, one pass that increments a counter on legible cells and resets it on the others gives both the total and the longest run."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "6 3 1\n1 4\n3 6\n2 2\n",
+      "output": "3 2\n"
+    },
+    {
+      "input": "4 2 0\n1 4\n2 3\n",
+      "output": "0 0\n"
+    },
+    {
+      "input": "7 2 1\n1 3\n5 7\n",
+      "output": "7 7\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    diff = [0] * (n + 2)\n    p = 3\n    for _ in range(m):\n        l = int(data[p]); r = int(data[p + 1]); p += 2\n        diff[l] += 1\n        diff[r + 1] -= 1\n    total = 0; best = 0; run = 0; cur = 0\n    for i in range(1, n + 1):\n        cur += diff[i]\n        if cur <= k:\n            total += 1; run += 1\n            if run > best: best = run\n        else:\n            run = 0\n    print(total, best)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    cover = [0] * (n + 1)\n    p = 3\n    for _ in range(m):\n        l = int(data[p]); r = int(data[p + 1]); p += 2\n        for i in range(l, r + 1):\n            cover[i] += 1\n    legible = [cover[i] <= k for i in range(1, n + 1)]\n    total = sum(legible)\n    best = 0\n    for start in range(n):\n        if not legible[start] or (start > 0 and legible[start - 1]):\n            continue\n        end = start\n        while end < n and legible[end]:\n            end += 1\n        best = max(best, end - start)\n    print(total, best)\nmain()\n"
+  },
+  "cluster": "the-cartographer"
+}

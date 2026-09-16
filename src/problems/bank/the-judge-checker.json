@@ -1,0 +1,46 @@
+{
+  "title": "The Lenient Checker",
+  "lore": "The checker for this problem is lenient: one letter off the seal is still a seal. Nobody in the Hall believes it until the verdict comes back Accepted.",
+  "statement": "The Judge holds a seal: a string p of m category letters, each one of A, W, T, R, M, C. The night's transcript is a string s of n category letters drawn from the same six.\n\nThe checker for this problem is lenient. It calls a position i accepted, where 1 <= i <= n - m + 1, if the block s_i s_{i+1} ... s_{i+m-1} differs from the seal in at most one place, that is, if the number of indices k with 1 <= k <= m and s_{i+k-1} != p_k is zero or one.\n\nPrint how many positions are accepted, then list them in increasing order. If m > n, no position is accepted.\n\nExample 1:\nInput:\n9 3\nAWTAWWRWT\nAWT\nOutput:\n3\n1 4 7\nExplanation: Position 1 reads AWT and matches the seal exactly. Position 4 reads AWW, which is wrong only in the last letter. Position 7 reads RWT, which is wrong only in the first. Positions 2, 3, 5 and 6 are wrong in all three letters.\n\nExample 2:\nInput:\n5 5\nAAAAA\nAAWAA\nOutput:\n1\n1\nExplanation: The seal is as long as the transcript, so position 1 is the only candidate, and it differs from the seal in the third letter alone.\n\nExample 3:\nInput:\n5 3\nAWTRM\nCCC\nOutput:\n0\nExplanation: No block of three letters of the transcript holds two Cs, so every block is wrong in at least two places and the second line of the answer is empty.",
+  "inputFormat": "The first line contains n and m. The second line contains the transcript s, a string of n letters. The third line contains the seal p, a string of m letters.",
+  "outputFormat": "Print the number of accepted positions on the first line, then the accepted positions in increasing order separated by single spaces on the second line. When no position is accepted the second line is empty.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= m <= 2 * 10^5\nEvery letter of s and of p is one of A, W, T, R, M, C",
+  "tags": [
+    "strings",
+    "hashing",
+    "two-pointers"
+  ],
+  "hints": [
+    "A block that is wrong in at most one place is a prefix of the seal, then at most one wrong letter, then a suffix of the seal, so the middle never has to be examined letter by letter.",
+    "For every position of the transcript precompute two numbers: how far the seal matches when laid down starting there, and how far the seal matches backwards when its last letter is laid down there.",
+    "The position i is accepted when the forward match starting at i and the backward match ending at i + m - 1 together cover at least m - 1 letters of the seal, and also when the forward match already covers all m.",
+    "Both tables are one Z function each: run it on the seal, a separator that is not a category letter, and the transcript, then run it again on the same three pieces reversed."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "id": "the-judge-checker",
+  "samples": [
+    {
+      "input": "9 3\nAWTAWWRWT\nAWT\n",
+      "output": "3\n1 4 7\n"
+    },
+    {
+      "input": "5 5\nAAAAA\nAAWAA\n",
+      "output": "1\n1\n"
+    },
+    {
+      "input": "5 3\nAWTRM\nCCC\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef zfunc(s: bytes) -> list:\n    n = len(s)\n    z = [0] * n\n    if n > 0:\n        z[0] = n\n    l = 0\n    r = 0\n    for i in range(1, n):\n        k = 0\n        if i < r:\n            k = r - i\n            if z[i - l] < k:\n                k = z[i - l]\n        while i + k < n and s[k] == s[i + k]:\n            k += 1\n        z[i] = k\n        if i + k > r:\n            l = i\n            r = i + k\n    return z\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    s = data[2]\n    p = data[3]\n    if m > n:\n        sys.stdout.write(\"0\\n\\n\")\n        return\n    off = m + 1\n    forward = zfunc(p + b\"#\" + s)\n    backward = zfunc(p[::-1] + b\"#\" + s[::-1])\n    res = []\n    for i in range(n - m + 1):\n        a = forward[off + i]\n        if a >= m:\n            res.append(i + 1)\n        elif a + backward[off + n - i - m] >= m - 1:\n            res.append(i + 1)\n    sys.stdout.write(str(len(res)) + \"\\n\" + \" \".join(str(x) for x in res) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\ns = data[2]\np = data[3]\nres = []\nfor i in range(n - m + 1):\n    bad = 0\n    for k in range(m):\n        if s[i + k] != p[k]:\n            bad += 1\n            if bad > 1:\n                break\n    if bad <= 1:\n        res.append(i + 1)\nprint(len(res))\nprint(\" \".join(str(x) for x in res))\n"
+  },
+  "cluster": "the-judge"
+}

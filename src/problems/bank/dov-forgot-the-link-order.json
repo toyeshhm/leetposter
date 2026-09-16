@@ -1,0 +1,47 @@
+{
+  "id": "dov-forgot-the-link-order",
+  "title": "Back in Order",
+  "lore": "The slips survived the stairs; the order Dov carried them in did not. The Company will read out whichever chain the slips allow, and when several do they read the smallest.",
+  "statement": "The chain visited each of the n halls exactly once. Dov has m slips; a slip naming halls a and b means hall a was immediately followed by hall b. These slips are not trusted: two of them may disagree, and together they may even close a loop, in which case no chain fits them at all.\n\nReconstruct a chain, that is an ordering of all n halls, in which every slip holds. If several orderings fit, print the lexicographically smallest one. If none fits, print -1.\n\nAn ordering x is lexicographically smaller than an ordering y if at the first position where they differ, x names the smaller hall.\n\nExample 1:\nInput:\n5 3\n2 3\n3 1\n5 4\nOutput:\n2 3 1 5 4\nExplanation: The slips glue the halls into the runs 2, 3, 1 and 5, 4. Writing them in the other order gives 5 4 2 3 1, which is larger.\n\nExample 2:\nInput:\n3 3\n1 2\n2 3\n3 1\nOutput:\n-1\nExplanation: The slips close a loop, so no ordering of three halls can hold all of them.\n\nExample 3:\nInput:\n4 1\n4 1\nOutput:\n2 3 4 1\nExplanation: Only one slip survived. Halls 2 and 3 are runs of their own, and they come first because they begin with smaller halls than the run 4, 1.",
+  "inputFormat": "The first line contains two integers n and m, the number of halls and the number of slips. Each of the next m lines contains two integers a and b: one slip, saying hall a was immediately followed by hall b. The same slip may appear more than once.",
+  "outputFormat": "Print the n halls of the lexicographically smallest chain that fits every slip, separated by single spaces. Print -1 if no chain fits.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= m <= 2 * 10^5\n1 <= a, b <= n and a != b on every slip",
+  "tags": [
+    "greedy",
+    "sorting",
+    "graphs",
+    "implementation"
+  ],
+  "hints": [
+    "If some hall is given two different successors by the slips, or two different predecessors, nothing fits and the answer is -1.",
+    "Otherwise the slips glue the halls into runs, and every chain that fits is those runs written one after another. The only freedom left is the order of the runs.",
+    "The runs begin at the halls with no recorded predecessor, and all halls are different, so the smallest chain is the runs taken in increasing order of the hall they begin with. Sweeping the halls from 1 to n and walking forward from each start gives exactly that, in linear time.",
+    "A loop never shows up in that sweep, because no hall on a loop lacks a predecessor. So count what you printed: fewer than n halls means a loop, and the answer is -1."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    succ = [0] * (n + 1)\n    pred = [0] * (n + 1)\n    idx = 2\n    for _ in range(m):\n        a = int(data[idx])\n        b = int(data[idx + 1])\n        idx += 2\n        if (succ[a] != 0 and succ[a] != b) or (pred[b] != 0 and pred[b] != a):\n            sys.stdout.write(\"-1\\n\")\n            return\n        succ[a] = b\n        pred[b] = a\n    out = []\n    for v in range(1, n + 1):\n        if pred[v] == 0:\n            cur = v\n            while cur != 0:\n                out.append(cur)\n                cur = succ[cur]\n    if len(out) != n:\n        sys.stdout.write(\"-1\\n\")\n        return\n    sys.stdout.write(\" \".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nnxt = {}\nprv = {}\nparent = list(range(n + 1))\n\ndef find(x):\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]\n        x = parent[x]\n    return x\n\nok = True\nidx = 2\nfor _ in range(m):\n    a = int(data[idx])\n    b = int(data[idx + 1])\n    idx += 2\n    if nxt.get(a, b) != b or prv.get(b, a) != a:\n        ok = False\n        continue\n    if a in nxt:\n        continue\n    nxt[a] = b\n    prv[b] = a\n    ra = find(a)\n    rb = find(b)\n    if ra == rb:\n        ok = False\n    else:\n        parent[ra] = rb\nif not ok:\n    print(-1)\nelse:\n    segs = []\n    for v in range(1, n + 1):\n        if v not in prv:\n            seg = [v]\n            while seg[-1] in nxt:\n                seg.append(nxt[seg[-1]])\n            segs.append(seg)\n    segs.sort()\n    print(\" \".join(str(x) for s in segs for x in s))\n"
+  },
+  "cluster": "dov-forgot-the-link",
+  "samples": [
+    {
+      "input": "5 3\n2 3\n3 1\n5 4\n",
+      "output": "2 3 1 5 4\n"
+    },
+    {
+      "input": "3 3\n1 2\n2 3\n3 1\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "4 1\n4 1\n",
+      "output": "2 3 4 1\n"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "the-seal-ribbon",
+  "title": "The Heaviest Sound Stretch",
+  "lore": "Each mark on the ribbon was paid for in wax, and a few of them were charged to the Hall instead. The Company wants the richest stretch that still reads as a whole seal.",
+  "statement": "A ribbon carries n marks in a row; mark i is a press ( or a lift ), and carries a weight w_i, which may be negative.\n\nRead left to right, a stretch of consecutive marks is sound if the number of lifts in it never exceeds the number of presses at any point, and the two are equal at the end. The empty stretch is sound and weighs 0.\n\nThe weight of a stretch is the sum of the weights of its marks. Print the greatest weight of a sound stretch.\n\nExample 1:\n\nInput:\n4\n()()\n3 -1 4 4\nOutput:\n10\nExplanation: The sound stretches are marks 1 to 2 weighing 2, marks 3 to 4 weighing 8, and marks 1 to 4 weighing 10.\n\nExample 2:\n\nInput:\n6\n()()()\n5 5 -100 -100 5 5\nOutput:\n10\nExplanation: Marks 1 to 2 weigh 10, and so do marks 5 to 6. Joining them would drag in the pair in the middle, which weighs -200, so the answer is 10 rather than 20.\n\nExample 3:\n\nInput:\n3\n(((\n7 7 7\nOutput:\n0\nExplanation: No stretch of this ribbon is sound, so only the empty stretch is left, and it weighs 0.",
+  "inputFormat": "The first line contains one integer n, the number of marks.\nThe second line contains a string of n characters, each one ( or ).\nThe third line contains n integers w_1 ... w_n, the weights of the marks in order.",
+  "outputFormat": "One integer: the greatest weight of a sound stretch. It is 0 or more, because the empty stretch is allowed.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery character of the ribbon is ( or )\n-10^9 <= w_i <= 10^9",
+  "tags": [
+    "stack",
+    "dp",
+    "prefix-sums",
+    "strings"
+  ],
+  "hints": [
+    "A sound stretch ends at a lift, and that lift closes exactly one press: the one a stack hands back when you pop it. Trying every pair of endpoints is O(n^2) and n runs to 2 * 10^5.",
+    "Let best[i] be the heaviest sound stretch ending at mark i, and 0 when every sound stretch ending there is a loss you would rather not take. If mark i is a lift closing the press at mark j, the stretch j to i can be extended to the left by the heaviest sound stretch ending at mark j-1, and by nothing else.",
+    "So best[i] = max(0, W[i] - W[j-1] + best[j-1]) with W the prefix sums of the weights, and the answer is the largest best[i]. One pass with a stack of press positions does the matching and the recurrence together."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4\n()()\n3 -1 4 4\n",
+      "output": "10\n"
+    },
+    {
+      "input": "6\n()()()\n5 5 -100 -100 5 5\n",
+      "output": "10\n"
+    },
+    {
+      "input": "3\n(((\n7 7 7\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = data[1].decode()\n    weight = data[2:2 + n]\n    pre = [0] * (n + 1)\n    run = 0\n    for i in range(n):\n        run += int(weight[i])\n        pre[i + 1] = run\n    # best[i + 1] is the heaviest sound stretch ending at mark i, or 0 when none of them is positive.\n    best = [0] * (n + 1)\n    stack = []\n    ans = 0\n    for i in range(n):\n        if s[i] == \"(\":\n            stack.append(i)\n        elif stack:\n            j = stack.pop()\n            cur = pre[i + 1] - pre[j] + best[j]\n            if cur > 0:\n                best[i + 1] = cur\n                if cur > ans:\n                    ans = cur\n    sys.stdout.write(str(ans) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\n# Different route: [l, r] is sound exactly when the balance before l equals the balance at r and\n# never dips below it in between. Walking the balance array with a stack that drops every larger\n# value keeps, for each still live balance level, the smallest prefix weight seen at that level.\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = data[1]\nw = [int(x) for x in data[2:2 + n]]\nbal = [0] * (n + 1)\npre = [0] * (n + 1)\nfor i in range(n):\n    bal[i + 1] = bal[i] + (1 if s[i] == \"(\" else -1)\n    pre[i + 1] = pre[i] + w[i]\nstack = []\nans = 0\nfor k in range(n + 1):\n    b = bal[k]\n    p = pre[k]\n    while stack and stack[-1][0] > b:\n        stack.pop()\n    if stack and stack[-1][0] == b:\n        if p - stack[-1][1] > ans:\n            ans = p - stack[-1][1]\n        if p < stack[-1][1]:\n            stack[-1][1] = p\n    else:\n        stack.append([b, p])\nprint(ans)\n"
+  },
+  "cluster": "the-seal"
+}

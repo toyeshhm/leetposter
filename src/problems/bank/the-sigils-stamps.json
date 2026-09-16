@@ -1,0 +1,47 @@
+{
+  "id": "the-sigils-stamps",
+  "title": "The Overstruck Plate",
+  "lore": "A stamp struck wrong is not a ruined plate, only a letter waiting to be overstruck, which is also what Ada tells the Company about its verdicts.",
+  "statement": "The forge prints a sigil on a blank plate with five positions, none of them holding a letter to begin with.\n\nThere are m stamps. Stamp j carries a pattern p_j of exactly five characters, each one an uppercase letter or a dot, and costs c_j candles every time it is used. Striking the plate with stamp j writes the letters of p_j onto the positions where p_j holds a letter, replacing whatever stood in those positions before; the positions where p_j holds a dot are left exactly as they were.\n\nThe Company may strike the plate with any stamp, in any order, as many times as it likes, paying c_j for each strike of stamp j. The forging succeeds when the plate ends with all five positions written and reading exactly the target sigil T.\n\nPrint the smallest total cost of a successful forging, or -1 if the plate can never be made to read T.\n\nExample 1:\nInput:\n3\nABCDE\nAB... 3\n..CDE 4\nABCDE 10\nOutput:\n7\nExplanation: The first two stamps write the first two positions and the last three positions, so together they leave the plate reading ABCDE for 3 + 4 candles, which beats the single stamp that does it for 10.\n\nExample 2:\nInput:\n3\nABCDE\nABCDX 1\n....E 5\nABCDE 9\nOutput:\n6\nExplanation: Strike ABCDX first and then ....E. The X at the fifth position is overstruck by the E, so the plate reads ABCDE for 1 + 5 candles, less than the 9 of the stamp that is right everywhere.\n\nExample 3:\nInput:\n2\nABCDE\nABCD. 1\nABCDX 2\nOutput:\n-1\nExplanation: The fifth position is written only by the second stamp, which writes X there, and no later strike can ever replace it, so the plate never reads ABCDE.\n",
+  "inputFormat": "The first line contains one integer m, the number of stamps.\nThe second line contains the target sigil T: exactly five uppercase letters.\nEach of the next m lines contains one stamp: its pattern of exactly five characters, each an uppercase letter or a dot, then a single space, then its cost.",
+  "outputFormat": "One integer: the smallest total cost of a forging that leaves the plate reading T, or -1 if there is none. The answer can exceed 2^31.",
+  "constraints": "1 <= m <= 2 * 10^5\n1 <= c_j <= 10^9\nEvery pattern is exactly 5 characters, each an uppercase letter from A to Z or a dot\nT is exactly 5 uppercase letters",
+  "tags": [
+    "dp",
+    "bitmasks",
+    "shortest-paths",
+    "implementation"
+  ],
+  "hints": [
+    "Only two things about a stamp ever matter: the set of positions it writes, and the subset of those positions where its letter disagrees with T; both are five-bit masks, so there are at most 32 * 32 kinds of stamp.",
+    "Read the strikes backwards, from the last one to the first. A position holds the letter of the last stamp that wrote it, so a stamp struck earlier is allowed to disagree with T at a position exactly when some later stamp writes that position too.",
+    "Working backwards, keep a mask of the positions already written by the strikes chosen so far; a stamp may be added when every position where it disagrees with T is already in the mask, and the mask then grows by the positions the stamp writes. That is a shortest path over 32 states from the empty mask to the full mask, and unreachable means -1.",
+    "Two stamps with the same pair of masks are interchangeable, so first reduce the m stamps to the cheapest one for each of the at most 1024 pairs, then run the 32 states against that small table; relaxing all 2 * 10^5 stamps from every state is what the time limit is set to refuse."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "3\nABCDE\nAB... 3\n..CDE 4\nABCDE 10\n",
+      "output": "7\n"
+    },
+    {
+      "input": "3\nABCDE\nABCDX 1\n....E 5\nABCDE 9\n",
+      "output": "6\n"
+    },
+    {
+      "input": "2\nABCDE\nABCD. 1\nABCDX 2\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    m = int(data[0])\n    target = data[1]\n    INF = 1 << 62\n    best = [INF] * 1024\n    pos = 2\n    for _ in range(m):\n        pat = data[pos]\n        cost = int(data[pos + 1])\n        pos += 2\n        need = 0\n        gain = 0\n        for p in range(5):\n            ch = pat[p]\n            if ch != 46:\n                gain |= 1 << p\n                if ch != target[p]:\n                    need |= 1 << p\n        k = (need << 5) | gain\n        if cost < best[k]:\n            best[k] = cost\n    edges = [((k >> 5), (k & 31), c) for k, c in enumerate(best) if c < INF]\n    dp = [INF] * 32\n    dp[0] = 0\n    for mask in range(32):\n        d = dp[mask]\n        if d == INF:\n            continue\n        for need, gain, c in edges:\n            if need & ~mask == 0:\n                nxt = mask | gain\n                if d + c < dp[nxt]:\n                    dp[nxt] = d + c\n    sys.stdout.write(str(dp[31]) + \"\\n\" if dp[31] < INF else \"-1\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nm = int(data[0])\ntarget = data[1]\nstamps = []\nfor j in range(m):\n    pat = data[2 + 2 * j]\n    cost = int(data[3 + 2 * j])\n    need = 0\n    gain = 0\n    for p in range(5):\n        if pat[p] != \".\":\n            gain |= 1 << p\n            if pat[p] != target[p]:\n                need |= 1 << p\n    stamps.append((need, gain, cost))\nINF = float(\"inf\")\ndp = [INF] * 32\ndp[0] = 0\nchanged = True\nwhile changed:\n    changed = False\n    for mask in range(32):\n        d = dp[mask]\n        if d == INF:\n            continue\n        for need, gain, cost in stamps:\n            if need & ~mask == 0 and d + cost < dp[mask | gain]:\n                dp[mask | gain] = d + cost\n                changed = True\nprint(dp[31] if dp[31] < INF else -1)\n"
+  },
+  "cluster": "the-sigils"
+}

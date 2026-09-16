@@ -1,0 +1,47 @@
+{
+  "id": "the-oracle-sittings",
+  "title": "The Oracle's Sittings",
+  "lore": "Brin reads the hints in one long monotone, and the Company hears them in sittings, breaking to relight the candle and clear their heads. Nobody has yet worked out where to break.",
+  "statement": "The Oracle will read n hints in order; hint i weighs w_i. The Company hears them in sittings. A sitting is a nonempty block of consecutive hints, and the sittings split the hints 1, 2, ..., n into consecutive blocks with no hint left out and none heard twice.\n\nOpening a sitting costs c candles. The confusion of a sitting is the square of the total weight of the hints heard in it. The price of a plan is the sum over its sittings of c plus the confusion of that sitting.\n\nPrint the smallest price of any plan.\n\nThe answer can be as large as about 10^18, so use 64-bit arithmetic.\n\nExample 1:\nInput:\n4 5\n1 2 3 4\nOutput:\n49\nExplanation: The plan (1 2) (3) (4) costs (5 + 3^2) + (5 + 3^2) + (5 + 4^2) = 14 + 14 + 21 = 49. Hearing every hint alone costs 6 + 9 + 14 + 21 = 50, one sitting for everything costs 5 + 100 = 105, and (1 2 3) (4) costs 41 + 21 = 62. No plan beats 49.\n\nExample 2:\nInput:\n3 0\n7 7 7\nOutput:\n147\nExplanation: Sittings are free, so every hint is heard alone: three sittings at 7^2 each, 147 in total. Any join only makes the squares larger.\n\nExample 3:\nInput:\n5 1000000000000\n100000 100000 100000 100000 100000\nOutput:\n1250000000000\nExplanation: A sitting costs a thousand billion candles and the whole reading weighs 500000, so one sitting is cheapest: 10^12 + 500000^2 = 1250000000000. Two sittings would already cost at least 2 * 10^12.",
+  "inputFormat": "The first line contains two integers n and c, the number of hints and the cost of opening a sitting. The second line contains n integers w_1, ..., w_n, the weights of the hints in reading order.",
+  "outputFormat": "Print a single integer, the smallest price of any plan.",
+  "constraints": "1 <= n <= 10^4\n0 <= c <= 10^12\n1 <= w_i <= 10^5",
+  "tags": [
+    "dp",
+    "prefix-sums",
+    "math",
+    "geometry"
+  ],
+  "hints": [
+    "A plan is determined by where the cuts fall, so write dp[i] for the cheapest way to hear the first i hints and think about where the last sitting begins.",
+    "With prefix sums P, dp[i] is the minimum over j < i of dp[j] + c + (P_i - P_j)^2, which considers a quadratic number of cuts and is too slow at the top of the bounds.",
+    "Expand the square: dp[i] = P_i^2 + c + the minimum over j of ((-2 P_j) * P_i + dp[j] + P_j^2), so every candidate j is a straight line evaluated at the point x = P_i.",
+    "The weights are positive, so the slopes -2 P_j only fall and the query points P_i only rise; keep the lower hull of the lines in a list and advance a pointer that never moves back, which costs amortised constant time per hint."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "4 5\n1 2 3 4\n",
+      "output": "49\n"
+    },
+    {
+      "input": "3 0\n7 7 7\n",
+      "output": "147\n"
+    },
+    {
+      "input": "5 1000000000000\n100000 100000 100000 100000 100000\n",
+      "output": "1250000000000\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    c = int(data[1])\n    p = 0\n    pref = [0] * (n + 1)\n    for i in range(1, n + 1):\n        p += int(data[1 + i])\n        pref[i] = p\n    # dp[i] = min over j < i of dp[j] + c + (pref[i] - pref[j]) ** 2\n    #       = pref[i] ** 2 + c + min over j of ((-2 * pref[j]) * pref[i] + dp[j] + pref[j] ** 2)\n    # The slopes fall as j grows and the query points rise, so a deque of lines with a\n    # forward-only pointer answers every query in amortised constant time.\n    ms = [0]\n    bs = [0]\n    ptr = 0\n    dp = 0\n    for i in range(1, n + 1):\n        x = pref[i]\n        size = len(ms)\n        if ptr >= size:\n            ptr = size - 1\n        while ptr + 1 < size and ms[ptr + 1] * x + bs[ptr + 1] <= ms[ptr] * x + bs[ptr]:\n            ptr += 1\n        dp = ms[ptr] * x + bs[ptr] + x * x + c\n        m = -2 * x\n        b = dp + x * x\n        while len(ms) >= 2:\n            m1, b1 = ms[-2], bs[-2]\n            m2, b2 = ms[-1], bs[-1]\n            # line 2 is never strictly below both of its neighbours: drop it\n            if (b2 - b1) * (m2 - m) >= (b - b2) * (m1 - m2):\n                ms.pop()\n                bs.pop()\n                if ptr >= len(ms):\n                    ptr = len(ms) - 1\n            else:\n                break\n        ms.append(m)\n        bs.append(b)\n    sys.stdout.write(str(dp) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, c = int(data[0]), int(data[1])\nw = list(map(int, data[2:2 + n]))\npref = [0] * (n + 1)\nfor i in range(n):\n    pref[i + 1] = pref[i] + w[i]\ndp = [0] * (n + 1)\nfor i in range(1, n + 1):\n    p = pref[i]\n    dp[i] = min(dp[j] + c + (p - pref[j]) ** 2 for j in range(i))\nprint(dp[n])\n"
+  }
+}

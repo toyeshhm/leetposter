@@ -1,0 +1,47 @@
+{
+  "title": "The Warden's Claims",
+  "lore": "A ledger of n entries burned with the last candle, and all that survives is the Warden's habit of announcing, for stretches of it, the largest entry. The Company would like to know how many ledgers the Warden could have been describing.",
+  "statement": "A lost ledger had n entries x_1, ..., x_n, each an integer between 1 and W inclusive.\nThe Warden made m claims about it. Claim i says that the largest entry among x_{l_i}, ..., x_{r_i} is exactly v_i.\nCount the ledgers, that is the sequences x_1..x_n with 1 <= x_j <= W, that agree with every claim. Print the count modulo 998244353.\n\nExample 1:\nInput:\n3 2 3\n1 2 2\n2 3 3\nOutput:\n3\nExplanation: Entry 2 is at most 2 because of the first claim, so entry 3 must be 3 to satisfy the second. Entries 1 and 2 are each 1 or 2 and at least one of them is 2: (1, 2), (2, 1) and (2, 2). Three ledgers.\n\nExample 2:\nInput:\n4 2 5\n1 4 2\n2 3 4\nOutput:\n0\nExplanation: The second claim wants a 4 among entries 2..3, but the first claim caps every entry at 2.\n\nExample 3:\nInput:\n1 0 1000000000\nOutput:\n1755647\nExplanation: No claims, so every one of the 10^9 ledgers agrees, and 10^9 modulo 998244353 is 1755647.",
+  "inputFormat": "The first line has three integers n, m and W. Each of the next m lines has three integers l_i, r_i and v_i, one claim.",
+  "outputFormat": "One integer, the number of ledgers agreeing with all claims, modulo 998244353.",
+  "constraints": "1 <= n <= 10^5\n0 <= m <= 10^5\n1 <= W <= 10^9\n1 <= l_i <= r_i <= n\n1 <= v_i <= W",
+  "tags": [
+    "dp",
+    "sorting",
+    "dsu",
+    "combinatorics"
+  ],
+  "hints": [
+    "Each entry is capped by the smallest v among the claims covering it, and only entries whose cap equals v can be the largest entry that a claim with value v is talking about, so claims with different values never interact.",
+    "Fix one value v and look only at the positions capped by exactly v; each is either equal to v or one of the v - 1 smaller values, and every claim with value v needs at least one position equal to v inside its range.",
+    "Count with a DP over those positions whose state is the last position equal to v; the previous such position may not be so far back that a whole claim fits in the gap, so the allowed previous positions form a window whose left end only moves right.",
+    "Weight a gap by (v - 1) to the power of its length; keep the window sum incrementally, multiplying it by v - 1 when the gap grows and subtracting the terms that fall out on the left using a table of powers, then multiply the results over all values together with W to the power of the number of uncapped positions."
+  ],
+  "difficulty": "hard",
+  "rating": 2300,
+  "timeLimitMs": 5000,
+  "id": "the-wardens-bounds-claims",
+  "samples": [
+    {
+      "input": "3 2 3\n1 2 2\n2 3 3\n",
+      "output": "3\n"
+    },
+    {
+      "input": "4 2 5\n1 4 2\n2 3 4\n",
+      "output": "0\n"
+    },
+    {
+      "input": "1 0 1000000000\n",
+      "output": "1755647\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left, bisect_right\nMOD = 998244353\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); W = int(data[2])\n    claims = []\n    p = 3\n    for _ in range(m):\n        claims.append((int(data[p + 2]), int(data[p]) - 1, int(data[p + 1]) - 1))\n        p += 3\n    claims.sort()\n    # paint each position with the smallest claimed maximum covering it\n    upper = [0] * n\n    nxt = list(range(n + 1))  # next unpainted position (path compressed)\n    def find(x):\n        root = x\n        while nxt[root] != root:\n            root = nxt[root]\n        while nxt[x] != root:\n            nxt[x], x = root, nxt[x]\n        return root\n    for v, l, r in claims:\n        i = find(l)\n        while i <= r:\n            upper[i] = v\n            nxt[i] = i + 1\n            i = find(i + 1)\n    # group positions by their upper value\n    positions = {}\n    free = 0\n    for i in range(n):\n        u = upper[i]\n        if u == 0:\n            free += 1\n        else:\n            lst = positions.get(u)\n            if lst is None:\n                positions[u] = [i]\n            else:\n                lst.append(i)\n    # translate each claim into index space of its value class\n    by_value = {}\n    for v, l, r in claims:\n        P = positions.get(v)\n        if P is None:\n            print(0)\n            return\n        a = bisect_left(P, l)\n        b = bisect_right(P, r) - 1\n        if a > b:\n            print(0)\n            return\n        by_value.setdefault(v, []).append((b, a))\n    ans = pow(W, free, MOD)\n    for v, P in positions.items():\n        k = len(P)\n        ivs = by_value[v]\n        ivs.sort()\n        base = v - 1\n        pw = [1] * (k + 1)\n        for t in range(1, k + 1):\n            pw[t] = pw[t - 1] * base % MOD\n        g = [0] * (k + 1)\n        g[0] = 1\n        lo = 0          # smallest allowed previous-hit index j\n        S = 0           # sum over j in [lo, i-1] of g[j] * base^(i-1-j)\n        ptr = 0         # intervals with right end <= i-2 have been absorbed into maxA\n        maxA = -1\n        for i in range(1, k + 1):\n            # window now spans j in [lo, i-1], S holds terms with exponent i-1-j\n            S = (S * base + g[i - 1]) % MOD if i > 1 else g[0]\n            while ptr < len(ivs) and ivs[ptr][0] <= i - 2:\n                if ivs[ptr][1] > maxA:\n                    maxA = ivs[ptr][1]\n                ptr += 1\n            while lo <= maxA:\n                S = (S - g[lo] * pw[i - 1 - lo]) % MOD\n                lo += 1\n            g[i] = S\n        # final: previous hit j in [lo, k], gap j..k-1\n        while ptr < len(ivs):\n            if ivs[ptr][1] > maxA:\n                maxA = ivs[ptr][1]\n            ptr += 1\n        total = 0\n        for j in range(max(lo, maxA + 1), k + 1):\n            total = (total + g[j] * pw[k - j]) % MOD\n        ans = ans * total % MOD\n    print(ans)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import product\nMOD = 998244353\ndata = sys.stdin.read().split()\nn = int(data[0]); m = int(data[1]); W = int(data[2])\nclaims = []\np = 3\nfor _ in range(m):\n    claims.append((int(data[p]) - 1, int(data[p + 1]) - 1, int(data[p + 2])))\n    p += 3\nif W ** n <= 300000:\n    count = 0\n    for arr in product(range(1, W + 1), repeat=n):\n        if all(max(arr[l:r + 1]) == v for l, r, v in claims):\n            count += 1\n    print(count % MOD)\n    sys.exit()\n# quadratic method: paint upper bounds, then count per value with a plain double loop\nupper = [W + 1] * n\nfor l, r, v in claims:\n    for i in range(l, r + 1):\n        if v < upper[i]:\n            upper[i] = v\nfor l, r, v in claims:\n    if all(upper[i] != v for i in range(l, r + 1)):\n        print(0)\n        sys.exit()\ngroups = {}\nfor i in range(n):\n    groups.setdefault(upper[i], []).append(i)\nclaims_by_value = {}\nfor l, r, v in claims:\n    claims_by_value.setdefault(v, []).append((l, r))\nans = 1\nfor v, P in groups.items():\n    k = len(P)\n    if v == W + 1:\n        ans = ans * pow(W, k, MOD) % MOD\n        continue\n    idx = {pos: t for t, pos in enumerate(P)}\n    ivs = []\n    for l, r in claims_by_value[v]:\n        inside = [idx[i] for i in P if l <= i <= r]\n        ivs.append((inside[0], inside[-1]))\n    pw = [pow(v - 1, t, MOD) for t in range(k + 1)]\n    # gap positions j..t are all below v; that is fine only if no interval lies inside j..t\n    # first_ok[t] = smallest j allowed when the gap ends at t\n    first_ok = [0] * k\n    for t in range(k):\n        first_ok[t] = max([a + 1 for a, b in ivs if b <= t], default=0)\n    # g[i]: ways for the first i class positions with position i-1 equal to v\n    g = [0] * (k + 1)\n    g[0] = 1\n    for i in range(1, k + 1):\n        total = 0\n        lo = first_ok[i - 2] if i >= 2 else 0\n        for j in range(lo, i):\n            total += g[j] * pw[i - 1 - j]\n        g[i] = total % MOD\n    total = 0\n    lo = first_ok[k - 1]\n    for j in range(lo, k + 1):\n        total += g[j] * pw[k - j]\n    ans = ans * (total % MOD) % MOD\nprint(ans)\n"
+  },
+  "cluster": "the-wardens-bounds"
+}

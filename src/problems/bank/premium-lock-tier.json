@@ -1,0 +1,41 @@
+{
+  "id": "premium-lock-tier",
+  "title": "The Free Tier",
+  "lore": "Most of the archive wears the premium lock icon, and nobody in the Hall can afford it. Standing is the only coin that opens anything, and standing comes only from reading.",
+  "statement": "The archive holds n scrolls. Scroll i is shown only to a reader whose tier is at least r_i, and reading it raises the reader's tier by g_i from then on. The Company starts at tier s and may read the scrolls in any order, each of them at most once.\n\nReport how many scrolls the Company can end up having read.\n\nExample 1:\nInput:\n5 2\n2 1\n4 0\n3 2\n9 5\n1 0\nOutput:\n4\nExplanation: Tier 2 already shows scrolls 1 and 5, which ask for 2 and 1. Reading both raises the tier to 3, which shows scroll 3; its grant of 2 raises the tier to 5, which shows scroll 2. Scroll 4 asks for tier 9 and is never shown.\n\nExample 2:\nInput:\n3 1\n5 100\n6 100\n7 100\nOutput:\n0\nExplanation: Nothing is within reach at tier 1, and the tier rises only by reading.",
+  "inputFormat": "The first line contains two integers n and s, the number of scrolls and the Company's starting tier.\nEach of the next n lines contains two integers r_i and g_i, the tier scroll i demands and the tier it grants.",
+  "outputFormat": "Print a single integer, the largest number of scrolls the Company can read.",
+  "constraints": "1 <= n <= 10^5\n0 <= s <= 10^9\n1 <= r_i <= 10^9\n0 <= g_i <= 10^9",
+  "tags": [
+    "greedy",
+    "sorting",
+    "implementation"
+  ],
+  "hints": [
+    "Grants are never negative, so a scroll that comes within reach stays within reach. There is no order to regret and nothing to choose: the set of scrolls that can be read is fixed.",
+    "Rescanning the whole list after every read is n passes over n scrolls, far past what the bound allows. The only order that matters is the order of the requirements.",
+    "Sort the scrolls by requirement and walk the list once, adding each grant as you pass. The first scroll whose requirement is above the tier ends the walk, because every scroll after it asks for at least as much."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "5 2\n2 1\n4 0\n3 2\n9 5\n1 0\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 1\n5 100\n6 100\n7 100\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    tier = int(data[1])\n    scrolls = []\n    for i in range(n):\n        scrolls.append((int(data[2 + 2 * i]), int(data[3 + 2 * i])))\n    scrolls.sort()\n    read = 0\n    for r, g in scrolls:\n        if r > tier:\n            break\n        tier += g\n        read += 1\n    sys.stdout.write(str(read) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Simulates the rule itself: keep taking any scroll whose requirement is already met.\n# A heap hands back the cheapest remaining requirement, so nothing is sorted up front.\nimport sys\nimport heapq\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ntier = int(data[1])\nheap = []\nfor i in range(n):\n    heapq.heappush(heap, (int(data[2 + 2 * i]), int(data[3 + 2 * i])))\nread = 0\nwhile heap and heap[0][0] <= tier:\n    r, g = heapq.heappop(heap)\n    tier += g\n    read += 1\nprint(read)\n"
+  },
+  "cluster": "premium-lock"
+}

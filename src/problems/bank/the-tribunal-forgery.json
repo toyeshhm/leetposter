@@ -1,0 +1,46 @@
+{
+  "id": "the-tribunal-forgery",
+  "title": "The Forged Ballots",
+  "lore": "The Changeling wants seat x gone before the Unmasking, and has learned that a ballot without wax on it can be rewritten in the dark. The sealed ones it cannot touch.",
+  "statement": "A Hall has n seats numbered 1 to n, and m ballots have been cast. Ballot i names seat v_i and is either sealed (s_i = 1) or open (s_i = 0).\n\nThe Changeling may rewrite an open ballot: the name on it is replaced by any seat of the Changeling's choosing. Sealed ballots cannot be changed. Rewriting the same ballot twice is allowed but never useful.\n\nSeat x is cast out if it is named on strictly more ballots than every other seat. Find the minimum number of rewrites needed so that seat x is cast out, or report -1 if no sequence of rewrites can achieve it.\n\nExample 1:\nInput:\n3 5 1\n2 0\n2 1\n2 0\n3 0\n1 1\nOutput:\n2\nExplanation: Seat 1 holds one ballot, seat 2 three and seat 3 one. One rewrite is not enough: seat 1 would hold two and seat 2 at least two. Rewriting one open ballot of seat 2 and the open ballot of seat 3 to name seat 1 gives counts 3, 2, 0, so seat 1 is cast out.\n\nExample 2:\nInput:\n2 3 2\n1 1\n1 1\n1 0\nOutput:\n-1\nExplanation: Only one ballot is open. After rewriting it seat 2 holds one ballot and seat 1 still holds two sealed ones.\n\nExample 3:\nInput:\n4 4 4\n4 1\n4 0\n1 0\n2 1\nOutput:\n0\nExplanation: Seat 4 already holds two ballots and nobody else holds more than one.",
+  "inputFormat": "The first line contains n, m and x. Each of the next m lines contains v_i and s_i: the seat named on ballot i and 1 if the ballot is sealed, 0 if it is open.",
+  "outputFormat": "Print one integer: the minimum number of rewrites, or -1 if seat x cannot be cast out.",
+  "constraints": "2 <= n <= 2*10^5\n1 <= m <= 2*10^5\n1 <= x <= n\n1 <= v_i <= n\ns_i is 0 or 1",
+  "tags": [
+    "binary-search",
+    "greedy",
+    "sorting"
+  ],
+  "hints": [
+    "Every useful rewrite takes an open ballot away from some other seat and gives it to seat x, so after k rewrites seat x holds exactly its original count plus k.",
+    "If k rewrites are enough then k plus one rewrites are also enough, so the answer can be found by binary search on k, or by simulating one rewrite at a time.",
+    "For a fixed k, seat y must lose at least c_y minus (c_x plus k) plus 1 ballots when that is positive; each such loss must fit within the open ballots of seat y and the losses must sum to at most k.",
+    "The total number of open ballots not naming x is an upper bound on k; if even that many rewrites fail the check, the answer is -1."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "3 5 1\n2 0\n2 1\n2 0\n3 0\n1 1\n",
+      "output": "2\n"
+    },
+    {
+      "input": "2 3 2\n1 1\n1 1\n1 0\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "4 4 4\n4 1\n4 0\n1 0\n2 1\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); x = int(data[2])\n    cnt = [0] * (n + 1); opn = [0] * (n + 1)\n    for i in range(m):\n        v = int(data[3 + 2 * i]); s = data[4 + 2 * i]\n        cnt[v] += 1\n        if s == b\"0\":\n            opn[v] += 1\n    others = [(cnt[y], opn[y]) for y in range(1, n + 1) if y != x and cnt[y] > 0]\n    total_open = sum(o for _, o in others)\n    cx = cnt[x]\n    def feasible(k):\n        need_sum = 0\n        limit = cx + k\n        for c, o in others:\n            need = c - limit + 1\n            if need > 0:\n                if need > o:\n                    return False\n                need_sum += need\n                if need_sum > k:\n                    return False\n        return True\n    lo, hi = 0, total_open\n    if not feasible(hi):\n        print(-1); return\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if feasible(mid):\n            hi = mid\n        else:\n            lo = mid + 1\n    print(lo)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys, heapq\nfrom itertools import combinations\ndata = sys.stdin.read().split()\nn, m, x = int(data[0]), int(data[1]), int(data[2])\nballots = [(int(data[3 + 2 * i]), data[4 + 2 * i] == \"1\") for i in range(m)]\ndef cast_out(counts):\n    return all(counts[x] > counts[y] for y in range(1, n + 1) if y != x)\nif m <= 16:\n    # exhaustive: every subset of open ballots is rewritten to name x\n    open_idx = [i for i, (v, sealed) in enumerate(ballots) if not sealed and v != x]\n    best = -1\n    for k in range(len(open_idx) + 1):\n        for chosen in combinations(open_idx, k):\n            counts = [0] * (n + 1)\n            for i, (v, _) in enumerate(ballots):\n                counts[x if i in chosen else v] += 1\n            if cast_out(counts):\n                best = k; break\n        if best != -1:\n            break\n    print(best)\nelse:\n    cnt = [0] * (n + 1); opn = [0] * (n + 1)\n    for v, sealed in ballots:\n        cnt[v] += 1\n        if not sealed:\n            opn[v] += 1\n    fixed_max = 0\n    heap = []\n    for y in range(1, n + 1):\n        if y == x:\n            continue\n        if opn[y] > 0:\n            heap.append((-cnt[y], y))\n        else:\n            fixed_max = max(fixed_max, cnt[y])\n    heapq.heapify(heap)\n    steps = 0\n    while True:\n        top = -heap[0][0] if heap else 0\n        if cnt[x] > max(fixed_max, top):\n            print(steps); break\n        if not heap:\n            print(-1); break\n        _, y = heapq.heappop(heap)\n        cnt[y] -= 1; opn[y] -= 1; cnt[x] += 1; steps += 1\n        if opn[y] > 0:\n            heapq.heappush(heap, (-cnt[y], y))\n        else:\n            fixed_max = max(fixed_max, cnt[y])\n"
+  },
+  "cluster": "the-tribunal"
+}

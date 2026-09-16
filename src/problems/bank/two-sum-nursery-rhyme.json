@@ -1,0 +1,44 @@
+{
+  "id": "two-sum-nursery-rhyme",
+  "title": "The Nursery Rhyme",
+  "lore": "Two Sum is the Hall's nursery rhyme and every scribe claims to have solved it as a child. The roll the Warden hands over tonight is rather longer than the one they remember.",
+  "statement": "The Company keeps a roll of n cards. Card i shows the integer a_i, and the Judge's number for the night is S.\n\nCard i has a partner if there is some card j with j != i and a_i + a_j = S. A card is never its own partner, but two cards showing the same value may be partners of each other.\n\nReport, for every card in the order it lies on the roll, whether it has a partner.\n\nExample 1:\nInput:\n6 10\n3 7 5 5 1 4\nOutput:\n111100\nExplanation: Card 1 (3) pairs with card 2 (7). The two cards showing 5 pair with each other, since 5 + 5 = 10. Card 5 (1) would need a 9 and card 6 (4) would need a 6, and neither is on the roll.\n\nExample 2:\nInput:\n4 8\n4 1 2 3\nOutput:\n0000\nExplanation: Card 1 shows 4 and 4 + 4 = 8, but there is only one card showing 4 and a card cannot be its own partner. No other value has its partner on the roll.\n\nExample 3:\nInput:\n5 6\n3 3 6 2 4\nOutput:\n11011\nExplanation: The two cards showing 3 pair with each other. Card 3 (6) would need a 0. Cards 4 and 5 show 2 and 4, which sum to 6.\n",
+  "inputFormat": "The first line contains two integers n and S, the number of cards and the Judge's number. The second line contains n integers a_1, ..., a_n, the value on each card in the order they lie on the roll.",
+  "outputFormat": "Print one line of exactly n characters. The i-th character is 1 if card i has a partner and 0 otherwise.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9\n2 <= S <= 2 * 10^9",
+  "tags": [
+    "hashing",
+    "implementation"
+  ],
+  "hints": [
+    "Card i has a partner exactly when the value S - a_i lies somewhere else on the roll, so the only question is which values are present and how many times.",
+    "Count how many cards carry each value in one pass, then answer each card by a single lookup of S - a_i instead of by another pass over the roll.",
+    "The one trap is a card whose partner value is its own value: then the roll needs at least two cards carrying it, so subtract the card itself from the count before deciding."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "6 10\n3 7 5 5 1 4\n",
+      "output": "111100\n"
+    },
+    {
+      "input": "4 8\n4 1 2 3\n",
+      "output": "0000\n"
+    },
+    {
+      "input": "5 6\n3 3 6 2 4\n",
+      "output": "11011\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = int(data[1])\n    a = [int(x) for x in data[2:2 + n]]\n    cnt = Counter(a)\n    out = []\n    for v in a:\n        need = s - v\n        c = cnt.get(need, 0)\n        if need == v:\n            c -= 1\n        out.append(\"1\" if c > 0 else \"0\")\n    sys.stdout.write(\"\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left, bisect_right\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = int(data[1])\na = [int(x) for x in data[2:2 + n]]\nres = []\nif n <= 2000:\n    # exhaustive: look at every other card\n    for i in range(n):\n        ok = \"0\"\n        for j in range(n):\n            if i != j and a[i] + a[j] == s:\n                ok = \"1\"\n                break\n        res.append(ok)\nelse:\n    # same question answered by sorting and binary search instead of a hash map\n    b = sorted(a)\n    for v in a:\n        need = s - v\n        c = bisect_right(b, need) - bisect_left(b, need)\n        if need == v:\n            c -= 1\n        res.append(\"1\" if c > 0 else \"0\")\nprint(\"\".join(res))\n"
+  },
+  "cluster": "two-sum-nursery"
+}

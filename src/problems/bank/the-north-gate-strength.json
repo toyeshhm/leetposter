@@ -1,0 +1,47 @@
+{
+  "id": "the-north-gate-strength",
+  "title": "Strengths of the Watch",
+  "lore": "The Warden of the North Gate counts a pair of tallies once for every number that divides them both, which is his usual arithmetic. Brin would like the count that survives it.",
+  "statement": "The Warden keeps n iron tallies. Tally i is stamped with the number a_i, and several tallies may carry the same number.\n\nFor two different tallies the Warden calls the greatest common divisor of their two numbers the strength of that pair. There are n(n-1)/2 pairs in all.\n\nPrint how many different values occur as the strength of a pair.\n\nExample 1:\nInput:\n4\n2 3 4 6\nOutput:\n3\nExplanation: The six strengths are gcd(2,3)=1, gcd(2,4)=2, gcd(2,6)=2, gcd(3,4)=1, gcd(3,6)=3 and gcd(4,6)=2. Three different values occur: 1, 2 and 3.\n\nExample 2:\nInput:\n3\n5 5 5\nOutput:\n1\nExplanation: Every pair has strength 5, so only one value occurs.\n\nExample 3:\nInput:\n2\n4 8\nOutput:\n1\nExplanation: Both numbers are divisible by 1, 2 and 4, but the only pair has strength 4. A divisor that both numbers share is not by itself a strength.",
+  "inputFormat": "The first line contains one integer n, the number of tallies.\nThe second line contains n integers a_1, ..., a_n, the numbers stamped on them.",
+  "outputFormat": "Print a single integer, the number of different values that occur as the strength of a pair.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= a_i <= 2 * 10^5",
+  "tags": [
+    "number-theory",
+    "math",
+    "combinatorics",
+    "implementation"
+  ],
+  "hints": [
+    "The order of the tallies never matters and n is far larger than the largest number, so work with how many tallies carry each value rather than with the list itself.",
+    "For a fixed d it is easy to count the pairs whose two numbers are both divisible by d: if cnt[d] tallies are divisible by d then there are cnt[d] * (cnt[d] - 1) / 2 such pairs. Every one of them has a strength that is a multiple of d, but most of them have a strength larger than d.",
+    "So the pairs of strength exactly d are those pairs minus the pairs of strength exactly 2d, exactly 3d, and so on. Walk d downwards from the largest number and every term you subtract is already known.",
+    "Both cnt[d] and the subtraction are sums over the multiples of d, which together cost about M log M steps for M the largest number. Print how many d end with a nonzero count."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "cluster": "the-north-gate",
+  "samples": [
+    {
+      "input": "4\n2 3 4 6\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\n5 5 5\n",
+      "output": "1\n"
+    },
+    {
+      "input": "2\n4 8\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    top = 0\n    vals = [0] * n\n    for i in range(n):\n        v = int(data[1 + i])\n        vals[i] = v\n        if v > top:\n            top = v\n    freq = [0] * (top + 1)\n    for v in vals:\n        freq[v] += 1\n    exact = [0] * (top + 2)\n    seen = 0\n    # Pairs of strength exactly d are the pairs both divisible by d, less the pairs of strength\n    # exactly 2d, 3d, and so on, which are already known when d falls.\n    for d in range(top, 0, -1):\n        c = sum(freq[d::d])\n        e = c * (c - 1) // 2 - sum(exact[2 * d::d])\n        exact[d] = e\n        if e > 0:\n            seen += 1\n    sys.stdout.write(str(seen) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Every pair's greatest common divisor, collected in a set. Quadratic, so the largest tests\n# here hold 7 * 10^3 tallies rather than the 2 * 10^5 the statement allows; the inner loop is\n# handed to map only so that the checker can afford to run it.\nimport sys\nfrom functools import partial\nfrom math import gcd\n\ndata = sys.stdin.read().split()\nn = int(data[0])\na = [int(x) for x in data[1:1 + n]]\nseen = set()\nfor i in range(n):\n    seen.update(map(partial(gcd, a[i]), a[i + 1:]))\nprint(len(seen))\n"
+  }
+}

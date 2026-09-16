@@ -1,0 +1,45 @@
+{
+  "id": "the-candle-ledger",
+  "title": "The Ledger of the North Gate",
+  "lore": "The Warden of the North Gate writes the candle's height at the end of every night and counts it twice. The ink has run on some lines, and the Company must know how many honest ledgers could lie beneath the stains.",
+  "statement": "The Hall burns one candle each night for n nights. A fresh candle has height H. During a night the candle burns an integer amount between a and b units inclusive. The amount cannot exceed the candle's height at the start of the night, so a candle shorter than a cannot serve a night at all. Before any night, Ada may replace the current candle with a fresh one of height H; the old one is discarded. The candle used on night 1 is fresh.\n\nThe ledger has n lines. Line j is the height of the candle at the end of night j, or -1 if the line is unreadable. Count the sequences (x_1, ..., x_n) of heights that could be the true ledger: x_j must equal line j wherever that line is readable, and there must exist some choice of replacements and burn amounts that leaves the candle at height exactly x_j at the end of night j for every j. Two sequences are different if they differ at any position; how a sequence is produced does not matter. Print the count modulo 998244353.\n\nExample 1:\nInput:\n2 5 2 3\n-1 -1\nOutput:\n7\nExplanation: Night 1 ends at height 2 or 3. From 2 the second night can only continue to 0, or use a fresh candle to end at 2 or 3. From 3 it can continue to 0 or 1, or use a fresh candle to end at 2 or 3. That is 3 + 4 = 7 sequences.\n\nExample 2:\nInput:\n3 4 1 2\n-1 3 -1\nOutput:\n6\nExplanation: Night 1 ends at 2 or 3. Night 2 must end at 3, which is only possible with a fresh candle burning 1 unit. Night 3 can then end at 1, 2 or 3 (2 and 3 are reachable both by continuing and by replacing, but each sequence counts once). 2 * 1 * 3 = 6.\n\nExample 3:\nInput:\n1 3 2 2\n0\nOutput:\n0\nExplanation: The fresh candle burns exactly 2 units and ends at height 1, never 0.",
+  "inputFormat": "The first line contains four integers n, H, a and b. The second line contains n integers, the ledger lines; each is -1 or an integer between 0 and H.",
+  "outputFormat": "Print a single integer, the number of possible true ledgers modulo 998244353.",
+  "constraints": "1 <= n <= 1000\n1 <= H <= 2000\n1 <= a <= b <= H\nEach ledger line is -1 or an integer between 0 and H inclusive",
+  "tags": [
+    "dp",
+    "prefix-sums"
+  ],
+  "hints": [
+    "Let f(j, v) be the number of valid ledgers for the first j nights that end with the candle at height v; the answer is the sum of f(n, v) over all v.",
+    "Night j can end at height v either by continuing a candle of height u with u - b <= v <= u - a, or after a replacement, in which case v lies in [H - b, H - a] whatever u was; a sequence still counts once even if both routes reach it.",
+    "So f(j, v) equals the total of f(j - 1, *) when H - b <= v <= H - a, and otherwise the sum of f(j - 1, u) for u from v + a to v + b; a prefix-sum array over f(j - 1, *) makes each night O(H).",
+    "A readable line simply zeroes every f(j, v) with v different from the recorded value. With n * H up to 2 * 10^6 you cannot afford an inner loop over the burn amount, and 998244353 is the modulus, not a suggestion."
+  ],
+  "difficulty": "hard",
+  "rating": 1800,
+  "timeLimitMs": 5000,
+  "cluster": "the-candle",
+  "samples": [
+    {
+      "input": "2 5 2 3\n-1 -1\n",
+      "output": "7\n"
+    },
+    {
+      "input": "3 4 1 2\n-1 3 -1\n",
+      "output": "6\n"
+    },
+    {
+      "input": "1 3 2 2\n0\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import accumulate\n\nMOD = 998244353\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); H = int(data[1]); a = int(data[2]); b = int(data[3])\n    ledger = data[4:4 + n]\n    dp = [0] * (H + 1)\n    dp[H] = 1\n    lo = H - b\n    hi = H - a\n    pad = [0] * (b + 1)\n    for j in range(n):\n        pref = [0]\n        pref.extend(accumulate(dp))\n        total = pref[H + 1] % MOD\n        # pref[i] = sum(dp[0:i]); pad so that pref[v + b + 1] is defined for every v\n        tail = pref[H + 1]\n        pref.extend([tail] * (b + 1))\n        x = int(ledger[j])\n        if x >= 0:\n            nxt = [0] * (H + 1)\n            if lo <= x <= hi:\n                nxt[x] = total\n            else:\n                nxt[x] = (pref[x + b + 1] - pref[x + a]) % MOD\n        else:\n            nxt = [(pref[v + b + 1] - pref[v + a]) % MOD for v in range(H + 1)]\n            nxt[lo:hi + 1] = [total] * (hi - lo + 1)\n        dp = nxt\n    print(sum(dp) % MOD)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 998244353\n\ndef main() -> None:\n    data = sys.stdin.read().split()\n    n = int(data[0]); H = int(data[1]); a = int(data[2]); b = int(data[3])\n    ledger = [int(x) for x in data[4:4 + n]]\n    # ways[v] = number of valid ledgers so far ending with a candle of height v\n    ways = [0] * (H + 1)\n    ways[H] = 1\n    for j in range(n):\n        total = sum(ways) % MOD\n        nxt = [0] * (H + 1)\n        for v in range(H + 1):\n            if H - b <= v <= H - a:\n                # a fresh candle can always end the night here\n                nxt[v] = total\n            else:\n                # only a continued candle of height u with u - b <= v <= u - a\n                nxt[v] = sum(ways[v + a:v + b + 1]) % MOD\n        if ledger[j] != -1:\n            keep = nxt[ledger[j]]\n            nxt = [0] * (H + 1)\n            nxt[ledger[j]] = keep\n        ways = nxt\n    print(sum(ways) % MOD)\n\nmain()\n"
+  }
+}

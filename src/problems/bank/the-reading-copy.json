@@ -1,0 +1,46 @@
+{
+  "id": "the-reading-copy",
+  "title": "The Copy Made of Glances",
+  "lore": "Dov the Herald may not carry the statement out of the Hall, so he copies it by memory: a glance at the page, a few words written down, another glance. He always starts a glance at the very first word.",
+  "statement": "The statement is a string s of lowercase letters. A Herald copies it without ever holding it: each glance lets him memorise a prefix of s of any length he likes, at least one letter, and he writes that prefix down. The copy is everything he wrote, in order.\n\nYou are given the copy t. Print the smallest number of glances that could have produced it, that is, the smallest k such that t is the concatenation of k nonempty prefixes of s. Print -1 if no number of glances produces t.\n\nExample 1:\nInput:\nabac\nabaabac\nOutput:\n2\nExplanation: The Herald wrote aba, then abac. Both are prefixes of abac, and together they spell the copy.\n\nExample 2:\nInput:\naab\naaab\nOutput:\n2\nExplanation: Writing a and then aab works. Memorising as much as possible on the first glance instead, aa, leaves ab, and neither ab nor a followed by b can be completed, so greed on a single glance is not the same as the fewest glances.\n\nExample 3:\nInput:\nabc\nacb\nOutput:\n-1\nExplanation: After writing a, the copy continues with c, and no prefix of abc starts with c.",
+  "inputFormat": "The first line contains the string s, the statement.\nThe second line contains the string t, the copy.\nBoth consist of lowercase English letters.",
+  "outputFormat": "One integer: the smallest number of glances, or -1 if the copy could not have been written this way.",
+  "constraints": "1 <= |s| <= 2 * 10^5\n1 <= |t| <= 2 * 10^5\ns and t consist of lowercase English letters only",
+  "tags": [
+    "strings",
+    "greedy",
+    "two-pointers"
+  ],
+  "hints": [
+    "Standing at position i of the copy, the pieces that may be written next are the prefixes of s of length 1, 2, ..., up to the length of the longest common prefix of s and t[i:]. The set of landing places is therefore the whole block i+1 .. i+match[i].",
+    "Every one of those match lengths comes out of a single Z-function run on s, a separator that appears in neither string, and t: the values sitting over t are exactly the match lengths.",
+    "Now it is a fewest-jumps problem on a line. Taking the longest piece each time is wrong, as Example 2 shows; instead sweep the block of positions reachable with g glances, take the furthest position any of them reaches, and that block is what g+1 glances reach.",
+    "Each position is swept exactly once, so the sweep is linear; if a block reaches no further than itself, the copy is impossible."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "abac\nabaabac\n",
+      "output": "2\n"
+    },
+    {
+      "input": "aab\naaab\n",
+      "output": "2\n"
+    },
+    {
+      "input": "abc\nacb\n",
+      "output": "-1\n"
+    }
+  ],
+  "cluster": "the-reading",
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    s = data[0]\n    t = data[1]\n    n = len(s)\n    m = len(t)\n    joined = s + b\"\\n\" + t\n    total = len(joined)\n    z = [0] * total\n    left = 0\n    right = 0\n    for i in range(1, total):\n        k = 0\n        if i < right:\n            k = right - i\n            other = z[i - left]\n            if other < k:\n                k = other\n        while i + k < total and joined[k] == joined[i + k]:\n            k += 1\n        z[i] = k\n        if i + k > right:\n            left = i\n            right = i + k\n    # reach[i] = the furthest position in t writable with one more glance from position i\n    base = n + 1\n    cur = 0\n    nxt = 0\n    i = 0\n    glances = 0\n    while cur < m:\n        while i <= cur and i < m:\n            far = i + z[base + i]\n            if far > nxt:\n                nxt = far\n            i += 1\n        if nxt <= cur:\n            print(-1)\n            return\n        cur = nxt\n        glances += 1\n    print(glances)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\ns = data[0]\nt = data[1]\nn = len(s)\nm = len(t)\n# The prefix function of s, a separator, and t gives at each position of t the longest prefix\n# of s ending there, so a piece ending at j starts anywhere in j - reach .. j - 1. The fewest\n# glances needed never falls as j grows, so the leftmost of those starts is always the best.\njoined = s + \"\\n\" + t\npi = [0] * len(joined)\nk = 0\nfor i in range(1, len(joined)):\n    ch = joined[i]\n    while k and joined[k] != ch:\n        k = pi[k - 1]\n    if joined[k] == ch:\n        k += 1\n    pi[i] = k\nbase = n + 1\nINF = float(\"inf\")\ndp = [INF] * (m + 1)\ndp[0] = 0\nfor j in range(1, m + 1):\n    reach = pi[base + j - 1]\n    if reach:\n        prev = dp[j - reach]\n        if prev < INF:\n            dp[j] = prev + 1\nprint(-1 if dp[m] == INF else dp[m])\n"
+  }
+}

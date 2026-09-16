@@ -1,0 +1,40 @@
+{
+  "title": "The Torn Page",
+  "lore": "The Warden of the North Gate counts everything twice, and still insists the balance never went below what the ledger shows. The Company would like to know what happens if a page goes missing.",
+  "statement": "The Warden of the North Gate keeps the ledger of the hall's balance. The ledger has n entries a_1, a_2, ..., a_n. The balance starts at 0, and after each entry the balance changes by that entry's value. The Warden writes down the balance after every entry.\n\nThe Company is considering tearing out one page: a contiguous block of entries from a_l to a_r inclusive. The remaining entries stay in their original order and the Warden rewrites the balance from 0 as if the torn entries never existed.\n\nFor each of q proposed pages (l, r), print the lowest balance the Warden would write down, counting the starting 0 as one of the balances written. Each proposal is independent; nothing is actually torn out.\n\nExample 1:\nInput:\n5 3\n3 -5 2 -4 6\n2 2\n1 3\n4 5\nOutput:\n0\n-4\n-2\nExplanation: Tearing out entry 2 leaves 3, 2, -4, 6 with balances 0, 3, 5, 1, 7, lowest 0. Tearing out entries 1 to 3 leaves -4, 6 with balances 0, -4, 2, lowest -4. Tearing out entries 4 to 5 leaves 3, -5, 2 with balances 0, 3, -2, 0, lowest -2.\n\nExample 2:\nInput:\n2 1\n-2 -2\n1 2\nOutput:\n0\nExplanation: Everything is torn out. Only the starting 0 is written.",
+  "inputFormat": "The first line contains two integers n and q, the number of entries and the number of proposals.\nThe second line contains n integers a_1, ..., a_n.\nEach of the next q lines contains two integers l and r describing one proposal.",
+  "outputFormat": "Print q lines. The i-th line contains the lowest balance written by the Warden after the i-th proposed page is torn out, counting the starting 0.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n-10^9 <= a_i <= 10^9\n1 <= l <= r <= n",
+  "tags": [
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "Rebuilding the balance for every proposal costs n steps each, and with both n and q as large as the Warden allows that is far too slow, so precompute something that answers each proposal in constant time.",
+    "Let P_i be the balance after the first i entries of the untouched ledger; the balances before the torn page are exactly P_0, ..., P_(l-1), unchanged.",
+    "Every balance after the torn page is the original P_j (for j > r) shifted down by the sum of the torn entries, P_r - P_(l-1), so a suffix minimum of P plus a prefix minimum of P answers each proposal."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "id": "the-ledger-page",
+  "samples": [
+    {
+      "input": "5 3\n3 -5 2 -4 6\n2 2\n1 3\n4 5\n",
+      "output": "0\n-4\n-2\n"
+    },
+    {
+      "input": "2 1\n-2 -2\n1 2\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    prefix = [0] * (n + 1)\n    s = 0\n    for i in range(n):\n        s += int(data[2 + i])\n        prefix[i + 1] = s\n    low_before = [0] * (n + 1)\n    m = 0\n    for i in range(n + 1):\n        v = prefix[i]\n        if v < m:\n            m = v\n        low_before[i] = m\n    big = 1 << 62\n    low_after = [big] * (n + 2)\n    m = big\n    for i in range(n, -1, -1):\n        v = prefix[i]\n        if v < m:\n            m = v\n        low_after[i] = m\n    out = []\n    idx = 2 + n\n    for _ in range(q):\n        l = int(data[idx])\n        r = int(data[idx + 1])\n        idx += 2\n        ans = low_before[l - 1]\n        t = low_after[r + 1] - (prefix[r] - prefix[l - 1])\n        if t < ans:\n            ans = t\n        out.append(ans)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import accumulate\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nq = int(data[1])\na = [int(x) for x in data[2:2 + n]]\nout = []\nfor k in range(q):\n    l = int(data[2 + n + 2 * k])\n    r = int(data[3 + n + 2 * k])\n    remaining = a[:l - 1] + a[r:]\n    out.append(min([0] + list(accumulate(remaining))))\nprint(*out, sep=\"\\n\")\n"
+  },
+  "cluster": "the-ledger"
+}

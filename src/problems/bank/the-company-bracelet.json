@@ -1,0 +1,46 @@
+{
+  "id": "the-company-bracelet",
+  "title": "Seatings of the Company",
+  "lore": "Cass the Cartographer insists that a seating turned by one seat is the same seating, and that reading the table backwards changes nothing either. Nobody has found the flaw in it yet.",
+  "statement": "The round table has n seats, each seat neighbouring the two beside it, and the table is round, so seat n - 1 neighbours seat 0. A seating gives every seat to a scribe of one of k guilds, and no two neighbouring seats may hold scribes of the same guild.\n\nTwo seatings count as the same if one becomes the other by turning the table, that is by moving every scribe the same number of seats around it, or by reading the seats the other way round, that is by a reflection, or by doing both.\n\nCount the seatings that are different in this sense and print the count modulo 10^9 + 7.\n\nExample 1:\nInput:\n3 3\nOutput:\n1\nExplanation: Three seats and three guilds force all three guilds to appear, and any such seating can be turned or read backwards into any other, so they are all the same seating.\n\nExample 2:\nInput:\n4 3\nOutput:\n6\nExplanation: There are 18 seatings of four seats from three guilds with no two neighbours alike. Turning and reflection gather them into 6 classes.\n\nExample 3:\nInput:\n5 2\nOutput:\n0\nExplanation: An odd number of seats cannot be filled from two guilds without two of a guild ending up side by side, so there is nothing to count.",
+  "inputFormat": "One line with two integers n and k: the number of seats and the number of guilds.",
+  "outputFormat": "One integer: the number of different seatings modulo 10^9 + 7.",
+  "constraints": "3 <= n <= 10^9\n1 <= k <= 10^9",
+  "tags": [
+    "combinatorics",
+    "math",
+    "number-theory"
+  ],
+  "hints": [
+    "The turns and the reflections form a group of 2n symmetries of the table. Count, for each symmetry, the seatings it leaves unchanged, and the answer is the average of those counts.",
+    "A turn by r leaves a seating unchanged exactly when the seating repeats with period g = gcd(r, n), and such seatings are the proper seatings of a round table of g seats, of which there are (k - 1)^g + (-1)^g * (k - 1). Gather the turns by the value of g and there are only the divisors of n to walk, with Euler's totient counting the turns in each group.",
+    "A reflection whose axis passes between two seats makes those two seats neighbours holding the same guild, so it leaves nothing unchanged. The same happens for every reflection when n is odd. Only when n is even do the n / 2 axes through two opposite seats leave anything unchanged, namely k * (k - 1)^(n/2) seatings each.",
+    "n is up to 10^9, so factorise it by trial division to about 31623 and build the divisors with their totients from the factorisation. The modulus 10^9 + 7 is a prime larger than n, so 2n has an inverse and the average can be taken with it."
+  ],
+  "difficulty": "hard",
+  "rating": 2500,
+  "timeLimitMs": 4000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 10 ** 9 + 7\n\ndef main():\n    n, k = (int(x) for x in sys.stdin.buffer.read().split())\n    rest = n\n    factors = []\n    d = 2\n    while d * d <= rest:\n        if rest % d == 0:\n            e = 0\n            while rest % d == 0:\n                rest //= d\n                e += 1\n            factors.append((d, e))\n        d += 1 if d == 2 else 2\n    if rest > 1:\n        factors.append((rest, 1))\n    divisors = [(1, 1)]\n    for p, e in factors:\n        grown = []\n        power = 1\n        phi = 1\n        for j in range(e + 1):\n            if j == 1:\n                power = p\n                phi = p - 1\n            elif j > 1:\n                power *= p\n                phi *= p\n            for dv, ph in divisors:\n                grown.append((dv * power, ph * phi))\n        divisors = grown\n    km1 = (k - 1) % MOD\n    total = 0\n    for dv, ph in divisors:\n        g = n // dv\n        fixed = pow(km1, g, MOD) + (km1 if g % 2 == 0 else MOD - km1)\n        total = (total + ph % MOD * (fixed % MOD)) % MOD\n    if n % 2 == 0:\n        half = n // 2\n        total = (total + half % MOD * (k % MOD) % MOD * pow(km1, half, MOD)) % MOD\n    print(total * pow(2 * n % MOD, MOD - 2, MOD) % MOD)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import product\n\nMOD = 10 ** 9 + 7\n\ndef mul(X, Y):\n    return (\n        (X[0] * Y[0] + X[1] * Y[2]) % MOD, (X[0] * Y[1] + X[1] * Y[3]) % MOD,\n        (X[2] * Y[0] + X[3] * Y[2]) % MOD, (X[2] * Y[1] + X[3] * Y[3]) % MOD,\n    )\n\ndef cycle_colourings(g, k):\n    # a_1 = 0, a_2 = k(k-1), a_g = (k-2)a_{g-1} + (k-1)a_{g-2}\n    if g == 1:\n        return 0\n    a2 = k % MOD * ((k - 1) % MOD) % MOD\n    if g == 2:\n        return a2\n    base = ((k - 2) % MOD, (k - 1) % MOD, 1, 0)\n    acc = (1, 0, 0, 1)\n    e = g - 2\n    while e:\n        if e & 1:\n            acc = mul(acc, base)\n        base = mul(base, base)\n        e >>= 1\n    return acc[0] * a2 % MOD\n\ndef main():\n    n, k = (int(x) for x in sys.stdin.read().split())\n    if n <= 13 and k <= 4 and k ** n <= 70000:\n        seen = set()\n        for colouring in product(range(k), repeat=n):\n            if any(colouring[i] == colouring[i - 1] for i in range(n)):\n                continue\n            best = None\n            for r in range(n):\n                turned = colouring[r:] + colouring[:r]\n                mirrored = tuple(reversed(turned))\n                if best is None or turned < best:\n                    best = turned\n                if mirrored < best:\n                    best = mirrored\n            seen.add(best)\n        print(len(seen) % MOD)\n        return\n    divisors = []\n    d = 1\n    while d * d <= n:\n        if n % d == 0:\n            divisors.append(d)\n            if d != n // d:\n                divisors.append(n // d)\n        d += 1\n    divisors.sort()\n    exact = {}\n    necklaces = 0\n    for g in divisors:\n        value = cycle_colourings(g, k)\n        for smaller in divisors:\n            if smaller < g and g % smaller == 0:\n                value -= exact[smaller]\n        value %= MOD\n        exact[g] = value\n        necklaces = (necklaces + value * pow(g, MOD - 2, MOD)) % MOD\n    inv2 = pow(2, MOD - 2, MOD)\n    if n % 2 == 0:\n        mirrors = k % MOD * pow((k - 1) % MOD, n // 2, MOD) % MOD * inv2 % MOD\n    else:\n        mirrors = 0\n    print((necklaces + mirrors) % MOD * inv2 % MOD)\n\nmain()\n"
+  },
+  "samples": [
+    {
+      "input": "3 3\n",
+      "output": "1\n"
+    },
+    {
+      "input": "4 3\n",
+      "output": "6\n"
+    },
+    {
+      "input": "5 2\n",
+      "output": "0\n"
+    }
+  ],
+  "cluster": "the-company"
+}

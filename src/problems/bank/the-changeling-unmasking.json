@@ -1,0 +1,47 @@
+{
+  "id": "the-changeling-unmasking",
+  "title": "The Unmasking",
+  "lore": "The Unmasking lays every card next to the truth. What survives it is not a confession but a list of the seats no arrangement of the night can clear.",
+  "statement": "A Hall has n seats, numbered 1 to n. The record of the night says k of them were Changelings and the rest true crew.\n\nAt the Unmasking, m pairings were laid out. Pairing t names two seats x_t and y_t and a number d_t: if d_t is 0 the two seats are of the same kind, both Changelings or both true crew; if d_t is 1 they are of different kinds. Take every pairing as written; the same two seats may be paired more than once, and nothing promises the record holds together.\n\nCall an assignment valid if it gives every seat a kind, agrees with every pairing, and makes exactly k seats Changelings. Say which seats the Unmasking settles: a seat is settled as a Changeling if it is a Changeling in every valid assignment, settled as crew if it is crew in every valid assignment, and open otherwise.\n\nExample 1:\nInput:\n4 2 1\n1 2 1\n3 4 0\nOutput:\n??TT\nExplanation: Seats 1 and 2 are of different kinds, so exactly one of them is a Changeling whichever way it falls. That is already the one Changeling, so seats 3 and 4, being of the same kind, must both be crew. Seats 1 and 2 stay open because both arrangements of that pair are valid.\n\nExample 2:\nInput:\n3 1 2\n1 2 0\nOutput:\nCCT\nExplanation: Seats 1 and 2 are of the same kind. Two Changelings are needed, and seat 3 alone cannot supply two, so seats 1 and 2 are both Changelings and seat 3 is crew.\n\nExample 3:\nInput:\n3 3 1\n1 2 1\n2 3 1\n1 3 1\nOutput:\n-1\nExplanation: Seats 1 and 2 differ, seats 2 and 3 differ, so seats 1 and 3 are of the same kind, which the third pairing denies. No assignment agrees with all three.",
+  "inputFormat": "The first line contains three integers n, m and k: the number of seats, the number of pairings and the number of Changelings.\nEach of the next m lines contains three integers x_t, y_t and d_t, with x_t != y_t and d_t either 0 or 1.",
+  "outputFormat": "If no valid assignment exists, print -1.\nOtherwise print one line of n characters: the i-th is C if seat i is a Changeling in every valid assignment, T if it is crew in every valid assignment, and ? otherwise.",
+  "constraints": "1 <= n <= 4000\n0 <= m <= 2 * 10^5\n0 <= k <= n\n1 <= x_t, y_t <= n and x_t != y_t\nd_t is 0 or 1",
+  "tags": [
+    "dsu",
+    "dp",
+    "bitmasks",
+    "graphs"
+  ],
+  "hints": [
+    "The pairings cut the seats into groups. Inside a group, fixing one seat's kind fixes every other seat's kind, so a group offers exactly two choices: which of its two sides is the Changeling side. Contradictory pairings inside a group mean -1.",
+    "Write each group as a pair of side sizes (a, b). A valid assignment picks one number from every pair so that the picked numbers total exactly k, which is a subset sum over the groups.",
+    "A seat is settled exactly when only one of its group's two choices can be completed to k by the other groups. So for every group j you need the set of totals the groups other than j can reach.",
+    "Recomputing that set from scratch for every group is quadratic. Split the groups in half and recurse into each half carrying the reachable totals of everything outside it. A Python integer is the bitset: shifting it left by a adds a to every reachable total, and the two choices are ored together."
+  ],
+  "difficulty": "hard",
+  "rating": 2200,
+  "timeLimitMs": 5000,
+  "cluster": "the-changeling",
+  "samples": [
+    {
+      "input": "4 2 1\n1 2 1\n3 4 0\n",
+      "output": "??TT\n"
+    },
+    {
+      "input": "3 1 2\n1 2 0\n",
+      "output": "CCT\n"
+    },
+    {
+      "input": "3 3 1\n1 2 1\n2 3 1\n1 3 1\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    k = int(data[2])\n    parent = list(range(n + 1))\n    par = [0] * (n + 1)\n\n    def find(x: int) -> int:\n        path = []\n        while parent[x] != x:\n            path.append(x)\n            x = parent[x]\n        for node in reversed(path):\n            par[node] ^= par[parent[node]]\n            parent[node] = x\n        return x\n\n    p = 3\n    for _ in range(m):\n        x = int(data[p])\n        y = int(data[p + 1])\n        d = int(data[p + 2])\n        p += 3\n        rx = find(x)\n        ry = find(y)\n        if rx == ry:\n            if par[x] ^ par[y] != d:\n                sys.stdout.write(\"-1\\n\")\n                return\n        else:\n            parent[ry] = rx\n            par[ry] = par[x] ^ par[y] ^ d\n    side = [0] * (n + 1)\n    index = [0] * (n + 1)\n    comps = []\n    for v in range(1, n + 1):\n        r = find(v)\n        side[v] = par[v]\n        if r == v:\n            index[v] = len(comps)\n            comps.append([0, 0])\n    for v in range(1, n + 1):\n        comps[index[find(v)]][par[v]] += 1\n    c = len(comps)\n\n    def fold(bits: int, lo: int, hi: int) -> int:\n        for t in range(lo, hi + 1):\n            a, b = comps[t]\n            bits = (bits << a) | (bits << b)\n        return bits\n\n    total = fold(1, 0, c - 1)\n    if k > n or not (total >> k) & 1:\n        sys.stdout.write(\"-1\\n\")\n        return\n    outside = [0] * c\n    stack = [(0, c - 1, 1)]\n    while stack:\n        lo, hi, bits = stack.pop()\n        if lo == hi:\n            outside[lo] = bits\n            continue\n        mid = (lo + hi) // 2\n        stack.append((lo, mid, fold(bits, mid + 1, hi)))\n        stack.append((mid + 1, hi, fold(bits, lo, mid)))\n    mark = [0] * c\n    for t in range(c):\n        a, b = comps[t]\n        bits = outside[t]\n        ok_a = k >= a and (bits >> (k - a)) & 1\n        ok_b = k >= b and (bits >> (k - b)) & 1\n        mark[t] = (2 if ok_a else 0) | (1 if ok_b else 0)\n    ans = []\n    for v in range(1, n + 1):\n        t = mark[index[find(v)]]\n        if t == 3:\n            ans.append(\"?\")\n        elif t == 2:\n            ans.append(\"C\" if side[v] == 0 else \"T\")\n        else:\n            ans.append(\"T\" if side[v] == 0 else \"C\")\n    sys.stdout.write(\"\".join(ans) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndata = sys.stdin.buffer.read().split()\nn = int(data[0]); m = int(data[1]); k = int(data[2])\nadj = [[] for _ in range(n + 1)]\np = 3\nfor _ in range(m):\n    x = int(data[p]); y = int(data[p + 1]); t = int(data[p + 2]); p += 3\n    adj[x].append((y, t))\n    adj[y].append((x, t))\ncolor = [-1] * (n + 1)\ngroups = []\nbad = False\nfor s in range(1, n + 1):\n    if color[s] != -1:\n        continue\n    color[s] = 0\n    members = [s]\n    q = deque([s])\n    while q:\n        u = q.popleft()\n        for v, t in adj[u]:\n            want = color[u] ^ t\n            if color[v] == -1:\n                color[v] = want\n                members.append(v)\n                q.append(v)\n            elif color[v] != want:\n                bad = True\n    groups.append(members)\nif bad:\n    print(-1)\n    sys.exit()\nsizes = []\nfor mem in groups:\n    a = sum(1 for v in mem if color[v] == 0)\n    sizes.append((a, len(mem) - a))\nfull = 1\nfor a, b in sizes:\n    full = (full << a) | (full << b)\nif k > n or not (full >> k) & 1:\n    print(-1)\n    sys.exit()\nans = [\"\"] * (n + 1)\ncache = {}\nfor j, mem in enumerate(groups):\n    a, b = sizes[j]\n    bits = cache.get((a, b))\n    if bits is None:\n        # Groups with the same pair of side sizes leave the same multiset behind.\n        bits = 1\n        for i2, (c, e) in enumerate(sizes):\n            if i2 == j:\n                continue\n            bits = (bits << c) | (bits << e)\n        cache[(a, b)] = bits\n    ok_a = k >= a and (bits >> (k - a)) & 1\n    ok_b = k >= b and (bits >> (k - b)) & 1\n    for v in mem:\n        if ok_a and ok_b:\n            ans[v] = \"?\"\n        elif ok_a:\n            ans[v] = \"C\" if color[v] == 0 else \"T\"\n        else:\n            ans[v] = \"T\" if color[v] == 0 else \"C\"\nprint(\"\".join(ans[1:]))\n"
+  }
+}

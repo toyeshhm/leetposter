@@ -1,0 +1,47 @@
+{
+  "id": "the-seal-signet",
+  "title": "The Signet and the Impression",
+  "lore": "A signet cuts the mirror of what it stamps, so a true ring gives an impression that reads the same as the ring itself. The Hall will accept nothing that is not both true and sound, and the engraver charges by the mark.",
+  "statement": "An impression is a row of n marks, each a press ( or a lift ).\n\nThe mirror of an impression is the row read backwards with every press turned into a lift and every lift turned into a press. An impression is true if it equals its own mirror. Read left to right, an impression is sound if the number of lifts never exceeds the number of presses at any point, and the two are equal at the end.\n\nThe Hall holds an impression s and wants one that is both true and sound. The engraver can recut any mark, turning a press into a lift or a lift into a press; recutting mark i costs c_i, and every mark may be recut at most once. Print the least total cost of reaching an impression that is both true and sound, or -1 if no such impression of this length exists.\n\nExample 1:\n\nInput:\n2\n((\n1 5\nOutput:\n5\nExplanation: The only true and sound impression of length 2 is (), so mark 2 must be recut, at a cost of 5. Recutting mark 1 instead gives )(, which is true but not sound.\n\nExample 2:\n\nInput:\n4\n))((\n10 1 1 10\nOutput:\n20\nExplanation: Mark 1 must become a press and mark 4 must then be a lift, which costs 10 + 10. Marks 2 and 3 are already a lift and a press, which is allowed, so the result is ()() and nothing more is paid. Recutting marks 2 and 3 as well would give (()) for 2 more.\n\nExample 3:\n\nInput:\n3\n(()\n1 1 1\nOutput:\n-1\nExplanation: In a true impression of odd length the middle mark would have to be the opposite of itself.",
+  "inputFormat": "The first line contains one integer n, the number of marks.\nThe second line contains a string of n characters, each one ( or ), the impression the Hall holds.\nThe third line contains n integers c_1 ... c_n, the cost of recutting each mark.",
+  "outputFormat": "One integer: the least total cost, or -1 if no true and sound impression of length n exists.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery character of the impression is ( or )\n1 <= c_i <= 10^6",
+  "tags": [
+    "greedy",
+    "heap",
+    "strings",
+    "constructive"
+  ],
+  "hints": [
+    "Being true ties mark i to mark n+1-i: they must be opposite. For odd n the middle mark is tied to itself, so the answer is -1. Otherwise the second half is decided the moment the first half is.",
+    "In a true impression the balance after mark n-k equals the balance after mark k, so every balance in the second half repeats one from the first half. It is sound exactly when the first half never goes below zero.",
+    "That leaves n/2 places, each either a press or a lift with its own price: place i costs press_i = [s_i is not a press] * c_i + [s_(n+1-i) is not a lift] * c_(n+1-i), and lift_i the other way round. Minimise the total with every prefix of the half holding at least as many presses as lifts. An O(n^2) walk over the balance is too slow at n = 2 * 10^5.",
+    "Take the cheaper of the two at every place, and when you take the lift push its regret press_i - lift_i on a heap. The moment the running balance would go below zero, pop the smallest regret and turn that lift back into a press."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "2\n((\n1 5\n",
+      "output": "5\n"
+    },
+    {
+      "input": "4\n))((\n10 1 1 10\n",
+      "output": "20\n"
+    },
+    {
+      "input": "3\n(()\n1 1 1\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    if n % 2 == 1:\n        sys.stdout.write(\"-1\\n\")\n        return\n    s = data[1].decode()\n    w = data[2:2 + n]\n    total = 0\n    bal = 0\n    regrets = []\n    for i in range(n // 2):\n        j = n - 1 - i\n        wi = int(w[i])\n        wj = int(w[j])\n        # press at mark i forces a lift at mark j, and the other way round\n        press = (0 if s[i] == \"(\" else wi) + (0 if s[j] == \")\" else wj)\n        lift = (0 if s[i] == \")\" else wi) + (0 if s[j] == \"(\" else wj)\n        if press <= lift:\n            total += press\n            bal += 1\n        else:\n            total += lift\n            bal -= 1\n            heappush(regrets, press - lift)\n        if bal < 0:\n            total += heappop(regrets)\n            bal += 2\n    sys.stdout.write(str(total) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\n# Same reduction, opposite greedy: read it as \"of the first k places in the half, at least\n# ceil(k / 2) must be presses\". Walk k upwards, keep every place seen so far in a heap, and\n# whenever the requirement rises take the cheapest place not yet turned into a press. Anything\n# left over is turned into a press only when that is cheaper than leaving it a lift.\ndata = sys.stdin.read().split()\nn = int(data[0])\nif n % 2 == 1:\n    print(-1)\nelse:\n    s = data[1]\n    w = [int(x) for x in data[2:2 + n]]\n    m = n // 2\n    base = 0\n    delta = []\n    for i in range(m):\n        j = n - 1 - i\n        press = (0 if s[i] == \"(\" else w[i]) + (0 if s[j] == \")\" else w[j])\n        lift = (0 if s[i] == \")\" else w[i]) + (0 if s[j] == \"(\" else w[j])\n        base += lift\n        delta.append(press - lift)\n    heap = []\n    taken = 0\n    extra = 0\n    for k in range(1, m + 1):\n        heappush(heap, delta[k - 1])\n        while taken < (k + 1) // 2:\n            extra += heappop(heap)\n            taken += 1\n    while heap:\n        d = heappop(heap)\n        if d >= 0:\n            break\n        extra += d\n    print(base + extra)\n"
+  },
+  "cluster": "the-seal"
+}

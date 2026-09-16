@@ -1,0 +1,46 @@
+{
+  "id": "the-shared-file-ancestor",
+  "title": "The Draft Nobody Kept",
+  "lore": "Two scribes left with their own version of the shared file and neither kept the draft they started from. The Herald cannot produce it either, but he is expected to say exactly how much work it would take to make the two agree.",
+  "statement": "Two scribes walked out of the Hall with their own version of the shared file, and the draft they both started from is gone. Version A has n lines and version B has m lines. A line is recorded as a fingerprint, an integer, and two lines are the same line exactly when their fingerprints are equal.\n\nOne edit inserts a single line anywhere in a version, or deletes a single line from it. Nothing else is allowed: rewriting a line counts as a delete and an insert.\n\nPrint the smallest number of edits that turns version A into version B.\n\nNo fingerprint appears more than three times in version B. Version A is not restricted.\n\nExample 1:\nInput:\n4 4\n1 2 3 4\n2 1 3 4\nOutput:\n2\nExplanation: Delete the line 1 from the front of A and insert it again after the line 2, which is two edits. The lines 1, 3, 4 survive untouched, and no single edit is enough.\n\nExample 2:\nInput:\n3 2\n5 5 5\n5 5\nOutput:\n1\nExplanation: Delete one of the three copies of the line 5.\n\nExample 3:\nInput:\n2 2\n1 2\n3 4\nOutput:\n4\nExplanation: The two versions share nothing, so both lines of A are deleted and both lines of B are inserted.",
+  "inputFormat": "The first line contains two integers n and m.\nThe second line contains n integers a_1, ..., a_n, the fingerprints of version A in order.\nThe third line contains m integers b_1, ..., b_m, the fingerprints of version B in order.",
+  "outputFormat": "Print one integer: the smallest number of line insertions and line deletions that turns version A into version B.",
+  "constraints": "1 <= n <= 10^5\n1 <= m <= 10^5\n1 <= a_i, b_j <= 10^9\nno value appears more than 3 times among b_1, ..., b_m",
+  "tags": [
+    "dp",
+    "binary-search",
+    "hashing",
+    "greedy"
+  ],
+  "hints": [
+    "Lines that survive untouched form a common subsequence of the two versions, and everything else is deleted or inserted, so the answer is n + m minus twice the length of the longest common subsequence.",
+    "The table of the usual quadratic recurrence has 10^10 cells here, but a fingerprint appears at most three times in version B, so there are at most 3n positions (i, j) where the two versions agree. Those matches are the only cells that matter.",
+    "Walk i from 1 to n and list the positions j where b_j equals a_i, in decreasing order of j inside one i. A common subsequence is exactly a strictly increasing subsequence of that list, and the decreasing order inside one i stops a single a_i being used twice. Patience sorting with bisect gives its length in O(n log n)."
+  ],
+  "difficulty": "hard",
+  "rating": 2400,
+  "timeLimitMs": 6000,
+  "cluster": "the-shared-file",
+  "samples": [
+    {
+      "input": "4 4\n1 2 3 4\n2 1 3 4\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3 2\n5 5 5\n5 5\n",
+      "output": "1\n"
+    },
+    {
+      "input": "2 2\n1 2\n3 4\n",
+      "output": "4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    a = data[2:2 + n]\n    b = data[2 + n:2 + n + m]\n    spots = {}\n    for j in range(m - 1, -1, -1):\n        v = b[j]\n        lst = spots.get(v)\n        if lst is None:\n            spots[v] = [j]\n        else:\n            lst.append(j)\n    tails = []\n    push = tails.append\n    for v in a:\n        lst = spots.get(v)\n        if lst is None:\n            continue\n        for j in lst:\n            t = bisect_left(tails, j)\n            if t == len(tails):\n                push(j)\n            else:\n                tails[t] = j\n    print(n + m - 2 * len(tails))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Textbook quadratic longest common subsequence, O(n * m). This caps the cross-checked sizes: the\n# tests take n or m to 10^5 with the other side short, and the densest pair of versions is 3000.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\na = data[2:2 + n]\nb = data[2 + n:2 + n + m]\nprev = [0] * (m + 1)\nfor x in a:\n    cur = [0] * (m + 1)\n    best = 0\n    for j in range(1, m + 1):\n        if b[j - 1] == x:\n            v = prev[j - 1] + 1\n        else:\n            v = prev[j]\n            if best > v:\n                v = best\n        cur[j] = v\n        best = v\n    prev = cur\nprint(n + m - 2 * prev[m])\n"
+  }
+}

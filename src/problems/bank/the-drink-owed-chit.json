@@ -1,0 +1,45 @@
+{
+  "id": "the-drink-owed-chit",
+  "title": "Chits That Cancel",
+  "lore": "Ada keeps the night's chits in a jar behind the bar, one slip for every drink owed. Two slips that point opposite ways between the same pair are torn up on the spot; a ring of favours going right round the table is not her problem.",
+  "statement": "The jar holds n chits. Chit i reads that scribe u_i owes scribe v_i exactly one drink. Scribes are numbered 1 to m, and no chit names the same scribe twice.\n\nTwo chits cancel when one reads that u owes v a drink and the other reads that v owes u a drink. Ada tears up both. The same pair of scribes may appear on many chits, in either direction, and Ada tears up as many pairs as she can.\n\nA chit that survives still names two scribes, the one who owes and the one who is owed.\n\nPrint the number of pairs Ada tears up, and the largest number of surviving chits that name one scribe. If no chit survives, the second number is 0.\n\nExample 1:\nInput:\n6 4\n1 2\n2 1\n1 2\n3 4\n1 3\n4 3\nOutput:\n2 2\nExplanation: Between scribes 1 and 2 there are two chits one way and one the other, so one pair is torn up and one chit survives. Between 3 and 4 the two chits cancel exactly and nothing survives. The chit from 1 to 3 has nothing to cancel against. Two surviving chits name scribe 1, which is the most any scribe carries.\n\nExample 2:\nInput:\n3 3\n1 2\n2 3\n3 1\nOutput:\n0 2\nExplanation: The three favours go right round the table, so no two of them point opposite ways between the same pair and nothing is torn up. Every scribe is named on two of the three surviving chits.\n\nExample 3:\nInput:\n4 2\n1 2\n2 1\n1 2\n2 1\nOutput:\n2 0\nExplanation: Both pairs cancel and the jar is empty, so no scribe carries a chit.",
+  "inputFormat": "The first line contains two integers n and m, the number of chits and the number of scribes. Each of the next n lines contains two integers u_i and v_i: chit i reads that scribe u_i owes scribe v_i one drink.",
+  "outputFormat": "Print one line with two integers separated by a space: the number of pairs of chits torn up, and the largest number of surviving chits naming a single scribe.",
+  "constraints": "1 <= n <= 2 * 10^5\n2 <= m <= 2 * 10^5\n1 <= u_i, v_i <= m\nu_i != v_i",
+  "tags": [
+    "hashing",
+    "sorting",
+    "implementation"
+  ],
+  "hints": [
+    "A chit can only ever cancel against a chit between the same two scribes, so the jar falls apart into independent piles, one per pair of scribes. Comparing every chit with every other chit is 2 * 10^5 squared and will not finish.",
+    "For one pair of scribes, if x chits point one way and y the other, exactly min(x, y) pairs are torn up and |x - y| chits survive, all pointing the same way.",
+    "Key each pile by the pair with the smaller scribe first, and keep two counts per key in a dictionary. Then walk the keys once, adding the surviving count to both scribes of the pair, and take the largest total."
+  ],
+  "difficulty": "easy",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "6 4\n1 2\n2 1\n1 2\n3 4\n1 3\n4 3\n",
+      "output": "2 2\n"
+    },
+    {
+      "input": "3 3\n1 2\n2 3\n3 1\n",
+      "output": "0 2\n"
+    },
+    {
+      "input": "4 2\n1 2\n2 1\n1 2\n2 1\n",
+      "output": "2 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    pairs = {}\n    pos = 2\n    for _ in range(n):\n        u = int(data[pos])\n        v = int(data[pos + 1])\n        pos += 2\n        if u < v:\n            key = (u, v)\n            side = 0\n        else:\n            key = (v, u)\n            side = 1\n        got = pairs.get(key)\n        if got is None:\n            got = [0, 0]\n            pairs[key] = got\n        got[side] += 1\n    cancelled = 0\n    load = {}\n    for (a, b), (x, y) in pairs.items():\n        cancelled += x if x < y else y\n        left = x - y\n        if left < 0:\n            left = -left\n        if left:\n            load[a] = load.get(a, 0) + left\n            load[b] = load.get(b, 0) + left\n    busiest = max(load.values()) if load else 0\n    sys.stdout.write(str(cancelled) + \" \" + str(busiest) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nchits = []\nfor i in range(n):\n    u = int(data[2 + 2 * i])\n    v = int(data[3 + 2 * i])\n    chits.append((min(u, v), max(u, v), 0 if u < v else 1))\nchits.sort()\nnamed = [0] * (m + 1)\ncancelled = 0\ni = 0\nwhile i < len(chits):\n    j = i\n    forward = 0\n    backward = 0\n    while j < len(chits) and chits[j][0] == chits[i][0] and chits[j][1] == chits[i][1]:\n        if chits[j][2] == 0:\n            forward += 1\n        else:\n            backward += 1\n        j += 1\n    cancelled += min(forward, backward)\n    survivors = abs(forward - backward)\n    named[chits[i][0]] += survivors\n    named[chits[i][1]] += survivors\n    i = j\nprint(cancelled, max(named))\n"
+  },
+  "cluster": "the-drink-owed"
+}

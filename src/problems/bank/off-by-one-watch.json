@@ -1,0 +1,46 @@
+{
+  "id": "off-by-one-watch",
+  "title": "The Watch Ledger",
+  "lore": "The Warden of the North Gate keeps the watch ledger and counts everything twice. A watch that ends at the hour and one that begins at it have never, in his counting, overlapped.",
+  "statement": "The Hall is guarded around the clock. There are n watches. Watch i begins at hour s_i and ends at hour e_i: the watchman is on duty during every hour h with s_i <= h < e_i, so he is not on duty during hour e_i itself. A watch that ends at hour 7 and a watch that begins at hour 7 share no hour.\n\nHours are integers. Find the largest number of watchmen on duty during any single hour, and the number of distinct hours during which exactly that many watchmen are on duty.\n\nExample 1:\nInput:\n4\n1 4\n4 6\n2 5\n5 9\nOutput:\n2 4\nExplanation: Hour 1 has one watchman on duty. Hours 2 and 3 have two (the first and third watches). Hour 4 has two (the second and third; the first ended). Hour 5 has two (the second and fourth). Hours 6, 7 and 8 have one. The most is 2, reached during 4 distinct hours.\n\nExample 2:\nInput:\n2\n0 3\n3 10\nOutput:\n1 10\nExplanation: The watches touch at hour 3 but never overlap. Exactly one watchman is on duty during each of the hours 0 to 9.\n\nExample 3:\nInput:\n3\n5 6\n5 6\n5 6\nOutput:\n3 1\nExplanation: All three watches cover only hour 5.",
+  "inputFormat": "The first line contains one integer n, the number of watches.\nEach of the next n lines contains two integers s_i and e_i, the hour the watch begins and the hour it ends.",
+  "outputFormat": "Print two integers separated by a space: the largest number of watchmen on duty during a single hour, and the number of hours during which exactly that many are on duty.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= s_i < e_i <= 10^9",
+  "tags": [
+    "sorting",
+    "intervals",
+    "implementation"
+  ],
+  "hints": [
+    "Hours run up to a billion and there can be two hundred thousand watches, so neither walking hour by hour nor checking every watch against every other will finish before the candle dies.",
+    "The number of watchmen on duty only changes at a start hour or an end hour, so sort those 2n moments and sweep through them keeping a running count.",
+    "When a start and an end fall on the same hour, apply the end first, because the leaving watchman is not on duty during that hour while the arriving one is.",
+    "Between one moment and the next the count is constant, so the hours it contributes are simply the difference between the two moments; add that difference to the total when the count equals the best so far and reset the total when the count beats it."
+  ],
+  "difficulty": "medium",
+  "rating": 1200,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4\n1 4\n4 6\n2 5\n5 9\n",
+      "output": "2 4\n"
+    },
+    {
+      "input": "2\n0 3\n3 10\n",
+      "output": "1 10\n"
+    },
+    {
+      "input": "3\n5 6\n5 6\n5 6\n",
+      "output": "3 1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    events = []\n    for i in range(n):\n        events.append((int(data[1 + 2 * i]), 1))\n        events.append((int(data[2 + 2 * i]), -1))\n    events.sort()\n    best = 0\n    hours = 0\n    cur = 0\n    i = 0\n    total = len(events)\n    while i < total:\n        t = events[i][0]\n        while i < total and events[i][0] == t:\n            cur += events[i][1]\n            i += 1\n        if i < total:\n            span = events[i][0] - t\n            if cur > best:\n                best = cur\n                hours = span\n            elif cur == best:\n                hours += span\n    print(best, hours)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nwatches = [(int(data[1 + 2 * i]), int(data[2 + 2 * i])) for i in range(n)]\npoints = sorted(set([s for s, e in watches] + [e for s, e in watches]))\nbest = 0\nhours = 0\nfor a, b in zip(points, points[1:]):\n    on_duty = sum(1 for s, e in watches if s <= a < e)\n    if on_duty > best:\n        best = on_duty\n        hours = b - a\n    elif on_duty == best:\n        hours += b - a\nprint(best, hours)\n"
+  },
+  "cluster": "off-by-one"
+}

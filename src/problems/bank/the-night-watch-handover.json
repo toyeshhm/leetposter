@@ -1,0 +1,45 @@
+{
+  "id": "the-night-watch-handover",
+  "title": "The Longest Handover",
+  "lore": "A handover counts only for the hours two watchmen actually stand together, and the Warden will hear no argument about the hour one of them leaves. Off by one is a curse word in the Hall.",
+  "statement": "The Hall is guarded all night by n watches. Watch i begins at hour s_i and ends at hour e_i: its watchman stands during every hour h with s_i <= h < e_i, and he is already gone during hour e_i itself.\n\nTwo different watches hand over during the hours both of their watchmen stand. The length of the handover is the number of hours covered by both watches, and it is zero when they share no hour. Two watches may cover exactly the same stretch; they are still two different watches, and their handover is that whole stretch.\n\nPrint the length of the longest handover of the night.\n\nExample 1:\nInput:\n4\n0 6\n3 10\n5 7\n20 25\nOutput:\n3\nExplanation: The first two watches both cover hours 3, 4 and 5. The second and third share only hours 5 and 6, the first and third share only hour 5, and the last watch shares nothing with anyone.\n\nExample 2:\nInput:\n3\n1 4\n4 7\n7 9\nOutput:\n0\nExplanation: Each watch ends at the hour the next one begins, so no hour is ever covered twice.\n\nExample 3:\nInput:\n3\n2 100\n5 50\n5 50\nOutput:\n45\nExplanation: The second and third watches cover the same 45 hours, and each of them shares those same 45 hours with the first.",
+  "inputFormat": "The first line contains one integer n, the number of watches.\nEach of the next n lines contains two integers s_i and e_i, the hour watch i begins and the hour it ends.",
+  "outputFormat": "Print a single integer, the length of the longest handover, or 0 if no two watches share an hour.",
+  "constraints": "2 <= n <= 2 * 10^5\n0 <= s_i < e_i <= 10^9",
+  "tags": [
+    "sorting",
+    "intervals",
+    "implementation"
+  ],
+  "hints": [
+    "Trying every pair costs about n^2 / 2 steps, which the Warden's bound on n does not allow. Fix the later-beginning watch of a pair instead and ask what its best partner looks like.",
+    "Sort the watches by the hour they begin. For a watch (s, e) and an earlier watch that ends at hour f, their handover is min(f, e) - s, which never shrinks when f grows, so only the largest ending hour seen so far can matter.",
+    "Sweep the sorted watches keeping the largest ending hour of everything already passed. For each watch take min(that hour, e) - s, ignore it when it is not positive, and keep the largest value you see."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "4\n0 6\n3 10\n5 7\n20 25\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\n1 4\n4 7\n7 9\n",
+      "output": "0\n"
+    },
+    {
+      "input": "3\n2 100\n5 50\n5 50\n",
+      "output": "45\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    watches = [(int(data[1 + 2 * i]), int(data[2 + 2 * i])) for i in range(n)]\n    watches.sort()\n    # Walking the watches in order of their first hour, the best partner for the one that\n    # begins now is simply the one that reaches furthest among those already begun.\n    best = 0\n    reach = -1\n    for s, e in watches:\n        if reach > s:\n            share = (reach if reach < e else e) - s\n            if share > best:\n                best = share\n        if e > reach:\n            reach = e\n    sys.stdout.write(str(best) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Every pair of watches, straight from the definition. Quadratic, so the largest tests here\n# hold 5000 watches rather than the 2 * 10^5 the statement allows. 5000 is chosen to be the\n# size at which this very code takes about 6 seconds, three times the time limit, so a\n# quadratic contestant solution fails on the same tests it is used to check.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\niv = [(int(data[1 + 2 * i]), int(data[2 + 2 * i])) for i in range(n)]\nbest = 0\nfor i in range(n):\n    s1, e1 = iv[i]\n    for j in range(i + 1, n):\n        s2, e2 = iv[j]\n        lo = s1 if s1 > s2 else s2\n        hi = e1 if e1 < e2 else e2\n        if hi - lo > best:\n            best = hi - lo\nprint(best)\n"
+  },
+  "cluster": "the-night-watch"
+}

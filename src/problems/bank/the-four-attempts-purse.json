@@ -1,0 +1,46 @@
+{
+  "id": "the-four-attempts-purse",
+  "title": "The Asymmetric Purse",
+  "lore": "The Oracle sells answers by the word, and a no has always cost more than a yes because it is the one that gets her shouted at. The Company has learned that asking cheaply is not the same as asking well.",
+  "statement": "The Judge has chosen a secret integer s with 1 <= s <= m. The Company may ask him questions, one at a time, each of the form: is s at most x, for any integer x they like. The Judge always answers truthfully with yes or no, and the Company may choose each question after hearing every answer so far.\nAnswers are not free. A question the Judge answers yes costs a candles. A question he answers no costs b candles. The two prices need not be equal.\nThe Company must be certain of s when they stop asking. Find the smallest number C of candles such that they can guarantee knowing s having spent at most C candles, whatever the secret turns out to be.\n\nExample 1:\nInput:\n1 5 7\nOutput:\n0\nExplanation: There is only one possible secret, so the Company already knows it and asks nothing.\n\nExample 2:\nInput:\n8 1 1\nOutput:\n3\nExplanation: Both answers cost one candle, so the price is simply the number of questions, and halving the range three times settles eight candidates.\n\nExample 3:\nInput:\n5 1 2\nOutput:\n4\nExplanation: With four candles the Company asks about the second value. A yes costs one and leaves two candidates with three candles left, which is enough. A no costs two and leaves three candidates with two candles left, which is also enough. Three candles are not enough for five candidates.",
+  "inputFormat": "One line with three integers m, a and b: the upper end of the Judge's range, the price in candles of an answer of yes, and the price in candles of an answer of no.",
+  "outputFormat": "One integer, the smallest number of candles that guarantees the secret is known.",
+  "constraints": "1 <= m <= 10^18\n1 <= a <= 10^3\n1 <= b <= 10^3",
+  "tags": [
+    "dp",
+    "games",
+    "math"
+  ],
+  "hints": [
+    "Searching for the strategy directly is hopeless because m is enormous. Turn the question inside out and ask what a purse of c candles can buy.",
+    "One question cuts the candidates into the group where the answer is yes and the group where the answer is no. Nothing about those groups matters except their sizes, because any group of size t behaves like the range 1 to t.",
+    "Let g(c) be the largest number of candidates a purse of c candles can always settle. A question is only worth asking when both answers are affordable, so g(c) = 1 while c < max(a, b), and g(c) = g(c - a) + g(c - b) from there on.",
+    "Walk c upward from 0, clamp g(c) at m so the numbers never grow past 10^18, and print the first c with g(c) >= m. The walk is never longer than about 60 times max(a, b)."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 4000,
+  "samples": [
+    {
+      "input": "1 5 7\n",
+      "output": "0\n"
+    },
+    {
+      "input": "8 1 1\n",
+      "output": "3\n"
+    },
+    {
+      "input": "5 1 2\n",
+      "output": "4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    m, a, b = map(int, sys.stdin.buffer.read().split())\n    if m == 1:\n        sys.stdout.write(\"0\\n\")\n        return\n    top = a if a > b else b\n    g = [1] * top\n    c = top - 1\n    while True:\n        c += 1\n        v = g[c - a] + g[c - b]\n        if v > m:\n            v = m\n        g.append(v)\n        if v >= m:\n            sys.stdout.write(str(c) + \"\\n\")\n            return\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nm = int(data[0])\na = int(data[1])\nb = int(data[2])\nif m <= 1200:\n    # Strategy side: f[size] is the cheapest worst case for `size` candidates.\n    f = [0] * (m + 1)\n    for size in range(2, m + 1):\n        best = -1\n        for i in range(1, size):\n            left = a + f[i]\n            right = b + f[size - i]\n            worst = left if left > right else right\n            if best < 0 or worst < best:\n                best = worst\n        f[size] = best\n    print(f[m])\nelse:\n    # Counting side: a purse of c candles buys exactly the answer strings whose cost is\n    # at most c - max(a, b), and a binary tree with that many internal nodes has one more\n    # leaf than that, so g(c) = 1 + (number of such strings).\n    top = a if a > b else b\n    exact = [1]\n    strings = 1\n    cost = 0\n    while strings + 1 < m:\n        cost += 1\n        v = 0\n        if cost >= a:\n            v += exact[cost - a]\n        if cost >= b:\n            v += exact[cost - b]\n        exact.append(v)\n        strings += v\n    print(0 if m == 1 else cost + top)\n"
+  },
+  "cluster": "the-four-attempts"
+}

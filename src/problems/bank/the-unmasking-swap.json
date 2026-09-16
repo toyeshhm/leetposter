@@ -1,0 +1,46 @@
+{
+  "id": "the-unmasking-swap",
+  "title": "One Correction at the Unmasking",
+  "lore": "The Unmasking lays every card next to the truth it claimed to be. The Herald is allowed to plead that exactly two cards were handed out the wrong way round, and the table will hear it once.",
+  "statement": "At the Unmasking the cards are laid in a row beside the truths they were meant to match. There are n positions. Position i holds a card showing the integer a_i, and the truth written under it is b_i. Position i is revealed when a_i = b_i.\n\nThe Herald is allowed one correction: pick two distinct positions i and j and swap the cards that lie on them. The truths do not move. The Herald may also decline and swap nothing.\n\nPrint the largest number of revealed positions the Herald can leave on the table.\n\nExample 1:\nInput:\n5\n1 2 3 4 5\n1 3 2 4 6\nOutput:\n4\nExplanation: Positions 1 and 4 are revealed already. Swapping the cards on positions 2 and 3 puts 3 above the truth 3 and 2 above the truth 2, revealing both. Position 5 can never be revealed because no card shows 6.\n\nExample 2:\nInput:\n4\n1 1 2 2\n2 2 1 1\nOutput:\n2\nExplanation: Nothing is revealed to begin with. Swapping the cards on positions 1 and 3 reveals both of them, and one swap is all the Herald gets.\n\nExample 3:\nInput:\n3\n5 5 5\n1 2 3\nOutput:\n0\nExplanation: Every card shows 5 and no truth is 5, so no arrangement of the cards reveals anything.",
+  "inputFormat": "The first line contains one integer n. The second line contains n integers a_1, ..., a_n, the cards from left to right. The third line contains n integers b_1, ..., b_n, the truths under them.",
+  "outputFormat": "Print one integer: the largest number of revealed positions after at most one swap.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9\n1 <= b_i <= 10^9",
+  "tags": [
+    "hashing",
+    "implementation",
+    "greedy"
+  ],
+  "hints": [
+    "A swap touches two positions and nothing else, so the answer is the number of positions revealed now plus 0, 1 or 2. Decide which of the three it is.",
+    "A position that is already revealed has nothing to gain and something to lose, so only the unrevealed positions are worth swapping; trying every pair of them is far too slow at the top of the bounds.",
+    "Write each unrevealed position as the pair (card, truth). A gain of two needs an unrevealed position whose pair, reversed, is also on the table. A gain of one needs a card that is the truth of some other unrevealed position.",
+    "Both questions are answered by one pass that builds a set of the unrevealed pairs, a set of their cards and a set of their truths."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "5\n1 2 3 4 5\n1 3 2 4 6\n",
+      "output": "4\n"
+    },
+    {
+      "input": "4\n1 1 2 2\n2 2 1 1\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3\n5 5 5\n1 2 3\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = data[1:1 + n]\n    b = data[1 + n:1 + 2 * n]\n    base = 0\n    pairs = set()\n    cards = set()\n    truths = set()\n    for i in range(n):\n        x = a[i]\n        y = b[i]\n        if x == y:\n            base += 1\n        else:\n            pairs.add((x, y))\n            cards.add(x)\n            truths.add(y)\n    gain = 0\n    for x, y in pairs:\n        if (y, x) in pairs:\n            gain = 2\n            break\n    if gain < 2 and not cards.isdisjoint(truths):\n        gain = 1\n    sys.stdout.write(str(base + gain) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\ndata = sys.stdin.read().split()\nn = int(data[0])\na = [int(x) for x in data[1:1 + n]]\nb = [int(x) for x in data[1 + n:1 + 2 * n]]\nbase = sum(1 for i in range(n) if a[i] == b[i])\nif n <= 600:\n    # exhaustive: try every swap and recount the two touched positions\n    best = base\n    for i in range(n):\n        for j in range(i + 1, n):\n            old = (a[i] == b[i]) + (a[j] == b[j])\n            new = (a[j] == b[i]) + (a[i] == b[j])\n            if base - old + new > best:\n                best = base - old + new\n    print(best)\nelse:\n    # sorting instead of hashing, on the unrevealed positions only\n    ps = sorted((a[i], b[i]) for i in range(n) if a[i] != b[i])\n    gain = 0\n    for x, y in ps:\n        k = bisect_left(ps, (y, x))\n        if k < len(ps) and ps[k] == (y, x):\n            gain = 2\n            break\n    if gain < 2:\n        cs = sorted(x for x, _ in ps)\n        for _, y in ps:\n            k = bisect_left(cs, y)\n            if k < len(cs) and cs[k] == y:\n                gain = 1\n                break\n    print(base + gain)\n"
+  },
+  "cluster": "the-unmasking"
+}

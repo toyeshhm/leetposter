@@ -1,0 +1,46 @@
+{
+  "id": "premium-lock-vault",
+  "title": "The Bundle Behind the Paywall",
+  "lore": "The archive sells no scroll on its own. It sells a run of neighbours, priced by the dearest scroll in the run, and the Company is hunting for the run where that arithmetic falls their way.",
+  "statement": "The archive lists n scrolls in a fixed order. Scroll i is worth v_i to the Company and carries a price p_i.\n\nOnly bundles are for sale. A bundle is a non-empty run of neighbouring scrolls l, l + 1, ..., r, and the archive charges for it the largest price inside it, that is max(p_l, ..., p_r). The gain of that bundle is v_l + ... + v_r minus that price.\n\nReport the largest gain over all bundles. It may be negative.\n\nExample 1:\nInput:\n5\n3 5 1 9 2\n4 2 7 3 20\nOutput:\n11\nExplanation: Scrolls 1 to 4 are worth 3 + 5 + 1 + 9 = 18 and the dearest of them is priced 7, for a gain of 11. Taking scroll 5 as well adds 2 in worth but raises the price to 20.\n\nExample 2:\nInput:\n1\n5\n9\nOutput:\n-4\nExplanation: There is one bundle and it loses money. The Company still has to name it.\n\nExample 3:\nInput:\n3\n10 1 1\n1 50 50\nOutput:\n9\nExplanation: The first scroll alone gains 9. Either longer bundle drags in a scroll priced 50 and gains far less.",
+  "inputFormat": "The first line contains one integer n, the number of scrolls.\nThe second line contains n integers v_1, ..., v_n, the worths.\nThe third line contains n integers p_1, ..., p_n, the prices.",
+  "outputFormat": "Print a single integer, the largest gain of a bundle.",
+  "constraints": "1 <= n <= 10^5\n1 <= v_i <= 10^9\n1 <= p_i <= 10^9",
+  "tags": [
+    "stack",
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "Let S be the prefix sums of the worths. The gain of the bundle ending at r with left end l is S[r] - S[l-1] - max(p_l, ..., p_r), so for a fixed r only the left end varies, and there are 10^5 right ends to serve.",
+    "As l walks left from r that maximum only grows, and it is constant on whole blocks of left ends. Those blocks are exactly what a stack of prices, kept decreasing from the bottom, holds: a new price swallows every block it is at least as large as.",
+    "Store in each block the best value of -S[l-1] among its left ends. Merging blocks is then taking the larger of two numbers, and a block's own best gain is that value minus the block's price.",
+    "Alongside each block also store the best gain over that block and every block below it. The stack only grows and shrinks at the top, so that running best is carried up as blocks are pushed, and the answer at r is S[r] plus the running best at the top."
+  ],
+  "difficulty": "hard",
+  "rating": 2400,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "5\n3 5 1 9 2\n4 2 7 3 20\n",
+      "output": "11\n"
+    },
+    {
+      "input": "1\n5\n9\n",
+      "output": "-4\n"
+    },
+    {
+      "input": "3\n10 1 1\n1 50 50\n",
+      "output": "9\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    worth = data[1:1 + n]\n    price = data[1 + n:1 + 2 * n]\n    # Blocks of left ends that share the same most expensive scroll, each holding the best\n    # -prefix[l-1] inside it and the best answer over itself and everything below it.\n    tops: list[int] = []\n    bests: list[int] = []\n    accs: list[int] = []\n    running = 0\n    answer = -(1 << 62)\n    for i in range(n):\n        p = int(price[i])\n        best = -running\n        running += int(worth[i])\n        while tops and tops[-1] <= p:\n            tops.pop()\n            accs.pop()\n            b = bests.pop()\n            if b > best:\n                best = b\n        acc = best - p\n        if accs and accs[-1] > acc:\n            acc = accs[-1]\n        tops.append(p)\n        bests.append(best)\n        accs.append(acc)\n        cand = running + acc\n        if cand > answer:\n            answer = cand\n    sys.stdout.write(str(answer) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Divide and conquer, no amortised stack: the best bundle lies left of the middle, right of\n# it, or across it, and the crossing case is a single sweep because both halves' running\n# maxima are monotone. Slower than the reference but it runs at the full bound.\nimport sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    v = [int(x) for x in data[1:1 + n]]\n    p = [int(x) for x in data[1 + n:1 + 2 * n]]\n    NEG = -(1 << 62)\n\n    def solve(lo, hi):\n        if lo == hi:\n            return v[lo] - p[lo]\n        mid = (lo + hi) // 2\n        res = solve(lo, mid)\n        other = solve(mid + 1, hi)\n        if other > res:\n            res = other\n        lmax = []\n        keep = []\n        plain = []\n        s = 0\n        m = 0\n        for l in range(mid, lo - 1, -1):\n            s += v[l]\n            if p[l] > m:\n                m = p[l]\n            lmax.append(m)\n            keep.append(s - m)\n            plain.append(s)\n        size = len(lmax)\n        pre_plain = [NEG] * size\n        run = NEG\n        for i in range(size):\n            if plain[i] > run:\n                run = plain[i]\n            pre_plain[i] = run\n        suf_keep = [NEG] * (size + 1)\n        for i in range(size - 1, -1, -1):\n            suf_keep[i] = keep[i] if keep[i] > suf_keep[i + 1] else suf_keep[i + 1]\n        s = 0\n        m = 0\n        j = 0\n        for r in range(mid + 1, hi + 1):\n            s += v[r]\n            if p[r] > m:\n                m = p[r]\n            while j < size and lmax[j] < m:\n                j += 1\n            if j < size:\n                cand = s + suf_keep[j]\n                if cand > res:\n                    res = cand\n            if j > 0:\n                cand = s - m + pre_plain[j - 1]\n                if cand > res:\n                    res = cand\n        return res\n\n    sys.setrecursionlimit(300)\n    print(solve(0, n - 1))\n\nmain()\n"
+  },
+  "cluster": "premium-lock"
+}

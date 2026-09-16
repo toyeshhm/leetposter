@@ -1,0 +1,45 @@
+{
+  "title": "The Herald's Heavy File",
+  "lore": "Dov the Herald must carry the shared file from the front hall to the Judge's door through corridors built for thinner parchment. The Warden says the file is at most 10^9 lines, which for once is true and is also not the point.",
+  "statement": "There are n halls numbered 1..n and m corridors. Corridor i joins halls u_i and v_i in both directions and has width w_i. A file of size s can pass through a corridor only if s <= w_i.\nThe Herald starts in hall 1 carrying a file of size S and must reach hall n. Walking through a corridor takes one minute.\nSome halls have a scribe. In a hall with a scribe the Herald may spend one minute to compress the file, which changes its size from s to floor(s / 2). This may be repeated any number of times, in the same hall or in other halls with a scribe. A file of size 0 fits through every corridor.\nFind the minimum number of minutes needed to reach hall n, or -1 if it cannot be done.\n\nExample 1:\nInput:\n3 2 8\n0 1 0\n1 2 8\n2 3 1\nOutput:\n5\nExplanation: The Herald walks to hall 2 (1 minute), compresses three times, 8 to 4 to 2 to 1 (3 minutes), and walks to hall 3 through the corridor of width 1 (1 minute).\n\nExample 2:\nInput:\n4 4 10\n1 0 0 0\n1 2 10\n2 4 10\n1 3 3\n3 4 3\nOutput:\n2\nExplanation: Going 1, 2, 4 uses two corridors of width 10 and takes 2 minutes. Compressing at hall 1 to size 5 and then 2 and going by hall 3 would take 2 + 2 = 4 minutes.\n\nExample 3:\nInput:\n2 1 1\n0 0\n1 2 0\nOutput:\n-1\nExplanation: The only corridor has width 0, the file has size 1 and there is no scribe anywhere.",
+  "inputFormat": "The first line has three integers n, m and S. The second line has n integers c_1..c_n, where c_i = 1 if hall i has a scribe and 0 otherwise. Each of the next m lines has three integers u_i, v_i and w_i describing one corridor. There may be several corridors between the same two halls, and a corridor may join a hall to itself.",
+  "outputFormat": "One integer, the minimum number of minutes, or -1 if hall n cannot be reached.",
+  "constraints": "2 <= n <= 5 * 10^4\n0 <= m <= 5 * 10^4\n0 <= S <= 10^9\n0 <= w_i <= 10^9\n1 <= u_i, v_i <= n\nc_i is 0 or 1",
+  "tags": [
+    "bfs",
+    "graphs",
+    "shortest-paths"
+  ],
+  "hints": [
+    "The size of the file only ever changes by halving, so however large S looks, the file can take on only a small number of distinct sizes before it reaches 0.",
+    "After k compressions the size is exactly floor(S / 2^k), so the pair (hall, number of compressions so far) describes everything that matters, and there are at most n times 31 such pairs.",
+    "Every action costs one minute, so a breadth-first search over the pairs (hall, k), moving to (neighbour, k) through a corridor wide enough for the current size or to (same hall, k + 1) at a scribe, finds the answer in the order the pairs are first reached."
+  ],
+  "difficulty": "hard",
+  "rating": 1900,
+  "timeLimitMs": 6000,
+  "id": "the-wardens-bounds-file",
+  "samples": [
+    {
+      "input": "3 2 8\n0 1 0\n1 2 8\n2 3 1\n",
+      "output": "5\n"
+    },
+    {
+      "input": "4 4 10\n1 0 0 0\n1 2 10\n2 4 10\n1 3 3\n3 4 3\n",
+      "output": "2\n"
+    },
+    {
+      "input": "2 1 1\n0 0\n1 2 0\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); S = int(data[2])\n    scribe = [int(x) for x in data[3:3 + n]]\n    p = 3 + n\n    adj = [[] for _ in range(n)]\n    for _ in range(m):\n        u = int(data[p]) - 1; v = int(data[p + 1]) - 1; w = int(data[p + 2]); p += 3\n        adj[u].append((w, v))\n        adj[v].append((w, u))\n    for lst in adj:\n        lst.sort(reverse=True)\n    K = S.bit_length()  # after K halvings the size is 0 and stays 0\n    sizes = [S >> k for k in range(K + 1)]\n    W = K + 1\n    dist = [-1] * (n * W)\n    dist[0] = 0\n    dq = deque([0])\n    while dq:\n        st = dq.popleft()\n        v = st // W; k = st - v * W\n        d = dist[st] + 1\n        if v == n - 1:\n            print(dist[st])\n            return\n        if scribe[v] and k < K:\n            nst = st + 1\n            if dist[nst] < 0:\n                dist[nst] = d\n                dq.append(nst)\n        sz = sizes[k]\n        for w, u in adj[v]:\n            if w < sz:\n                break\n            nst = u * W + k\n            if dist[nst] < 0:\n                dist[nst] = d\n                dq.append(nst)\n    print(-1)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys, heapq\ndata = sys.stdin.read().split()\nn = int(data[0]); m = int(data[1]); S = int(data[2])\nscribe = [int(x) for x in data[3:3 + n]]\np = 3 + n\nedges = []\nfor _ in range(m):\n    edges.append((int(data[p]) - 1, int(data[p + 1]) - 1, int(data[p + 2])))\n    p += 3\nINF = float(\"inf\")\nbest = INF\nprev = None  # distances after the previous number of compressions\nsize = S\nk = 0\nwhile True:\n    # halls where this layer starts, with the time already spent\n    start = [INF] * n\n    if k == 0:\n        start[0] = 0\n    else:\n        for v in range(n):\n            if scribe[v] and prev[v] < INF:\n                start[v] = prev[v] + 1\n    adj = [[] for _ in range(n)]\n    for u, v, w in edges:\n        if w >= size:\n            adj[u].append(v)\n            adj[v].append(u)\n    dist = start[:]\n    heap = [(dist[v], v) for v in range(n) if dist[v] < INF]\n    heapq.heapify(heap)\n    while heap:\n        d, v = heapq.heappop(heap)\n        if d > dist[v]:\n            continue\n        for u in adj[v]:\n            if d + 1 < dist[u]:\n                dist[u] = d + 1\n                heapq.heappush(heap, (d + 1, u))\n    best = min(best, dist[n - 1])\n    if size == 0:\n        break\n    size //= 2\n    k += 1\n    prev = dist\nprint(best if best < INF else -1)\n"
+  },
+  "cluster": "the-wardens-bounds"
+}

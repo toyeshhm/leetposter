@@ -1,0 +1,40 @@
+{
+  "title": "The Warden's Broken Promises",
+  "lore": "The Warden of the North Gate has been announcing bounds on n since before the candle was lit, and writes each one down twice. The Judge's tests have never once read the ledger.",
+  "statement": "The Warden's ledger holds m promises. Promise i says that the input size n will satisfy l_i <= n <= r_i.\nThe Judge ran q tests. Test j had input size s_j.\nA test breaks a promise if its size lies outside the promised range, that is, if s_j < l_i or s_j > r_i.\nFor every test, report how many of the m promises it breaks.\n\nExample 1:\nInput:\n3 4\n1 1000\n500 100000\n1 99999\n1\n1000\n1001\n100000\nOutput:\n1\n0\n1\n2\nExplanation: Size 1 breaks only the second promise. Size 1000 keeps all three. Size 1001 breaks only the first. Size 100000 breaks the first and the third.\n\nExample 2:\nInput:\n2 3\n7 7\n7 7\n7\n6\n8\nOutput:\n0\n2\n2\nExplanation: Both promises say the size is exactly 7. Size 7 keeps both, sizes 6 and 8 break both.",
+  "inputFormat": "The first line has two integers m and q. Each of the next m lines has two integers l_i and r_i, one promise. Each of the next q lines has one integer s_j, the size of one test.",
+  "outputFormat": "Print q lines. Line j is the number of promises broken by test j.",
+  "constraints": "1 <= m <= 2 * 10^5\n1 <= q <= 2 * 10^5\n1 <= l_i <= r_i <= 10^5\n1 <= s_j <= 10^5",
+  "tags": [
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "Checking every promise against every test is m times q comparisons, and both can be 2 * 10^5, so the bound on the sizes themselves is the thing to stare at.",
+    "Every size is at most 10^5, so you can afford one counter per possible size; a test breaks m minus the number of promises that cover its size.",
+    "Add 1 at l_i and subtract 1 at r_i + 1 for each promise, then a running sum over the sizes 1..10^5 tells you how many promises cover each size."
+  ],
+  "difficulty": "easy",
+  "rating": 1100,
+  "timeLimitMs": 2000,
+  "id": "the-wardens-bounds-promises",
+  "samples": [
+    {
+      "input": "3 4\n1 1000\n500 100000\n1 99999\n1\n1000\n1001\n100000\n",
+      "output": "1\n0\n1\n2\n"
+    },
+    {
+      "input": "2 3\n7 7\n7 7\n7\n6\n8\n",
+      "output": "0\n2\n2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    m = int(data[0]); q = int(data[1])\n    LIM = 100001\n    diff = [0] * (LIM + 1)\n    p = 2\n    for _ in range(m):\n        l = int(data[p]); r = int(data[p + 1]); p += 2\n        diff[l] += 1\n        diff[r + 1] -= 1\n    cov = [0] * LIM\n    run = 0\n    for x in range(1, LIM):\n        run += diff[x]\n        cov[x] = run\n    out = []\n    for _ in range(q):\n        s = int(data[p]); p += 1\n        out.append(m - cov[s])\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nm = int(data[0]); q = int(data[1])\nbounds = []\np = 2\nfor _ in range(m):\n    bounds.append((int(data[p]), int(data[p + 1])))\n    p += 2\nfor _ in range(q):\n    s = int(data[p]); p += 1\n    broken = 0\n    for l, r in bounds:\n        if s < l or s > r:\n            broken += 1\n    print(broken)\n"
+  },
+  "cluster": "the-wardens-bounds"
+}

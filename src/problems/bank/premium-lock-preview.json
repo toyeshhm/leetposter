@@ -1,0 +1,47 @@
+{
+  "id": "premium-lock-preview",
+  "title": "One Chamber Free",
+  "lore": "The archive gives away one chamber of any stretch as a free preview and charges full toll for the rest. The Warden has read the offer twice and still counts it as a trap.",
+  "statement": "A corridor runs through n chambers. Entering chamber i costs c_i coins.\n\nThe Company will walk one contiguous stretch of chambers l, l + 1, ..., r and pay the toll of every chamber in it, except that a single free preview covers the whole toll of one chamber of their choosing inside the stretch. The preview may be used once, on that one stretch. A stretch of a single chamber therefore costs nothing.\n\nThe Company holds B coins. Report the number of chambers in the longest stretch they can afford.\n\nExample 1:\nInput:\n7 6\n3 1 9 2 2 4 1\nOutput:\n4\nExplanation: Chambers 4 to 7 cost 2 + 2 + 4 + 1 = 9, and the preview covers the toll of 4, leaving 5 coins to pay. No stretch of five chambers works: every one of them holds the chamber costing 9, and paying the rest is already more than 6.\n\nExample 2:\nInput:\n3 0\n5 5 5\nOutput:\n1\nExplanation: With no coins at all only a single chamber can be walked, since the preview covers it in full.\n\nExample 3:\nInput:\n5 100\n1 2 3 4 5\nOutput:\n5\nExplanation: The whole corridor costs 15, the preview covers the chamber costing 5, and 10 is within budget.",
+  "inputFormat": "The first line contains two integers n and B, the number of chambers and the coins the Company holds.\nThe second line contains n integers c_1, ..., c_n, the toll of each chamber.",
+  "outputFormat": "Print a single integer, the number of chambers in the longest stretch the Company can afford.",
+  "constraints": "1 <= n <= 10^5\n0 <= B <= 10^14\n1 <= c_i <= 10^9",
+  "tags": [
+    "two-pointers",
+    "sliding-window",
+    "queue",
+    "implementation"
+  ],
+  "hints": [
+    "The preview is never better spent anywhere than on the dearest chamber of the stretch, so a stretch costs its total toll minus its largest toll.",
+    "n is 10^5, so weighing every stretch on its own is 10^10 steps. Anything that fits walks the corridor once, so the question is whether the left end of a stretch ever has to be moved back.",
+    "Dropping a chamber from either end of an affordable stretch leaves an affordable stretch: you lose either an ordinary toll or the largest one, and both are non-negative. So for each right end the set of workable left ends is a suffix, and its start only ever moves right.",
+    "Slide a window over the corridor, keeping the total in a running sum and the largest toll at the front of a deque that discards every smaller toll behind a new arrival."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "7 6\n3 1 9 2 2 4 1\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 0\n5 5 5\n",
+      "output": "1\n"
+    },
+    {
+      "input": "5 100\n1 2 3 4 5\n",
+      "output": "5\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    budget = int(data[1])\n    c = [int(x) for x in data[2:2 + n]]\n    window: deque[int] = deque()\n    left = 0\n    total = 0\n    best = 0\n    for right in range(n):\n        while window and c[window[-1]] <= c[right]:\n            window.pop()\n        window.append(right)\n        total += c[right]\n        while total - c[window[0]] > budget:\n            if window[0] == left:\n                window.popleft()\n            total -= c[left]\n            left += 1\n        if right - left + 1 > best:\n            best = right - left + 1\n    sys.stdout.write(str(best) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# A stretch stays walkable when it is made shorter, so the answer can be found by binary\n# search on the length. For a fixed length the window maxima come from the block trick\n# (prefix maxima inside each block of that length, suffix maxima likewise), not a deque.\nimport sys\n\ndef feasible(length, c, pre, budget, n):\n    pref = [0] * n\n    suff = [0] * n\n    for i in range(n):\n        pref[i] = c[i] if i % length == 0 else (pref[i - 1] if pref[i - 1] > c[i] else c[i])\n    for i in range(n - 1, -1, -1):\n        if i % length == length - 1 or i == n - 1:\n            suff[i] = c[i]\n        else:\n            suff[i] = suff[i + 1] if suff[i + 1] > c[i] else c[i]\n    for i in range(0, n - length + 1):\n        j = i + length - 1\n        top = suff[i] if suff[i] > pref[j] else pref[j]\n        if pre[j + 1] - pre[i] - top <= budget:\n            return True\n    return False\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nbudget = int(data[1])\nc = [int(x) for x in data[2:2 + n]]\npre = [0] * (n + 1)\nfor i in range(n):\n    pre[i + 1] = pre[i] + c[i]\nlo, hi = 1, n\nwhile lo < hi:\n    mid = (lo + hi + 1) // 2\n    if feasible(mid, c, pre, budget, n):\n        lo = mid\n    else:\n        hi = mid - 1\nprint(lo)\n"
+  },
+  "cluster": "premium-lock"
+}

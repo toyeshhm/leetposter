@@ -1,15 +1,25 @@
 /**
  * Bank checker. Usage: node scripts/problems/check.ts [id ...]
  * Validates every problem JSON in src/problems/bank against the schema, then runs the reference
- * solution AND the brute solution on every sample and hidden test through the real python3 and
+ * solution AND the brute solution on every sample and every stress test through the real python3 and
  * compares trimmed outputs. Exit 1 on any failure. Also regenerates src/problems/bank/index.ts.
  */
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { bankProblem, type BankProblem } from "../../src/problems/schema.ts";
+import { bankProblem, bankTests, type BankIo, type BankProblem } from "../../src/problems/schema.ts";
 
 const DIR = join(process.cwd(), "src/problems/bank");
+const STRESS = join(process.cwd(), "src/problems/stress");
+
+/**
+ * The checker proves the solutions against the FULL max-constraint set, not the trimmed set the
+ * Judge in the Hall runs. That is the whole point of keeping src/problems/stress on disk: the hall
+ * judges correctness in a browser, the checker judges correctness at the constraint bound.
+ */
+function stressTests(id: string): BankIo[] {
+  return bankTests.parse(JSON.parse(readFileSync(join(STRESS, `${id}.json`), "utf8"))).tests;
+}
 
 function run(code: string, input: string, timeoutMs: number): string {
   return execFileSync("python3", ["-c", code], { input, timeout: timeoutMs, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
@@ -27,7 +37,7 @@ function checkOne(file: string): string[] {
   const p: BankProblem = parsed.data;
   if (`${p.id}.json` !== file) errors.push(`${file}: id ${p.id} does not match the file name`);
   if (!p.statement.includes("Example 1:")) errors.push(`${p.id}: statement has no "Example 1:" block`);
-  const cases = [...p.samples.map((c, i) => ({ ...c, name: `sample ${String(i + 1)}` })), ...p.tests.map((c, i) => ({ ...c, name: `test ${String(i + 1)}` }))];
+  const cases = [...p.samples.map((c, i) => ({ ...c, name: `sample ${String(i + 1)}` })), ...stressTests(p.id).map((c, i) => ({ ...c, name: `test ${String(i + 1)}` }))];
   for (const c of cases) {
     for (const [who, code] of [["solution", p.solution.code], ["brute", p.brute.code]] as const) {
       try {

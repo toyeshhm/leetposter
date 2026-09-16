@@ -1,0 +1,47 @@
+{
+  "id": "two-sum-nursery-cull",
+  "title": "The Cull",
+  "lore": "The Changeling has been pulling cards off the roll to break the rhymes before the Reckoning. The Company wants to know how much damage any given number of missing cards can do.",
+  "statement": "The Company keeps a roll of n cards. Card i shows the integer a_i, and the Judge's number for the night is S. Two distinct cards i and j rhyme if a_i + a_j = S.\n\nThe Changeling pulls cards off the roll. If exactly k cards are pulled, the rhymes that remain are the rhyming pairs among the n - k cards still on the roll, and the Changeling pulls the k cards that leave as few rhymes as possible.\n\nYou are asked q questions. Question j gives a number k_j and asks how many rhymes remain when the Changeling pulls exactly k_j cards.\n\nExample 1:\nInput:\n4 10 5\n3 7 7 5\n0 1 2 3 4\nOutput:\n2\n0\n0\n0\n0\nExplanation: The rhymes are the 3 with each of the two 7s, so two of them. Pulling the card showing 3 breaks both at once, so one card is enough. The 5 rhymes with nothing, since it would need a second 5.\n\nExample 2:\nInput:\n5 8 6\n4 4 4 1 7\n0 1 2 3 4 5\nOutput:\n4\n2\n1\n0\n0\n0\nExplanation: Each pair of cards showing 4 rhymes, which is three rhymes, and the 1 rhymes with the 7, for four in all. Pulling one 4 leaves one rhyme among the 4s plus the 1 with the 7, so two. Pulling two 4s leaves only the 1 with the 7. Pulling two 4s and the 1 leaves none.\n\nExample 3:\nInput:\n6 12 3\n5 7 7 7 6 6\n2 0 1\nOutput:\n0\n4\n1\nExplanation: The 5 rhymes with each of the three 7s, and the two 6s rhyme with each other, so four rhymes in all. Pulling the 5 destroys three rhymes at once and leaves one; pulling one of the 6s as well leaves none. The questions are asked here for k = 2, then k = 0, then k = 1, and may come in any order.\n",
+  "inputFormat": "The first line contains three integers n, S and q, the number of cards, the Judge's number and the number of questions. The second line contains n integers a_1, ..., a_n, the value on each card. The third line contains q integers k_1, ..., k_q, the number of cards pulled in each question.",
+  "outputFormat": "Print q lines. Line j contains the smallest number of rhyming pairs that can remain after exactly k_j cards are pulled off the roll.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^4\n1 <= a_i <= 10^9\n2 <= S <= 2 * 10^9\n0 <= k_j <= n",
+  "tags": [
+    "greedy",
+    "graphs",
+    "hashing",
+    "sorting"
+  ],
+  "hints": [
+    "A card showing v rhymes only with a card showing S - v, so sort the cards into groups by value and ask what the rhymes between two groups look like.",
+    "The group of value v and the group of value S - v form a complete bipartite block: with p cards on one side and r on the other there are exactly p * r rhymes, and the group with 2v = S is a clique of m cards holding m * (m - 1) / 2 rhymes. No rhyme ever joins two different blocks, so the blocks can be treated one at a time.",
+    "Inside one block, a card pulled from the side of size r destroys p rhymes and a card pulled from the side of size p destroys r, so pull from the side facing the larger one first, and note that the number of rhymes each further pull destroys never increases.",
+    "Because every block's sequence of gains is non-increasing, the best k pulls are simply the k largest gains taken from all blocks together: build that list, which has at most n entries, sort it downward, take its prefix sums once, and answer every question by one subtraction."
+  ],
+  "difficulty": "hard",
+  "rating": 2300,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "4 10 5\n3 7 7 5\n0 1 2 3 4\n",
+      "output": "2\n0\n0\n0\n0\n"
+    },
+    {
+      "input": "5 8 6\n4 4 4 1 7\n0 1 2 3 4 5\n",
+      "output": "4\n2\n1\n0\n0\n0\n"
+    },
+    {
+      "input": "6 12 3\n5 7 7 7 6 6\n2 0 1\n",
+      "output": "0\n4\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = int(data[1])\n    q = int(data[2])\n    cnt = Counter(int(x) for x in data[3:3 + n])\n    total = 0\n    gains: list[int] = []\n    for v, c in cnt.items():\n        w = s - v\n        if w == v:\n            total += c * (c - 1) // 2\n            gains.extend(range(c - 1, 0, -1))\n        elif v < w:\n            d = cnt.get(w, 0)\n            if d == 0:\n                continue\n            p, r = (c, d) if c >= d else (d, c)\n            total += p * r\n            gains.extend([p] * r)\n    gains.sort(reverse=True)\n    pref = [0] * (len(gains) + 1)\n    for i, g in enumerate(gains):\n        pref[i + 1] = pref[i] + g\n    top = len(gains)\n    out = []\n    for j in range(3 + n, 3 + n + q):\n        k = int(data[j])\n        if k > top:\n            k = top\n        out.append(total - pref[k])\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = int(data[1])\nq = int(data[2])\na = [int(x) for x in data[3:3 + n]]\nqueries = [int(x) for x in data[3 + n:3 + n + q]]\nif n <= 14:\n    # exhaustive: try every set of cards to keep\n    best = [None] * (n + 1)\n    for mask in range(1 << n):\n        kept = [a[i] for i in range(n) if (mask >> i) & 1]\n        pairs = 0\n        for i in range(len(kept)):\n            for j in range(i + 1, len(kept)):\n                if kept[i] + kept[j] == s:\n                    pairs += 1\n        removed = n - len(kept)\n        if best[removed] is None or pairs < best[removed]:\n            best[removed] = pairs\n    print(\"\\n\".join(str(best[k]) for k in queries))\nelse:\n    # group by value with a sort, then work out each block's cost curve by trying\n    # both ways of splitting the removals between its two sides\n    a.sort()\n    groups = {}\n    for v in a:\n        groups[v] = groups.get(v, 0) + 1\n    total = 0\n    gains = []\n    for v, c in groups.items():\n        w = s - v\n        if w == v:\n            total += c * (c - 1) // 2\n            prev = c * (c - 1) // 2\n            for t in range(1, c + 1):\n                m = c - t\n                cur = m * (m - 1) // 2\n                gains.append(prev - cur)\n                prev = cur\n        elif v < w and w in groups:\n            p = c\n            r = groups[w]\n            total += p * r\n            prev = p * r\n            for t in range(1, p + r + 1):\n                lo = max(0, t - r)\n                hi = min(t, p)\n                cur = min((p - lo) * (r - (t - lo)), (p - hi) * (r - (t - hi)))\n                gains.append(prev - cur)\n                prev = cur\n    gains.sort()\n    gains.reverse()\n    pref = [0]\n    for g in gains:\n        pref.append(pref[-1] + g)\n    out = []\n    for k in queries:\n        if k > len(gains):\n            k = len(gains)\n        out.append(total - pref[k])\n    print(\"\\n\".join(map(str, out)))\n"
+  },
+  "cluster": "two-sum-nursery"
+}

@@ -1,0 +1,41 @@
+{
+  "id": "the-tribunal-plurality",
+  "title": "The Casting Out",
+  "lore": "When the candle gutters, the Reckoning begins: every seat names one seat, and the table casts out whoever was named most. Ada counts the ballots twice, because the last time somebody was off by one.",
+  "statement": "A Hall has n seats numbered 1 to n. At the Reckoning, seat i writes the number b_i on its ballot, naming one seat.\nA ballot that names its own caster (b_i = i) is void and counts for nobody.\n\nThe seat named on strictly more valid ballots than every other seat is cast out. If two or more seats share the highest count, or if there are no valid ballots at all, nobody is cast out.\n\nFor each Reckoning, print the number of the seat that is cast out, or 0 if nobody is.\n\nExample 1:\nInput:\n3\n5\n2 2 1 2 5\n4\n2 1 4 3\n3\n1 2 3\nOutput:\n2\n0\n0\nExplanation: In the first Reckoning seat 5 names itself, so that ballot is void; seat 2 is named three times and seat 1 once, so seat 2 is cast out. In the second every seat is named exactly once, a four-way tie, so nobody leaves. In the third every ballot is void.\n\nExample 2:\nInput:\n1\n6\n3 3 3 5 5 5\nOutput:\n0\nExplanation: Seat 3 names itself and seat 5 names itself, so each of them is left with two valid ballots. The count is tied and nobody is cast out.",
+  "inputFormat": "The first line contains t, the number of Reckonings. Each Reckoning is two lines: n, then n integers b_1 ... b_n where b_i is the seat named by seat i.",
+  "outputFormat": "For each Reckoning print one line: the number of the seat cast out, or 0 if nobody is.",
+  "constraints": "1 <= t <= 10^4\n1 <= n <= 2*10^5\nThe sum of n over all Reckonings does not exceed 2*10^5\n1 <= b_i <= n",
+  "tags": [
+    "implementation",
+    "hashing"
+  ],
+  "hints": [
+    "Count how many valid ballots each seat receives; one pass over the ballots is enough.",
+    "A ballot is void only when b_i equals i, so check the index against the value while counting.",
+    "Find the largest count and how many seats reach it; if more than one does, or the largest count is zero, print 0.",
+    "An array of size n plus one, indexed by seat number, avoids any sorting and runs in linear time even for the biggest Reckoning."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "3\n5\n2 2 1 2 5\n4\n2 1 4 3\n3\n1 2 3\n",
+      "output": "2\n0\n0\n"
+    },
+    {
+      "input": "1\n6\n3 3 3 5 5 5\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    t = int(data[0]); pos = 1; out = []\n    for _ in range(t):\n        n = int(data[pos]); pos += 1\n        cnt = [0] * (n + 1)\n        for i in range(1, n + 1):\n            b = int(data[pos]); pos += 1\n            if b != i:\n                cnt[b] += 1\n        best = 0; who = 0; tie = False\n        for s in range(1, n + 1):\n            if cnt[s] > best:\n                best = cnt[s]; who = s; tie = False\n            elif cnt[s] == best and best > 0:\n                tie = True\n        out.append(\"0\" if best == 0 or tie else str(who))\n    print(\"\\n\".join(out))\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nt = int(data[0]); pos = 1\nfor _ in range(t):\n    n = int(data[pos]); pos += 1\n    ballots = [int(x) for x in data[pos:pos + n]]; pos += n\n    valid = sorted(b for i, b in enumerate(ballots, start=1) if b != i)\n    runs = []\n    i = 0\n    while i < len(valid):\n        j = i\n        while j < len(valid) and valid[j] == valid[i]:\n            j += 1\n        runs.append((j - i, valid[i]))\n        i = j\n    if not runs:\n        print(0); continue\n    top = max(r[0] for r in runs)\n    winners = [r[1] for r in runs if r[0] == top]\n    print(winners[0] if len(winners) == 1 else 0)\n"
+  },
+  "cluster": "the-tribunal"
+}

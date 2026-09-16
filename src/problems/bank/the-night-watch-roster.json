@@ -1,0 +1,47 @@
+{
+  "id": "the-night-watch-roster",
+  "title": "The Roster Through the Night",
+  "lore": "The roster is rewritten all night as watches are pinned up and struck off. After every stroke of the quill the Warden asks the same two questions and writes the answers in the margin.",
+  "statement": "The Hall's roster is empty when the night begins. q changes are made to it, one after another.\n\nA change written + l r pins up a new watch covering every hour h with l <= h < r. Watches are numbered 1, 2, 3, and so on in the order they are pinned up, whether or not they are later struck off.\n\nA change written - k strikes watch number k off the roster. That watch was pinned up earlier and is still on the roster.\n\nAn hour is guarded when at least one watch on the roster covers it. A guarded stretch is a run of consecutive guarded hours that cannot be extended in either direction.\n\nAfter every change, print how many hours are guarded and how many guarded stretches they form.\n\nExample 1:\nInput:\n5\n+ 1 5\n+ 10 12\n+ 4 11\n- 3\n- 1\nOutput:\n4 1\n6 2\n11 1\n6 2\n2 1\nExplanation: The first watch guards hours 1 to 4. The second adds hours 10 and 11, in a stretch of its own. The third bridges them, so hours 1 to 11 form one stretch of eleven hours. Striking the third off breaks the bridge again, and striking the first off leaves only the second.\n\nExample 2:\nInput:\n4\n+ 0 3\n+ 3 6\n- 1\n- 2\nOutput:\n3 1\n6 1\n3 1\n0 0\nExplanation: The second watch begins at the hour the first one ends, so together they guard hours 0 to 5 without a break. Once both are struck off nothing is guarded at all.\n\nExample 3:\nInput:\n3\n+ 2 8\n+ 2 8\n- 1\nOutput:\n6 1\n6 1\n6 1\nExplanation: Two watches covering the same stretch guard no more hours than one, and striking either of them off changes nothing.",
+  "inputFormat": "The first line contains one integer q, the number of changes.\nEach of the next q lines holds one change: either a plus sign followed by two integers l and r, or a minus sign followed by one integer k.",
+  "outputFormat": "Print q lines. Line t holds two integers: after change t, the number of guarded hours and the number of guarded stretches.",
+  "constraints": "1 <= q <= 2 * 10^4\n0 <= l < r <= 10^9\nEvery change - k names a watch pinned up earlier and not yet struck off",
+  "tags": [
+    "segment-tree",
+    "intervals",
+    "sorting",
+    "implementation"
+  ],
+  "hints": [
+    "Read every change before answering any of them. The hours named in the input cut the night into fewer than 2q elementary stretches, and both answers are sums over those stretches, so no single hour ever has to be looked at.",
+    "Pinning up or striking off a watch adds 1 or subtracts 1 to a range of elementary stretches, and you need the total length where the count is positive. That is the covered-length tree whose counters live at the node they were added to and are never pushed down.",
+    "Alongside its counter each node keeps, ignoring whatever its ancestors add, the covered length inside it, how many covered blocks it holds and whether its first and its last elementary stretch are covered. A node with a positive counter is covered whole; otherwise it reads its two children.",
+    "Two children merge into blocks on the left plus blocks on the right, minus one exactly when the left child ends covered and the right child begins covered, since that is a stretch running across the boundary. The root after each change holds both answers."
+  ],
+  "difficulty": "hard",
+  "rating": 2400,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "5\n+ 1 5\n+ 10 12\n+ 4 11\n- 3\n- 1\n",
+      "output": "4 1\n6 2\n11 1\n6 2\n2 1\n"
+    },
+    {
+      "input": "4\n+ 0 3\n+ 3 6\n- 1\n- 2\n",
+      "output": "3 1\n6 1\n3 1\n0 0\n"
+    },
+    {
+      "input": "3\n+ 2 8\n+ 2 8\n- 1\n",
+      "output": "6 1\n6 1\n6 1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    q = int(data[0])\n    pos = 1\n    ops = []\n    spans = []\n    marks = set()\n    for _ in range(q):\n        if data[pos] == b\"+\":\n            l = int(data[pos + 1])\n            r = int(data[pos + 2])\n            pos += 3\n            spans.append((l, r))\n            ops.append((len(spans) - 1, 1))\n            marks.add(l)\n            marks.add(r)\n        else:\n            k = int(data[pos + 1])\n            pos += 2\n            ops.append((k - 1, -1))\n    cuts = sorted(marks)\n    at = {v: i for i, v in enumerate(cuts)}\n    m = len(cuts) - 1\n    size = 4 * m\n    # Every node keeps, ignoring whatever its ancestors add, the covered length inside it, its\n    # number of covered blocks and whether its first and last stretch are covered. A node whose\n    # own counter is positive is covered whole, so the counters are never pushed down.\n    cnt = [0] * size\n    cov = [0] * size\n    blocks = [0] * size\n    lft = [0] * size\n    rgt = [0] * size\n\n    def update(node, lo, hi, l, r, v):\n        if r < lo or hi < l:\n            return\n        if l <= lo and hi <= r:\n            cnt[node] += v\n        else:\n            mid = (lo + hi) >> 1\n            update(2 * node, lo, mid, l, r, v)\n            update(2 * node + 1, mid + 1, hi, l, r, v)\n        if cnt[node] > 0:\n            cov[node] = cuts[hi + 1] - cuts[lo]\n            blocks[node] = 1\n            lft[node] = 1\n            rgt[node] = 1\n        elif lo == hi:\n            cov[node] = 0\n            blocks[node] = 0\n            lft[node] = 0\n            rgt[node] = 0\n        else:\n            a = 2 * node\n            b = a + 1\n            cov[node] = cov[a] + cov[b]\n            blocks[node] = blocks[a] + blocks[b] - (rgt[a] & lft[b])\n            lft[node] = lft[a]\n            rgt[node] = rgt[b]\n\n    out = []\n    for which, v in ops:\n        l, r = spans[which]\n        update(1, 0, m - 1, at[l], at[r] - 1, v)\n        out.append(str(cov[1]) + \" \" + str(blocks[1]))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# After every change, sort what is on the roster and merge it, straight from the definition.\n# Quadratic, so the largest tests here hold 12000 changes rather than the 2 * 10^4 the\n# statement allows. 12000 is the size at which this code takes about 5 seconds, well past the\n# time limit, so a quadratic contestant solution fails on the same tests it checks.\nimport sys\n\ndata = sys.stdin.read().split()\nq = int(data[0])\npos = 1\nadded = []\nlive = []\nout = []\nfor _ in range(q):\n    if data[pos] == \"+\":\n        added.append((int(data[pos + 1]), int(data[pos + 2])))\n        live.append(True)\n        pos += 3\n    else:\n        live[int(data[pos + 1]) - 1] = False\n        pos += 2\n    total = 0\n    blocks = 0\n    end = None\n    for s, e in sorted(added[i] for i in range(len(added)) if live[i]):\n        if end is None or s > end:\n            blocks += 1\n            total += e - s\n            end = e\n        elif e > end:\n            total += e - end\n            end = e\n    out.append(str(total) + \" \" + str(blocks))\nprint(\"\\n\".join(out))\n"
+  },
+  "cluster": "the-night-watch"
+}

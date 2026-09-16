@@ -1,0 +1,47 @@
+{
+  "id": "two-sum-nursery-hearsay",
+  "title": "Rhymes by Hearsay",
+  "lore": "The Warden of the North Gate refuses to name a value and gives two numbers it sits between, which is the Warden's idea of cooperation. The Company counts the rhymes that are still possible.",
+  "statement": "The Warden of the North Gate will not name the value on a card. For card i the Warden says only that its value is an integer between l_i and r_i inclusive. There are n cards, and the Judge's number for the night is S.\n\nCall an unordered pair of distinct cards i and j possible if there exist integers x and y with l_i <= x <= r_i, l_j <= y <= r_j and x + y = S. The two cards are read on their own: no other pair constrains them.\n\nCount the possible pairs.\n\nExample 1:\nInput:\n3 10\n1 4\n5 9\n2 3\nOutput:\n2\nExplanation: Cards 1 and 2 can show 1 and 9, which sums to 10. Cards 2 and 3 can show 7 and 3. Cards 1 and 3 together reach only the sums 3 through 7, so that pair is not possible.\n\nExample 2:\nInput:\n4 8\n4 4\n4 4\n4 4\n4 4\nOutput:\n6\nExplanation: Every card is known exactly and shows 4, so all six pairs sum to 8.\n\nExample 3:\nInput:\n5 12\n1 2\n3 4\n5 6\n7 8\n9 10\nOutput:\n4\nExplanation: A pair of cards i < j reaches the sums from l_i + l_j to r_i + r_j. The pairs that reach 12 are (1, 5), (2, 4), (2, 5) and (3, 4). For instance cards 2 and 5 reach 12 through 16, and cards 1 and 2 reach only 4 through 6.\n",
+  "inputFormat": "The first line contains two integers n and S, the number of cards and the Judge's number. Each of the next n lines contains two integers l_i and r_i, the smallest and the largest value card i may show.",
+  "outputFormat": "Print one integer: the number of unordered pairs of distinct cards that are possible.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= l_i <= r_i <= 10^9\n2 <= S <= 2 * 10^9",
+  "tags": [
+    "sorting",
+    "two-pointers",
+    "math",
+    "binary-search"
+  ],
+  "hints": [
+    "The sums a pair can reach form the unbroken range from l_i + l_j to r_i + r_j, so the pair is possible exactly when l_i + l_j <= S <= r_i + r_j.",
+    "That looks like two conditions at once on two different arrays, which is what makes the naive count quadratic. Count the pairs failing each condition separately instead.",
+    "Because l_i <= r_i holds for every card, a pair with r_i + r_j < S automatically has l_i + l_j < S, so the failing pairs of the second kind are a subset of the pairs surviving the first: the answer is (pairs with l_i + l_j <= S) minus (pairs with r_i + r_j <= S - 1).",
+    "Each of those two counts is the classic count of pairs with sum at most a bound: sort the array, put one index at each end, and when the two ends sum within the bound every index between them does too."
+  ],
+  "difficulty": "medium",
+  "rating": 1800,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "3 10\n1 4\n5 9\n2 3\n",
+      "output": "2\n"
+    },
+    {
+      "input": "4 8\n4 4\n4 4\n4 4\n4 4\n",
+      "output": "6\n"
+    },
+    {
+      "input": "5 12\n1 2\n3 4\n5 6\n7 8\n9 10\n",
+      "output": "4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef count_le(arr: list[int], limit: int) -> int:\n    lo = 0\n    hi = len(arr) - 1\n    total = 0\n    while lo < hi:\n        if arr[lo] + arr[hi] <= limit:\n            total += hi - lo\n            lo += 1\n        else:\n            hi -= 1\n    return total\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = int(data[1])\n    low = [0] * n\n    high = [0] * n\n    for i in range(n):\n        low[i] = int(data[2 + 2 * i])\n        high[i] = int(data[3 + 2 * i])\n    low.sort()\n    high.sort()\n    sys.stdout.write(\"%d\\n\" % (count_le(low, s) - count_le(high, s - 1)))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = int(data[1])\nlow = [int(data[2 + 2 * i]) for i in range(n)]\nhigh = [int(data[3 + 2 * i]) for i in range(n)]\nif n <= 1500:\n    # exhaustive: test every pair against the definition\n    total = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            if low[i] + low[j] <= s <= high[i] + high[j]:\n                total += 1\n    print(total)\nelse:\n    # same two counts, taken by binary search instead of a sweep\n    def count_le(arr, limit):\n        b = sorted(arr)\n        total = 0\n        for v in b:\n            total += bisect_right(b, limit - v)\n            if v + v <= limit:\n                total -= 1\n        return total // 2\n\n    print(count_le(low, s) - count_le(high, s - 1))\n"
+  },
+  "cluster": "two-sum-nursery"
+}

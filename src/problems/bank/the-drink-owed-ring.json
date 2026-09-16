@@ -1,0 +1,47 @@
+{
+  "id": "the-drink-owed-ring",
+  "title": "Rings of Favours",
+  "lore": "A favour owed straight back cancels, and so does a favour that goes right round the table and comes home. Ada will not wipe the slate until every line on it sits in some ring, and she will write as few new lines as she has to.",
+  "statement": "The slate lists m favours among n scribes. Favour j reads that scribe u_j owes scribe v_j one drink. Nobody owes themselves, and the same favour may be written more than once.\n\nA ring is a list of favours taken from the slate, all different, arranged so that the scribe owed by each favour is the scribe who owes in the next one, and the scribe owed by the last is the scribe who owes in the first. A scribe may appear in a ring more than once. When a ring is called in, every debt in it cancels.\n\nAda wants to cut the whole slate into rings, so that every favour sits in exactly one ring. Before she does, she may write new favours on the slate; a new favour may name any two different scribes, in either direction, and counts as a line like any other.\n\nPrint the least number of new favours Ada must write, and then, writing only that many, the least number of rings the slate can be cut into.\n\nExample 1:\nInput:\n4 4\n1 2\n2 3\n3 1\n1 4\nOutput:\n1 1\nExplanation: Scribe 1 owes twice and is owed once, scribe 4 is owed once and owes nothing, so one new favour is needed and 4 owes 1 is the only useful one to write. The five favours then make a single ring: 1 owes 2, 2 owes 3, 3 owes 1, 1 owes 4, 4 owes 1.\n\nExample 2:\nInput:\n4 4\n1 2\n2 1\n3 4\n4 3\nOutput:\n0 2\nExplanation: Every scribe already owes exactly as much as they are owed, so nothing new is needed. The two pairs share no scribe, so no ring can hold favours from both and two rings is the fewest.\n\nExample 3:\nInput:\n5 4\n1 2\n2 1\n3 4\n4 5\nOutput:\n1 2\nExplanation: Scribes 1 and 2 are square with each other and make a ring on their own. Scribe 3 owes one more than it is owed and scribe 5 is owed one more than it owes, so writing 5 owes 3 closes the second ring. The new favour cannot reach the first pair, since both ends of a new favour must be a scribe who is not square.",
+  "inputFormat": "The first line contains two integers n and m, the number of scribes and the number of favours. Each of the next m lines contains two integers u_j and v_j: favour j reads that scribe u_j owes scribe v_j one drink.",
+  "outputFormat": "Print one line with two integers separated by a space: the least number of new favours Ada must write, and the least number of rings the slate can then be cut into.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= m <= 2 * 10^5\n1 <= u_j, v_j <= n\nu_j != v_j\nThe same pair may appear on many favours, in either direction",
+  "tags": [
+    "graphs",
+    "dsu",
+    "math",
+    "implementation"
+  ],
+  "hints": [
+    "Walk a ring and count: every time it arrives at a scribe it also leaves, so inside a ring each scribe is owed exactly as often as they owe. Cutting the whole slate into rings therefore needs every scribe to owe exactly as many drinks as they are owed, and that condition alone is enough.",
+    "A new favour raises one scribe's owing count by one and another scribe's owed count by one. So the number of new lines is at least the total surplus, the sum over scribes of max(0, owes - owed), and writing that many is always possible.",
+    "Once every scribe is square, take the scribes joined by favours into groups. A whole group can always be walked as one ring, and no ring can hold favours from two groups, so the number of rings is the number of groups that hold a favour.",
+    "Both ends of a useful new favour must be a scribe who is not square, so a group whose scribes are all square can never be joined to anything. Every group that does hold an unsquare scribe can be strung together into one ring by the new favours. The answer is the number of all-square groups, plus one if any new favour is written. Group the scribes with a disjoint set structure in one pass; a quadratic pass over pairs of favours will not survive 2 * 10^5."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 4000,
+  "samples": [
+    {
+      "input": "4 4\n1 2\n2 3\n3 1\n1 4\n",
+      "output": "1 1\n"
+    },
+    {
+      "input": "4 4\n1 2\n2 1\n3 4\n4 3\n",
+      "output": "0 2\n"
+    },
+    {
+      "input": "5 4\n1 2\n2 1\n3 4\n4 5\n",
+      "output": "1 2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    parent = list(range(n + 1))\n    owes = [0] * (n + 1)\n    owed = [0] * (n + 1)\n\n    def find(x):\n        root = x\n        while parent[root] != root:\n            root = parent[root]\n        while parent[x] != root:\n            parent[x], x = root, parent[x]\n        return root\n\n    pos = 2\n    for _ in range(m):\n        u = int(data[pos])\n        v = int(data[pos + 1])\n        pos += 2\n        owes[u] += 1\n        owed[v] += 1\n        ru = find(u)\n        rv = find(v)\n        if ru != rv:\n            parent[ru] = rv\n    extra = 0\n    groups = {}\n    for v in range(1, n + 1):\n        if owes[v] or owed[v]:\n            if owes[v] > owed[v]:\n                extra += owes[v] - owed[v]\n            root = find(v)\n            if owes[v] != owed[v]:\n                groups[root] = False\n            elif root not in groups:\n                groups[root] = True\n    settled = 0\n    for ok in groups.values():\n        if ok:\n            settled += 1\n    sys.stdout.write(str(extra) + \" \" + str(settled + (1 if extra else 0)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nadj = [[] for _ in range(n + 1)]\nowes = [0] * (n + 1)\nowed = [0] * (n + 1)\nfor i in range(m):\n    u = int(data[2 + 2 * i])\n    v = int(data[3 + 2 * i])\n    owes[u] += 1\n    owed[v] += 1\n    adj[u].append(v)\n    adj[v].append(u)\nextra = 0\nfor v in range(1, n + 1):\n    if owes[v] > owed[v]:\n        extra += owes[v] - owed[v]\nseen = [False] * (n + 1)\nalready = 0\nfor s in range(1, n + 1):\n    if seen[s] or not adj[s]:\n        continue\n    seen[s] = True\n    queue = deque([s])\n    balanced = True\n    while queue:\n        x = queue.popleft()\n        if owes[x] != owed[x]:\n            balanced = False\n        for y in adj[x]:\n            if not seen[y]:\n                seen[y] = True\n                queue.append(y)\n    if balanced:\n        already += 1\nprint(extra, already + (1 if extra else 0))\n"
+  },
+  "cluster": "the-drink-owed"
+}

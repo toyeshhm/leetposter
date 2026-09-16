@@ -1,0 +1,44 @@
+{
+  "id": "the-changeling-tell",
+  "title": "The Tell",
+  "lore": "The Changeling copies the roll like everyone else and alters a single number, on the grounds that a lie nobody can find is not worth telling. The Company lays every copy side by side.",
+  "statement": "The Hall keeps m copies of the same roll. A roll is a list of n numbers, and every copy was written from the same original, so any two copies ought to agree in every position.\n\nExactly one of the copies is the Changeling's. It matches the original in every position but one, where it carries some other number. Every other copy matches the original everywhere. There are at least three copies, so the original can always be recovered.\n\nName the altered entry: which copy it is in, which position it is in, and what the original carries there.\n\nExample 1:\nInput:\n3 4\n5 1 9 2\n5 1 9 2\n5 7 9 2\nOutput:\n3 2 1\nExplanation: Copies 1 and 2 agree in all four positions, so they are the original. Copy 3 carries 7 in position 2 where the original carries 1.\n\nExample 2:\nInput:\n4 3\n8 8 8\n8 8 3\n8 8 3\n8 8 3\nOutput:\n1 3 3\nExplanation: Copies 2, 3 and 4 agree, so the original is 8 8 3. Copy 1 is the Changeling's and carries 8 in position 3.\n\nExample 3:\nInput:\n3 1\n4\n4\n6\nOutput:\n3 1 4\nExplanation: The roll is one number long. Two copies carry 4 and one carries 6.",
+  "inputFormat": "The first line contains two integers m and n, the number of copies and the length of the roll.\nEach of the next m lines contains n integers: the i-th of those lines is copy i, and its j-th number is the entry that copy carries in position j.",
+  "outputFormat": "Print three integers separated by single spaces: the number of the altered copy, the position of the altered entry within that copy, and the number the original carries in that position. Copies and positions are numbered from 1.",
+  "constraints": "3 <= m <= 2 * 10^5\n1 <= n <= 2 * 10^5\nm * n <= 4 * 10^5\n1 <= a_ij <= 10^9\nExactly one copy differs from the others, and it differs in exactly one position",
+  "tags": [
+    "implementation",
+    "matrices"
+  ],
+  "hints": [
+    "Every copy but one is the original, so in a position where the copies disagree, the number carried by most of them is the original's.",
+    "Comparing every pair of copies is m * m * n work, which is 8 * 10^10 at the top of the bounds. Comparing every copy against copy 1 is m * n and settles almost everything.",
+    "If exactly one copy differs from copy 1, that copy is the Changeling's and copy 1 holds the original entry. If every other copy differs from copy 1, then copy 1 is the Changeling's, and any other copy shows what the original carries there."
+  ],
+  "difficulty": "easy",
+  "rating": 900,
+  "timeLimitMs": 2000,
+  "cluster": "the-changeling",
+  "samples": [
+    {
+      "input": "3 4\n5 1 9 2\n5 1 9 2\n5 7 9 2\n",
+      "output": "3 2 1\n"
+    },
+    {
+      "input": "4 3\n8 8 8\n8 8 3\n8 8 3\n8 8 3\n",
+      "output": "1 3 3\n"
+    },
+    {
+      "input": "3 1\n4\n4\n6\n",
+      "output": "3 1 4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    m = int(data[0])\n    n = int(data[1])\n    rows = []\n    p = 2\n    for _ in range(m):\n        rows.append(data[p:p + n])\n        p += n\n    base = rows[0]\n    odd = -1\n    two = False\n    for i in range(1, m):\n        if rows[i] != base:\n            if odd == -1:\n                odd = i\n            else:\n                two = True\n                break\n    if two:\n        other = rows[1]\n        for j in range(n):\n            if other[j] != base[j]:\n                sys.stdout.write(\"1 %d %s\\n\" % (j + 1, other[j].decode()))\n                return\n    else:\n        other = rows[odd]\n        for j in range(n):\n            if other[j] != base[j]:\n                sys.stdout.write(\"%d %d %s\\n\" % (odd + 1, j + 1, base[j].decode()))\n                return\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nm = int(data[0])\nn = int(data[1])\ngrid = []\np = 2\nfor _ in range(m):\n    grid.append(data[p:p + n])\n    p += n\nfor j in range(n):\n    col = [grid[i][j] for i in range(m)]\n    seen = set(col)\n    if len(seen) > 1:\n        for v in seen:\n            if col.count(v) == 1:\n                odd_val = v\n            else:\n                true_val = v\n        print(col.index(odd_val) + 1, j + 1, true_val)\n        break\n"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "the-stuck-door-wedge",
+  "title": "The Wedges Under the Door",
+  "lore": "The only thing holding the door ajar is the pile of wedges driven under it over the years. A new wedge lifts the door off every thinner one, and those are swept up in the morning.",
+  "statement": "Wedges are driven under the door one at a time, in the order they are numbered. Wedge i is t_i thick.\n\nDriving a wedge in lifts the door to the thickness of that wedge, so every wedge already under the door that is strictly thinner than t_i loses its grip and falls away. Such a wedge is said to be ejected by wedge i, and it is gone for the rest of the night. Wedge i itself then stays under the door. A wedge exactly as thick as the new one is not ejected.\n\nFor every wedge print the number of the wedge that ejects it, or 0 if it is still under the door after the last wedge has been driven in.\n\nExample 1:\n\nInput:\n5\n3 1 4 1 5\nOutput:\n3 3 5 5 0\nExplanation: Wedge 3 is 4 thick and ejects wedges 1 and 2, which are 3 and 1 thick. Wedge 5 is 5 thick and ejects wedges 3 and 4. Only wedge 5 is left under the door.\n\nExample 2:\n\nInput:\n4\n4 4 2 2\nOutput:\n0 0 0 0\nExplanation: No wedge is strictly thicker than one driven in before it, so nothing is ever ejected and all four are still under the door at the end.\n\nExample 3:\n\nInput:\n6\n2 7 3 3 9 1\nOutput:\n2 5 5 5 0 0\nExplanation: Wedge 2 ejects wedge 1. Wedge 5 is 9 thick and ejects wedges 2, 3 and 4 at once. Wedge 6 is 1 thick and ejects nothing, so wedges 5 and 6 remain.",
+  "inputFormat": "The first line contains one integer n, the number of wedges. The second line contains n integers t_1 ... t_n, the thicknesses in the order the wedges are driven in.",
+  "outputFormat": "Print n integers on one line, separated by single spaces: for each wedge in order, the number of the wedge that ejects it, or 0 if it is never ejected.",
+  "constraints": "1 <= n <= 10^5\n1 <= t_i <= 10^9",
+  "tags": [
+    "stack",
+    "implementation",
+    "simulation"
+  ],
+  "hints": [
+    "The wedge that ejects wedge i is the first wedge after it that is strictly thicker. Searching forward from every wedge costs O(n^2) and n runs to 10^5, so the answers have to fall out of one pass.",
+    "Think about what is under the door at any moment. Read from the bottom up, those wedges are never thinner going up, and a wedge only ever leaves from the top of that pile.",
+    "Keep the pile as a stack of wedge numbers. When wedge i arrives, pop while the top is thinner than t_i, writing i as the ejector of everything popped, then push i. Whatever is still on the stack at the end gets 0. Each wedge is pushed once and popped at most once, so the night costs O(n)."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "cluster": "the-stuck-door",
+  "samples": [
+    {
+      "input": "5\n3 1 4 1 5\n",
+      "output": "3 3 5 5 0\n"
+    },
+    {
+      "input": "4\n4 4 2 2\n",
+      "output": "0 0 0 0\n"
+    },
+    {
+      "input": "6\n2 7 3 3 9 1\n",
+      "output": "2 5 5 5 0 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "\nimport sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    t = [int(x) for x in data[1:1 + n]]\n    ans = [0] * n\n    stack = []\n    for i in range(n):\n        ti = t[i]\n        while stack and t[stack[-1]] < ti:\n            ans[stack.pop()] = i + 1\n        stack.append(i)\n    sys.stdout.write(\" \".join(map(str, ans)))\n    sys.stdout.write(\"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nt = [int(x) for x in data[1:1 + n]]\n# nxt[i] is the first position after i holding a thicker wedge, or n if there is none.\n# Walking right to left, if t[j] <= t[i] then everything from j up to nxt[j] - 1 is at\n# most t[j], so the search may jump straight to nxt[j].\nnxt = [n] * (n + 1)\nfor i in range(n - 1, -1, -1):\n    j = i + 1\n    while j < n and t[j] <= t[i]:\n        j = nxt[j]\n    nxt[i] = j\nout = [str(nxt[i] + 1) if nxt[i] < n else \"0\" for i in range(n)]\nprint(\" \".join(out))\n"
+  }
+}

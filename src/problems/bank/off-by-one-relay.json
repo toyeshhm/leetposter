@@ -1,0 +1,47 @@
+{
+  "id": "off-by-one-relay",
+  "title": "The Courier Relay",
+  "lore": "A verdict must travel between halls by relay. A courier kept waiting longer than his patience leaves without the message, and the Warden insists that a handover at the exact hour is not a wait at all.",
+  "statement": "The Judge's verdict must be carried across the land by a relay of couriers. There are n couriers. Courier i departs at hour s_i, arrives at hour e_i, and covers a distance of d_i.\n\nA relay is a sequence of one or more couriers c_1, c_2, ..., c_m. For every consecutive pair the next courier must depart no earlier than the previous one arrives, and the message may wait at most g hours between them: e_(c_j) <= s_(c_(j+1)) <= e_(c_j) + g. A handover at the exact hour of arrival is allowed, and it counts as a wait of zero hours.\n\nThe distance of a relay is the sum of the distances of its couriers. Print the largest distance of any relay.\n\nExample 1:\nInput:\n4 2\n0 3 5\n3 6 4\n8 10 7\n5 7 1\nOutput:\n16\nExplanation: The first courier arrives at hour 3 and the second departs at hour 3, a wait of zero. The second arrives at hour 6 and the third departs at hour 8, a wait of two, which is allowed. That relay covers 5 + 4 + 7 = 16. Using the fourth courier instead of the second gives only 5 + 1 + 7 = 13.\n\nExample 2:\nInput:\n2 0\n0 5 3\n6 9 4\nOutput:\n4\nExplanation: With g = 0 the second courier would have to depart at hour 5 exactly. He departs at 6, so no relay uses both, and the best is a single courier with distance 4.\n\nExample 3:\nInput:\n3 100\n0 1 1\n1 2 1\n2 3 1\nOutput:\n3\nExplanation: Every handover happens at the exact hour, so all three couriers form one relay.",
+  "inputFormat": "The first line contains two integers n and g, the number of couriers and the longest wait the message may endure between two couriers.\nEach of the next n lines contains three integers s_i, e_i and d_i: the hour the courier departs, the hour he arrives, and the distance he covers.",
+  "outputFormat": "Print one integer, the largest possible distance of a relay.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= g <= 10^9\n0 <= s_i < e_i <= 10^9\n1 <= d_i <= 10^9",
+  "tags": [
+    "dp",
+    "sorting",
+    "intervals",
+    "queue"
+  ],
+  "hints": [
+    "Sort the couriers by departure. The best relay ending with courier i is d_i plus the best relay ending with some courier j whose arrival e_j lies in [s_i - g, s_i], and every such j departs strictly earlier than i, so the values can be filled in departure order.",
+    "Checking every earlier courier for every i is n^2 work and the Warden allows two hundred thousand couriers, so the maximum over the arrival window must come from a structure, not a loop.",
+    "Process couriers in departure order and, as the current departure hour s grows, insert each finished courier into a structure keyed by its arrival hour the moment e_j <= s; every inserted value is already final because that courier departed earlier.",
+    "Both the insertion key e_j and the window's lower bound s - g only ever increase, so a deque holding arrival hours in increasing order with strictly decreasing best values answers each query from its front after popping expired entries; a segment tree over compressed arrival hours works too."
+  ],
+  "difficulty": "hard",
+  "rating": 1900,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "4 2\n0 3 5\n3 6 4\n8 10 7\n5 7 1\n",
+      "output": "16\n"
+    },
+    {
+      "input": "2 0\n0 5 3\n6 9 4\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 100\n0 1 1\n1 2 1\n2 3 1\n",
+      "output": "3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    g = int(data[1])\n    starts = [0] * n\n    ends = [0] * n\n    dist = [0] * n\n    for i in range(n):\n        starts[i] = int(data[2 + 3 * i])\n        ends[i] = int(data[3 + 3 * i])\n        dist[i] = int(data[4 + 3 * i])\n    by_start = sorted(range(n), key=starts.__getitem__)\n    by_end = sorted(range(n), key=ends.__getitem__)\n    best = [0] * n\n    window = deque()\n    j = 0\n    answer = 0\n    for i in by_start:\n        s = starts[i]\n        while j < n and ends[by_end[j]] <= s:\n            idx = by_end[j]\n            value = best[idx]\n            while window and window[-1][1] <= value:\n                window.pop()\n            window.append((ends[idx], value))\n            j += 1\n        limit = s - g\n        while window and window[0][0] < limit:\n            window.popleft()\n        total = dist[i] + (window[0][1] if window else 0)\n        best[i] = total\n        if total > answer:\n            answer = total\n    print(answer)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ng = int(data[1])\ncouriers = sorted((int(data[2 + 3 * i]), int(data[3 + 3 * i]), int(data[4 + 3 * i])) for i in range(n))\nbest = [0] * n\nfor i in range(n):\n    s, e, d = couriers[i]\n    best[i] = d + max([best[j] for j in range(i) if s - g <= couriers[j][1] <= s], default=0)\nprint(max(best))\n"
+  },
+  "cluster": "off-by-one"
+}

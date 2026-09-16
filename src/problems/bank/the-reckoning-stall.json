@@ -1,0 +1,46 @@
+{
+  "id": "the-reckoning-stall",
+  "title": "The Reckoning Stalls",
+  "lore": "There is no Skip at the Reckoning. A round that casts nobody out is a round that ends the night, so the Warden reads out the window in which each seat may be named and the Hall counts how long it can keep going.",
+  "statement": "The Hall has n seats, numbered 1 to n. Seat i may be cast out only during rounds l_i through r_i inclusive.\n\nThe Reckoning runs rounds 1, 2, 3, and so on. In every round exactly one seat still at the table is cast out, and seat i may be cast out in round t only if l_i <= t <= r_i. There is no skip: if a round begins and no seat still at the table may be cast out in it, the Reckoning stalls, and that round and every round after it does not happen.\n\nYou decide who is cast out in each round. Print the largest number of rounds that can happen.\n\nExample 1:\nInput:\n4\n1 4\n1 1\n3 4\n3 3\nOutput:\n4\nExplanation: Cast out seat 2 in round 1, since its window closes at once. Seat 1 then goes in round 2, seat 4 in round 3 and seat 3 in round 4. Taking seat 1 first would waste the only round seat 2 had.\n\nExample 2:\nInput:\n4\n1 1\n1 1\n3 4\n4 4\nOutput:\n1\nExplanation: Round 1 must take one of the first two seats, and the other one's window closes with it. No seat may be cast out in round 2, so the Reckoning stalls there.\n\nExample 3:\nInput:\n3\n2 3\n2 3\n2 3\nOutput:\n0\nExplanation: No window contains round 1, so the Reckoning stalls before it starts.",
+  "inputFormat": "The first line contains an integer n, the number of seats. Each of the next n lines contains two integers l_i and r_i, the first and the last round in which seat i may be cast out.",
+  "outputFormat": "Print one integer: the largest number of rounds the Reckoning can run.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= l_i <= r_i <= n",
+  "tags": [
+    "greedy",
+    "heap",
+    "sorting",
+    "implementation"
+  ],
+  "hints": [
+    "The rounds happen in order 1, 2, 3, ..., and the only thing a round needs is one seat still at the table whose window contains that round.",
+    "When several seats could be cast out in the round at hand, cast out the one whose window closes first. Exchanging two choices shows this never costs a round.",
+    "Sweep t from 1 to n. Push r_i into a min-heap for every seat with l_i = t, drop every entry below t, and take the smallest. The first t where the heap is empty is where the Reckoning stalls."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4\n1 4\n1 1\n3 4\n3 3\n",
+      "output": "4\n"
+    },
+    {
+      "input": "4\n1 1\n1 1\n3 4\n4 4\n",
+      "output": "1\n"
+    },
+    {
+      "input": "3\n2 3\n2 3\n2 3\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    opens = [[] for _ in range(n + 2)]\n    for i in range(n):\n        l = int(data[1 + 2 * i])\n        r = int(data[2 + 2 * i])\n        opens[l].append(r)\n    h = []\n    rounds = 0\n    for t in range(1, n + 1):\n        for r in opens[t]:\n            heappush(h, r)\n        while h and h[0] < t:\n            heappop(h)\n        if not h:\n            break\n        heappop(h)\n        rounds += 1\n    print(rounds)\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nseats = []\nfor i in range(n):\n    seats.append((int(data[1 + 2 * i]), int(data[2 + 2 * i])))\n\nif n <= 10:\n    # try every order of casting out\n    best = 0\n    full = (1 << n) - 1\n    memo = {}\n\n    def go(mask, t):\n        if mask in memo:\n            return memo[mask]\n        res = 0\n        for i in range(n):\n            if not (mask >> i) & 1:\n                l, r = seats[i]\n                if l <= t <= r:\n                    res = max(res, 1 + go(mask | (1 << i), t + 1))\n        memo[mask] = res\n        return res\n\n    print(go(0, 1))\nelse:\n    # hand every seat the earliest free round it can still use, deadlines first\n    nxt = list(range(n + 2))\n\n    def find(x):\n        root = x\n        while nxt[root] != root:\n            root = nxt[root]\n        while nxt[x] != root:\n            nxt[x], x = root, nxt[x]\n        return root\n\n    filled = bytearray(n + 2)\n    for r, l in sorted((r, l) for l, r in seats):\n        s = find(l)\n        if s <= r:\n            filled[s] = 1\n            nxt[s] = s + 1\n    rounds = 0\n    while rounds + 1 <= n and filled[rounds + 1]:\n        rounds += 1\n    print(rounds)\n"
+  },
+  "cluster": "the-reckoning"
+}

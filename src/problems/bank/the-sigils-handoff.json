@@ -1,0 +1,47 @@
+{
+  "id": "the-sigils-handoff",
+  "title": "Letters Down the Line",
+  "lore": "Letters travel the line hand to hand, since nobody in the Hall has ever been permitted to walk past their neighbour.",
+  "statement": "The n halls of the Company stand in a line, hall 1 to hall n. Hall i holds the five letters of its sigil s_i and must end the night holding the five letters of its target sigil t_i.\n\nWhile the forge is open, letters move only between neighbours: one hand-off takes a single letter out of hall i and puts it into hall i - 1 or hall i + 1. A hall may hold any number of letters, none or many, while the work goes on, and rearranging the letters inside a hall costs nothing, so hall i is satisfied as soon as it holds exactly the five letters of t_i in some order.\n\nPrint the smallest number of hand-offs that leaves every hall satisfied, or -1 if no sequence of hand-offs can do it.\n\nExample 1:\nInput:\n2\nAAAAB AAAAA\nAAAAA AAAAB\nOutput:\n2\nExplanation: Hall 1 holds a B it does not need and lacks an A, and hall 2 is short a B and holds an A too many. Hall 1 hands its B across the single gap and hall 2 hands an A back, which is two hand-offs.\n\nExample 2:\nInput:\n3\nAAAAA BBBBB\nBBBBB AAAAA\nCCCCC CCCCC\nOutput:\n10\nExplanation: Five A's cross from hall 1 to hall 2 and five B's cross the other way, ten hand-offs in all. Hall 3 already holds what it needs and gives nothing away.\n\nExample 3:\nInput:\n2\nAAAAA AAAAA\nAAAAA AAAAB\nOutput:\n-1\nExplanation: The line holds ten A's and no B, and a hand-off moves a letter without ever changing it, so no hall can come to hold a B.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls in the line.\nEach of the next n lines describes one hall: the sigil it holds now and the sigil it must end with, separated by a single space, each exactly five uppercase letters.",
+  "outputFormat": "One integer: the smallest number of hand-offs, or -1 if the line cannot be satisfied. The answer can exceed 2^31.",
+  "constraints": "1 <= n <= 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "greedy",
+    "prefix-sums",
+    "math",
+    "implementation"
+  ],
+  "hints": [
+    "The order of the letters inside a hall never matters, so replace every hall by how many of each letter it holds and how many of each letter it needs.",
+    "Look at one gap, the one between hall i and hall i + 1, and one letter: the halls up to i hold a certain number of that letter and need a certain number, and the difference has to cross that gap, in one direction or the other.",
+    "No letter ever gains anything by crossing the same gap twice, so the number of hand-offs over a gap is exactly the total imbalance of the first i halls, and the answer is the sum of those imbalances over all n - 1 gaps and all 26 letters.",
+    "Keep 26 running totals of held minus needed while reading the halls in order; the answer is -1 exactly when some running total is not zero at the end, and moving letters one gap at a time instead would take up to 10^5 - 1 steps for a single letter."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 4000,
+  "samples": [
+    {
+      "input": "2\nAAAAB AAAAA\nAAAAA AAAAB\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3\nAAAAA BBBBB\nBBBBB AAAAA\nCCCCC CCCCC\n",
+      "output": "10\n"
+    },
+    {
+      "input": "2\nAAAAA AAAAA\nAAAAA AAAAB\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    bal = [0] * 26\n    spread = 0\n    total = 0\n    pos = 1\n    for _ in range(n):\n        s = data[pos]\n        t = data[pos + 1]\n        pos += 2\n        for ch in s:\n            k = ch - 65\n            v = bal[k]\n            spread -= v if v >= 0 else -v\n            v += 1\n            bal[k] = v\n            spread += v if v >= 0 else -v\n        for ch in t:\n            k = ch - 65\n            v = bal[k]\n            spread -= v if v >= 0 else -v\n            v -= 1\n            bal[k] = v\n            spread += v if v >= 0 else -v\n        total += spread\n    if spread != 0:\n        sys.stdout.write(\"-1\\n\")\n    else:\n        sys.stdout.write(str(total) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncarry = Counter()\nmoves = 0\nfor i in range(n):\n    for ch in data[1 + 2 * i]:\n        carry[ch] += 1\n    for ch in data[2 + 2 * i]:\n        carry[ch] -= 1\n    if i < n - 1:\n        moves += sum(abs(v) for v in carry.values())\nif any(v != 0 for v in carry.values()):\n    print(-1)\nelse:\n    print(moves)\n"
+  },
+  "cluster": "the-sigils"
+}

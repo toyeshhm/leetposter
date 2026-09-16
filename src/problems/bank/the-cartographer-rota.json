@@ -1,0 +1,46 @@
+{
+  "id": "the-cartographer-rota",
+  "title": "Halls Lit on a Rota",
+  "lore": "The Warden of the North Gate lights the halls on a rota and counts the minutes twice. A hall that is dark at the minute you stand in it is a hall you do not leave.",
+  "statement": "The map is a grid with n rows and m columns. Each cell is a wall (#), the start hall (S), the target hall (T), or a hall marked with one of the first k lowercase letters. Each letter names a rota: a string w over the characters 0 and 1. A hall with rota w is lit at minute t if the character of w at index t mod |w| is 1 (indices start at 0). S and T are lit at every minute. Walls are never entered.\n\nThe Herald stands in S at minute 0. Every minute he either moves to a cell that shares a side with his current cell or stays where he is. At every minute t >= 1 the cell he is in must be lit at minute t.\n\nPrint the smallest minute at which the Herald can be in T, or -1 if he can never reach it.\n\nExample 1:\nInput:\n1 3 1\nSaT\n10\nOutput:\n3\nExplanation: The middle hall is lit at even minutes only. The Herald waits in S at minute 1, enters the middle hall at minute 2, and reaches T at minute 3.\n\nExample 2:\nInput:\n2 2 2\nSa\nbT\n100\n01\nOutput:\n2\nExplanation: The hall with rota b is lit at odd minutes, so the Herald steps down into it at minute 1 and right into T at minute 2. The hall with rota a would be dark until minute 3.\n\nExample 3:\nInput:\n1 3 1\nSaT\n0\nOutput:\n-1\nExplanation: The only hall between S and T is never lit.",
+  "inputFormat": "The first line contains three integers n, m and k. The next n lines each contain m characters describing the map. The next k lines each contain a string over the characters 0 and 1; the i-th of them is the rota named by the i-th lowercase letter.",
+  "outputFormat": "One integer: the smallest minute at which the Herald can be in T, or -1.",
+  "constraints": "1 <= n, m <= 5000\n2 <= n * m <= 5000\n1 <= k <= 10\n1 <= |w| <= 6 for every rota w\nThe map contains exactly one S and exactly one T",
+  "tags": [
+    "bfs",
+    "graphs",
+    "implementation"
+  ],
+  "hints": [
+    "Whether a hall may be entered at minute t depends only on t modulo its rota length, so two moments that agree modulo every rota length are indistinguishable.",
+    "Let L be the least common multiple of all rota lengths, at most 60; the state (cell, t mod L) captures everything, which gives at most n * m * L states.",
+    "Run a breadth-first search over those states, where from (cell, r) you may go to (cell', (r + 1) mod L) for cell' equal to the cell itself or a side neighbour, provided cell' is lit at minute (r + 1) mod L.",
+    "The depth of the first state on T that the search reaches is the answer, and if the search runs out of states print -1; simulating minute by minute without remembering visited states does not terminate when T is unreachable."
+  ],
+  "difficulty": "medium",
+  "rating": 1900,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "1 3 1\nSaT\n10\n",
+      "output": "3\n"
+    },
+    {
+      "input": "2 2 2\nSa\nbT\n100\n01\n",
+      "output": "2\n"
+    },
+    {
+      "input": "1 3 1\nSaT\n0\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom math import lcm\nfrom collections import deque\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    grid = data[3:3 + n]\n    rotas = data[3 + n:3 + n + k]\n    L = 1\n    for w in rotas:\n        L = lcm(L, len(w))\n    # lit[cell][t mod L]\n    total = n * m\n    lit = [None] * total\n    start = target = -1\n    for i in range(n):\n        row = grid[i]\n        for j in range(m):\n            c = row[j]\n            idx = i * m + j\n            if c == '#':\n                continue\n            if c == 'S':\n                start = idx; lit[idx] = [True] * L\n            elif c == 'T':\n                target = idx; lit[idx] = [True] * L\n            else:\n                w = rotas[ord(c) - 97]\n                lit[idx] = [w[t % len(w)] == '1' for t in range(L)]\n    seen = bytearray(total * L)\n    seen[start * L] = 1\n    dq = deque([(start, 0, 0)])\n    while dq:\n        cell, r, t = dq.popleft()\n        if cell == target:\n            print(t); return\n        nr = (r + 1) % L\n        i, j = divmod(cell, m)\n        nxt = [cell]\n        if i > 0: nxt.append(cell - m)\n        if i + 1 < n: nxt.append(cell + m)\n        if j > 0: nxt.append(cell - 1)\n        if j + 1 < m: nxt.append(cell + 1)\n        for c2 in nxt:\n            lc = lit[c2]\n            if lc is None or not lc[nr]:\n                continue\n            key = c2 * L + nr\n            if seen[key]:\n                continue\n            seen[key] = 1\n            dq.append((c2, nr, t + 1))\n    print(-1)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom math import lcm\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    grid = data[3:3 + n]\n    rotas = data[3 + n:3 + n + k]\n    period = 1\n    for w in rotas:\n        period = lcm(period, len(w))\n    def is_lit(i, j, t):\n        c = grid[i][j]\n        if c == '#':\n            return False\n        if c == 'S' or c == 'T':\n            return True\n        w = rotas[ord(c) - ord('a')]\n        return w[t % len(w)] == '1'\n    for i in range(n):\n        for j in range(m):\n            if grid[i][j] == 'S':\n                start = (i, j)\n            if grid[i][j] == 'T':\n                target = (i, j)\n    # cur = set of cells the Herald can be in at minute t\n    cur = {start}\n    t = 0\n    seen_states = set()\n    while True:\n        if target in cur:\n            print(t); return\n        key = (frozenset(cur), t % period)\n        if key in seen_states:\n            print(-1); return\n        seen_states.add(key)\n        t += 1\n        nxt = set()\n        for (i, j) in cur:\n            for (a, b) in ((i, j), (i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)):\n                if 0 <= a < n and 0 <= b < m and is_lit(a, b, t):\n                    nxt.add((a, b))\n        cur = nxt\nmain()\n"
+  },
+  "cluster": "the-cartographer"
+}

@@ -1,0 +1,47 @@
+{
+  "id": "the-north-gate-keys",
+  "title": "Rings of the North Gate",
+  "lore": "The North Gate has more locks than keepers, and the Warden insists that a key be counted once on every ring that carries it. What the Company wants to know is which keepers can open each other's doors.",
+  "statement": "The North Gate has k locks, numbered 1 to k, and key j opens lock j. Each of the n keepers carries a ring of between 1 and 5 distinct keys.\n\nTwo different keepers clash if some lock can be opened by both of them, that is, if their rings share at least one key. Two keepers may carry exactly the same ring; they still clash.\n\nCount the unordered pairs of keepers that clash.\n\nExample 1:\nInput:\n4 5\n2 1 2\n1 3\n2 3 1\n2 5 1\nOutput:\n4\nExplanation: Keepers 1, 3 and 4 all carry key 1, which gives three clashing pairs, and keepers 2 and 3 both carry key 3, which gives a fourth. Keepers 1 and 2 share nothing, and neither do keepers 2 and 4.\n\nExample 2:\nInput:\n3 3\n1 1\n1 2\n1 3\nOutput:\n0\nExplanation: Every keeper holds a different single key, so no lock has two keepers.\n\nExample 3:\nInput:\n5 4\n2 1 2\n2 2 3\n2 3 4\n2 4 1\n4 1 2 3 4\nOutput:\n8\nExplanation: The first four rings form a ring of neighbours: 1 with 2, 2 with 3, 3 with 4 and 4 with 1, which is four pairs. Keepers 1 and 3 share nothing, and neither do keepers 2 and 4. The last keeper carries every key and so clashes with all four others.",
+  "inputFormat": "The first line contains two integers n and k, the number of keepers and the number of locks.\nEach of the next n lines describes one ring: an integer c_i, the number of keys on it, followed by c_i distinct integers between 1 and k, the keys themselves.",
+  "outputFormat": "Print a single integer, the number of unordered pairs of keepers that clash.",
+  "constraints": "2 <= n <= 5 * 10^4\n1 <= k <= 60\n1 <= c_i <= 5\nc_i <= k\nthe c_i keys on one ring are distinct",
+  "tags": [
+    "hashing",
+    "bitmasks",
+    "combinatorics",
+    "math"
+  ],
+  "hints": [
+    "n is far too large to compare every pair of rings. Count instead, for every lock, the pairs of keepers that both carry its key: that is easy, but a pair is counted once for every key it shares, which is the Warden's usual arithmetic.",
+    "Repair it with inclusion and exclusion over sets of locks. For a set T of locks let cnt[T] be the number of keepers whose ring contains all of T; the pairs counted for every lock in T are exactly the cnt[T] * (cnt[T] - 1) / 2 pairs of those keepers, and the answer is the sum of (-1)^(|T|+1) * cnt[T] * (cnt[T] - 1) / 2 over all nonempty T.",
+    "A set T with cnt[T] >= 2 fits inside somebody's ring, and a ring holds at most five keys, so at most 31 sets per keeper can matter and every other T contributes nothing.",
+    "Walk the 31 nonempty subsets of each ring as bitmasks, count them in one dictionary, then add the pairs for a subset of odd size and subtract them for a subset of even size."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 8000,
+  "cluster": "the-north-gate",
+  "samples": [
+    {
+      "input": "4 5\n2 1 2\n1 3\n2 3 1\n2 5 1\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 3\n1 1\n1 2\n1 3\n",
+      "output": "0\n"
+    },
+    {
+      "input": "5 4\n2 1 2\n2 2 3\n2 3 4\n2 4 1\n4 1 2 3 4\n",
+      "output": "8\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    odd_counts: Counter[int] = Counter()\n    even_counts: Counter[int] = Counter()\n    cache: dict[int, tuple[list[int], list[int]]] = {}\n    pos = 2\n    for _ in range(n):\n        c = int(data[pos])\n        mask = 0\n        for t in range(1, c + 1):\n            mask |= 1 << (int(data[pos + t]) - 1)\n        pos += c + 1\n        lists = cache.get(mask)\n        if lists is None:\n            odd: list[int] = []\n            even: list[int] = []\n            sub = mask\n            while sub:\n                if bin(sub).count(\"1\") & 1:\n                    odd.append(sub)\n                else:\n                    even.append(sub)\n                sub = (sub - 1) & mask\n            lists = (odd, even)\n            cache[mask] = lists\n        odd_counts.update(lists[0])\n        even_counts.update(lists[1])\n    # Inclusion and exclusion over the sets of shared keys: a set of keys held by cnt keepers\n    # contributes its cnt * (cnt - 1) / 2 pairs with the sign of the parity of its size.\n    total = 0\n    for v in odd_counts.values():\n        total += v * (v - 1) // 2\n    for v in even_counts.values():\n        total -= v * (v - 1) // 2\n    sys.stdout.write(str(total) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# One bitset of keepers per key. For keeper i the keepers sharing a key with him are the\n# bits of the union of his keys' bitsets, and the ones above i are the pairs not yet\n# counted. Nothing here knows about inclusion and exclusion, and it runs at the full bound.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nk = int(data[1])\nbits = [0] * (k + 1)\nrings = []\npos = 2\nfor i in range(n):\n    c = int(data[pos])\n    ring = [int(x) for x in data[pos + 1:pos + 1 + c]]\n    pos += c + 1\n    for key in ring:\n        bits[key] |= 1 << i\n    rings.append(ring)\nans = 0\nfor i in range(n):\n    u = 0\n    for key in rings[i]:\n        u |= bits[key]\n    ans += bin(u >> (i + 1)).count(\"1\")\nprint(ans)\n"
+  }
+}

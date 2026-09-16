@@ -1,0 +1,46 @@
+{
+  "title": "Kin of the Sigil",
+  "lore": "Cass the Cartographer claims two halls are kin when their sigils are the same five letters in another order, and has never once been wrong about a tag.",
+  "statement": "The Company keeps a roll of n hall sigils. A sigil is exactly five uppercase letters, and the same sigil may appear on the roll more than once.\n\nTwo halls i and j with i < j are kin when one sigil can be turned into the other by rearranging its five letters, that is when the two sigils use exactly the same letters exactly as many times each. Two identical sigils are kin.\n\nPrint the number of kin pairs on the roll.\n\nExample 1:\nInput:\n4\nKANEP\nPANEK\nTGLWX\nNEPAK\nOutput:\n3\nExplanation: KANEP, PANEK and NEPAK are the same five letters in different orders, so all three pairs among them are kin. TGLWX shares its letters with nobody.\n\nExample 2:\nInput:\n3\nABCDE\nABCDF\nABDDE\nOutput:\n0\nExplanation: No two of these use the same multiset of letters, so there are no kin pairs.\n\nExample 3:\nInput:\n2\nEETYT\nEETYT\nOutput:\n1\nExplanation: Identical sigils are kin, so the single pair counts.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls on the roll.\nEach of the next n lines contains one sigil: exactly five uppercase letters with no spaces.",
+  "outputFormat": "One integer: the number of pairs i < j whose sigils are rearrangements of each other. The answer can exceed 2^31.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "hashing",
+    "sorting",
+    "strings",
+    "implementation"
+  ],
+  "hints": [
+    "Two sigils are kin exactly when sorting the five letters of each into alphabetical order gives the same string, so every sigil has one canonical form.",
+    "Walk the roll once and count, in a dictionary, how many sigils share each canonical form.",
+    "A group of k sigils with the same canonical form contributes k * (k - 1) / 2 kin pairs, so add that up over the groups instead of comparing all pairs, which would be 2 * 10^10 comparisons at the top of the bounds."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "cluster": "the-sigils",
+  "id": "the-sigils-kinship",
+  "samples": [
+    {
+      "input": "4\nKANEP\nPANEK\nTGLWX\nNEPAK\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\nABCDE\nABCDF\nABDDE\n",
+      "output": "0\n"
+    },
+    {
+      "input": "2\nEETYT\nEETYT\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    counts: dict[bytes, int] = {}\n    for i in range(1, n + 1):\n        key = bytes(sorted(data[i]))\n        counts[key] = counts.get(key, 0) + 1\n    total = 0\n    for k in counts.values():\n        total += k * (k - 1) // 2\n    print(total)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import groupby\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nkeys = sorted(\"\".join(sorted(code)) for code in data[1:1 + n])\ntotal = 0\nfor _, group in groupby(keys):\n    k = len(list(group))\n    total += k * (k - 1) // 2\nprint(total)\n"
+  }
+}

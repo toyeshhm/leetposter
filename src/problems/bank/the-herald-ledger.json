@@ -1,0 +1,43 @@
+{
+  "id": "the-herald-ledger",
+  "title": "The Deadline Ledger",
+  "lore": "The ledger lists every letter and the hour by which it must be in a hand. Amendments arrive all night, and after each one the Warden wants the count again, immediately.",
+  "statement": "The ledger holds n letters. Letter i must be delivered by the end of hour d_i.\n\nA herald delivers at most one letter per hour, in hours 1, 2, 3, and so on, and may deliver the letters in any order and skip any of them. A letter delivered in hour h is on time if h <= d_i. Letters that are never delivered are simply not counted.\n\nLet f be the largest number of letters that can be delivered on time by one herald.\n\nThen q amendments arrive. Amendment k sets the deadline of letter x_k to y_k, replacing whatever it was. Each amendment is permanent and they apply in the order given.\n\nPrint f for the original ledger, and then f again after each amendment.\n\nExample 1:\n\nInput:\n4 2\n1 1 2 3\n2 4\n3 1\nOutput:\n3\n4\n3\nExplanation: With deadlines 1 1 2 3 the herald can deliver one of the two letters due in hour 1, then the letter due by hour 2, then the letter due by hour 3, which is 3 letters; the second letter due in hour 1 has nowhere to go. After the first amendment the deadlines are 1 4 2 3 and all four fit, one per hour. After the second they are 1 4 1 3: two letters are due in hour 1, so one of them must be dropped.\n\nExample 2:\n\nInput:\n3 2\n5 5 5\n1 1\n2 1\nOutput:\n3\n3\n2\nExplanation: Three roomy deadlines all fit in hours 1, 2, 3. Moving one letter to hour 1 still leaves a valid order. Moving a second letter to hour 1 forces one of the two to be dropped.",
+  "inputFormat": "The first line contains two integers n and q.\nThe second line contains n integers d_1 ... d_n, the deadlines.\nEach of the next q lines contains two integers x_k and y_k: letter x_k gets deadline y_k.",
+  "outputFormat": "Print q + 1 lines: the answer for the original ledger, then the answer after each amendment in order.",
+  "constraints": "1 <= n <= 5*10^4\n1 <= q <= 5*10^4\n1 <= d_i <= 10^9\n1 <= x_k <= n\n1 <= y_k <= 10^9",
+  "tags": [
+    "greedy",
+    "segment-tree",
+    "sorting",
+    "math"
+  ],
+  "hints": [
+    "Sorting the deadlines and walking hours upward solves one ledger, but redoing that after every amendment is far too slow for the bounds the Warden is quoting.",
+    "For any hour threshold T, the letters with deadline at most T must all be delivered in the first T hours, so at least cnt(T) - T of them are dropped; the number dropped is the largest of those shortfalls over all T, and never less.",
+    "That means the answer equals the minimum over all thresholds T of T + n - cnt(T), where cnt(T) counts deadlines at most T, and only thresholds that appear as a deadline value need checking.",
+    "Compress every deadline that ever appears, keep T + n - cnt(T) in a segment tree with lazy range addition, and note that moving one deadline from old to new adds or subtracts one over the compressed range between them, so each amendment is one range update and one read of the global minimum."
+  ],
+  "difficulty": "hard",
+  "rating": 2500,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "4 2\n1 1 2 3\n2 4\n3 1\n",
+      "output": "3\n4\n3\n"
+    },
+    {
+      "input": "3 2\n5 5 5\n1 1\n2 1\n",
+      "output": "3\n3\n2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); q = int(data[1])\n    d = [int(x) for x in data[2:2 + n]]\n    xs = [0] * q; ys = [0] * q\n    pos = 2 + n\n    for k in range(q):\n        xs[k] = int(data[pos]) - 1; ys[k] = int(data[pos + 1]); pos += 2\n    vals = sorted(set(d) | set(ys) | {0})\n    index = {v: i for i, v in enumerate(vals)}\n    L = len(vals)\n    size = 1\n    while size < L:\n        size *= 2\n    INF = 1 << 62\n    mn = [INF] * (2 * size)\n    add = [0] * (2 * size)\n    cnt = [0] * L\n    for v in d:\n        cnt[index[v]] += 1\n    acc = 0\n    for i in range(L):\n        acc += cnt[i]\n        mn[size + i] = vals[i] + n - acc\n    for i in range(size - 1, 0, -1):\n        mn[i] = min(mn[2 * i], mn[2 * i + 1])\n    out = [mn[1]]\n    for k in range(q):\n        x = xs[k]; old = d[x]; new = ys[k]\n        if old == new:\n            out.append(mn[1])\n            continue\n        d[x] = new\n        if new > old:\n            l = index[old] + size; r = index[new] + size; v = 1\n        else:\n            l = index[new] + size; r = index[old] + size; v = -1\n        l0 = l; r0 = r - 1\n        while l < r:\n            if l & 1:\n                mn[l] += v; add[l] += v; l += 1\n            if r & 1:\n                r -= 1; mn[r] += v; add[r] += v\n            l >>= 1; r >>= 1\n        i = l0 >> 1; j = r0 >> 1\n        while i != j:\n            a = mn[2 * i]; b = mn[2 * i + 1]\n            mn[i] = (a if a < b else b) + add[i]\n            a = mn[2 * j]; b = mn[2 * j + 1]\n            mn[j] = (a if a < b else b) + add[j]\n            i >>= 1; j >>= 1\n        while i:\n            a = mn[2 * i]; b = mn[2 * i + 1]\n            mn[i] = (a if a < b else b) + add[i]\n            i >>= 1\n        out.append(mn[1])\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nn = int(data[0]); q = int(data[1])\nd = [int(x) for x in data[2:2 + n]]\npos = 2 + n\ndef on_time(deadlines):\n    hour = 0\n    for x in sorted(deadlines):\n        if hour < x:\n            hour += 1\n    return hour\nout = [str(on_time(d))]\nfor _ in range(q):\n    x, y = int(data[pos]), int(data[pos + 1])\n    pos += 2\n    d[x - 1] = y\n    out.append(str(on_time(d)))\nprint(\"\\n\".join(out))\n"
+  },
+  "cluster": "the-herald"
+}

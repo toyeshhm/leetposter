@@ -1,0 +1,46 @@
+{
+  "id": "the-seal-wax",
+  "title": "Seals From One Impression",
+  "lore": "A seal means Accepted and a broken seal means Rejected, and the Hall keeps both in the same drawer. Ada has one long impression and a room of scribes who each want a whole seal of their own.",
+  "statement": "An impression is a row of marks, each one a press ( or a lift ). Read left to right, an impression is sound if the number of lifts never exceeds the number of presses at any point, and the two are equal at the end.\n\nAda has an impression of n marks. She wants to cut it into contiguous pieces so that every piece is itself a sound impression. Every mark must end up in exactly one piece, the pieces keep their order, and no piece may be empty. Print the largest number of pieces she can cut it into, and the length of each piece in order. If no such cutting exists, print 0.\n\nExample 1:\n\nInput:\n6\n()(())\nOutput:\n2\n2 4\nExplanation: The first two marks form a sound piece and the last four form another. Cutting anywhere else leaves a piece that is not sound, so two is the most she can get.\n\nExample 2:\n\nInput:\n4\n))((\nOutput:\n0\nExplanation: The first mark is a lift with no press before it, so no piece containing it can be sound and no cutting exists.\n\nExample 3:\n\nInput:\n8\n()()()()\nOutput:\n4\n2 2 2 2\nExplanation: Every pair of marks is already a sound impression, so four scribes can be served.",
+  "inputFormat": "The first line contains one integer n, the number of marks.\nThe second line contains a string of n characters, each one ( or ), the impression read left to right.",
+  "outputFormat": "If no cutting into sound pieces exists, print one line containing 0.\nOtherwise print the number of pieces k on the first line, and on the second line the k piece lengths in order, separated by single spaces.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery character of the impression is ( or )",
+  "tags": [
+    "implementation",
+    "strings",
+    "greedy",
+    "stack"
+  ],
+  "hints": [
+    "A row that can be cut into sound pieces is itself sound, because sound pieces laid end to end are sound. So if the whole row is not sound the answer is 0 and there is nothing else to decide.",
+    "Cut as early as you can. The moment the count of presses and lifts is level again, closing the piece there can never cost you a later cut, and carrying on can only delay the next level point.",
+    "One pass with a running balance: it must never go below zero, and every time it touches zero you end a piece there. With n up to 2 * 10^5 that pass has to be the whole algorithm, not a re-scan of each candidate piece."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "6\n()(())\n",
+      "output": "2\n2 4\n"
+    },
+    {
+      "input": "4\n))((\n",
+      "output": "0\n"
+    },
+    {
+      "input": "8\n()()()()\n",
+      "output": "4\n2 2 2 2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    s = data[1].decode()\n    bal = 0\n    last = 0\n    pieces = []\n    for i in range(n):\n        bal += 1 if s[i] == \"(\" else -1\n        if bal < 0:\n            sys.stdout.write(\"0\\n\")\n            return\n        if bal == 0:\n            pieces.append(i + 1 - last)\n            last = i + 1\n    if bal != 0:\n        sys.stdout.write(\"0\\n\")\n        return\n    out = [str(len(pieces)), \" \".join(map(str, pieces))]\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\n# Cuts at every point where the running count of presses and lifts is level, then checks each\n# piece on its own with a plain scan. Every mark is scanned twice, so this stays linear.\ndata = sys.stdin.read().split()\nn = int(data[0])\ns = data[1]\n\n\ndef sound(t):\n    b = 0\n    for c in t:\n        b += 1 if c == \"(\" else -1\n        if b < 0:\n            return False\n    return b == 0\n\n\ncuts = []\nb = 0\nlast = 0\nfor i, c in enumerate(s):\n    b += 1 if c == \"(\" else -1\n    if b == 0:\n        cuts.append((last, i + 1))\n        last = i + 1\nok = last == n\nfor a, z in cuts:\n    if not sound(s[a:z]):\n        ok = False\n        break\nif not ok:\n    print(0)\nelse:\n    print(len(cuts))\n    print(\" \".join(str(z - a) for a, z in cuts))\n"
+  },
+  "cluster": "the-seal"
+}

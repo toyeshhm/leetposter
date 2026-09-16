@@ -1,0 +1,46 @@
+{
+  "id": "the-north-gate-patrols",
+  "title": "Patrols That Meet",
+  "lore": "The Warden of the North Gate counts every stone twice, once walking out and once walking back, and files a sheet for each pass. Ada asked only how many of the sheets quarrel with one another.",
+  "statement": "The stones of the corridor outside the North Gate are numbered 1, 2, 3, and so on. The Warden keeps n patrol sheets. Sheet i claims every stone from l_i to r_i inclusive.\n\nTwo different sheets meet if there is at least one stone claimed by both of them. Two sheets may claim exactly the same stones; they are still two different sheets and they meet.\n\nCount the unordered pairs of sheets that meet.\n\nExample 1:\nInput:\n4\n1 3\n3 5\n2 4\n7 9\nOutput:\n3\nExplanation: Sheets 1 and 2 both claim stone 3, sheets 1 and 3 both claim stones 2 and 3, and sheets 2 and 3 both claim stones 3 and 4. Sheet 4 claims stones 7, 8 and 9, which no other sheet claims.\n\nExample 2:\nInput:\n3\n5 5\n5 5\n1 4\nOutput:\n1\nExplanation: The first two sheets claim the same single stone, so they meet. Sheet 3 ends at stone 4 and meets neither of them.\n\nExample 3:\nInput:\n4\n1 2\n3 4\n5 6\n7 8\nOutput:\n0\nExplanation: Every sheet ends before the next one begins, so no two sheets meet.",
+  "inputFormat": "The first line contains one integer n, the number of patrol sheets.\nEach of the next n lines contains two integers l_i and r_i, the first and the last stone claimed by sheet i.",
+  "outputFormat": "Print a single integer, the number of unordered pairs of sheets that meet.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= l_i <= r_i <= 10^9",
+  "tags": [
+    "sorting",
+    "binary-search",
+    "intervals",
+    "combinatorics"
+  ],
+  "hints": [
+    "Looking at every pair costs about n^2 / 2 steps, and the Warden's bound on n does not allow that. Count the pairs that do not meet instead and subtract them from all n(n-1)/2 pairs.",
+    "Two sheets fail to meet exactly when one of them ends strictly before the other begins, so each such pair has a well defined earlier sheet and is counted once if, for every sheet, you count the sheets that end before it starts.",
+    "Sort all the right ends into one list. For sheet i the number of sheets that end before it starts is the number of right ends strictly less than l_i, which one binary search gives you, and no sheet counts itself because r_i is at least l_i."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 5000,
+  "cluster": "the-north-gate",
+  "samples": [
+    {
+      "input": "4\n1 3\n3 5\n2 4\n7 9\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\n5 5\n5 5\n1 4\n",
+      "output": "1\n"
+    },
+    {
+      "input": "4\n1 2\n3 4\n5 6\n7 8\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    lefts = [0] * n\n    rights = [0] * n\n    for i in range(n):\n        lefts[i] = int(data[1 + 2 * i])\n        rights[i] = int(data[2 + 2 * i])\n    # Two sheets miss each other exactly when one ends before the other begins, and that\n    # pair is counted once, at the later sheet. Everything else meets.\n    rights.sort()\n    apart = 0\n    for l in lefts:\n        apart += bisect_left(rights, l)\n    sys.stdout.write(str(n * (n - 1) // 2 - apart) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# A sweep along the corridor, with no idea that the answer has a closed form. Every sheet\n# opens at its first stone and closes one stone past its last, closings first at a shared\n# stone, and a sheet that opens while others are open meets exactly those, so each meeting\n# pair is counted once, at the later of the two.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nevents = []\nfor i in range(n):\n    l = int(data[1 + 2 * i])\n    r = int(data[2 + 2 * i])\n    events.append((l, 1))\n    events.append((r + 1, 0))\nevents.sort()\nopen_now = 0\nmet = 0\nfor _, kind in events:\n    if kind == 1:\n        met += open_now\n        open_now += 1\n    else:\n        open_now -= 1\nprint(met)\n"
+  }
+}

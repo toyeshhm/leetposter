@@ -1,0 +1,46 @@
+{
+  "id": "the-shared-file-carets",
+  "title": "Where the Carets Ended Up",
+  "lore": "Everyone types into the same file at once, so every caret drifts while its owner is still reading. The Warden of the North Gate counted the offsets twice and got two different answers, which he says proves nothing.",
+  "statement": "The shared file is one line of n characters. A caret sits in one of the gaps between characters: a caret at offset c is just after the c-th character, so offset 0 is before the first character and offset L is after the last one, where L is the length of the file at that moment.\n\nk edits are applied to the file, one after another.\nI p inserts one character so that it becomes the p-th character of the file; every character that was at position p or later moves one place to the right.\nD p deletes the p-th character; every character after it moves one place to the left.\n\nA caret is not part of the file, so it is fixed up after every edit:\nafter I p, a caret at offset c moves to c + 1 if c >= p, and stays where it is otherwise;\nafter D p, a caret at offset c moves to c - 1 if c >= p, and stays where it is otherwise.\n\nThe m scribes place their carets before the first edit, scribe j at offset c_j. Print where every caret ends up after all k edits.\n\nExample 1:\nInput:\n5 3 3\nI 3\nD 1\nI 1\n0 2 5\nOutput:\n0 2 6\nExplanation: The file starts with 5 characters and the carets sit at 0, 2 and 5. The insert at position 3 moves only the caret at 5, to 6. The delete at position 1 moves the carets at 2 and 6 down to 1 and 5. The insert at position 1 moves the carets at 1 and 5 up to 2 and 6, and leaves the caret at 0 alone.\n\nExample 2:\nInput:\n3 2 4\nD 2\nD 1\n0 1 2 3\nOutput:\n0 0 0 1\nExplanation: Deleting the second character pulls the carets at 2 and 3 down to 1 and 2. Deleting the first character then pulls the carets at 1, 1 and 2 down to 0, 0 and 1. The caret at offset 0 never moves.\n\nExample 3:\nInput:\n1 1 2\nI 1\n0 1\nOutput:\n0 2\nExplanation: The new character becomes the first character of the file. The caret at offset 0 is before it and stays at 0; the caret at offset 1 is after it and becomes 2.",
+  "inputFormat": "The first line contains three integers n, k and m.\nEach of the next k lines contains an edit: the letter I or the letter D, then an integer p.\nThe last line contains m integers c_1, ..., c_m, the starting offsets of the carets.\nEvery edit is valid: for I p we have 1 <= p <= L + 1 and for D p we have 1 <= p <= L, where L is the length of the file just before that edit.",
+  "outputFormat": "Print m integers separated by single spaces on one line: the final offset of every caret, in the order the carets were given.",
+  "constraints": "1 <= n <= 10^9\n1 <= k <= 2 * 10^5\n1 <= m <= 2 * 10^5\n0 <= c_j <= n",
+  "tags": [
+    "fenwick",
+    "sorting",
+    "binary-search",
+    "implementation"
+  ],
+  "hints": [
+    "Carets never cross. If one caret starts at or before another it ends at or before it, so sort the carets once and that order holds for the whole night.",
+    "An edit at position p moves exactly the carets whose current offset is at least p, and in the sorted order those form a suffix. Adding 1 or subtracting 1 on a suffix is a single point change in the array of gaps between neighbouring carets.",
+    "Keep a Fenwick tree over those gaps, so the current offset of the i-th sorted caret is the prefix sum up to i and is non-decreasing in i. The boundary of the suffix is the first i whose prefix sum reaches p, which the Fenwick finds by descending its own tree in O(log m), no inner binary search needed."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 5000,
+  "cluster": "the-shared-file",
+  "samples": [
+    {
+      "input": "5 3 3\nI 3\nD 1\nI 1\n0 2 5\n",
+      "output": "0 2 6\n"
+    },
+    {
+      "input": "3 2 4\nD 2\nD 1\n0 1 2 3\n",
+      "output": "0 0 0 1\n"
+    },
+    {
+      "input": "1 1 2\nI 1\n0 1\n",
+      "output": "0 2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    k = int(data[1])\n    m = int(data[2])\n    idx = 3\n    signs = [0] * k\n    spots = [0] * k\n    ins = b\"I\"\n    for e in range(k):\n        signs[e] = 1 if data[idx] == ins else -1\n        spots[e] = int(data[idx + 1])\n        idx += 2\n    car = [int(x) for x in data[idx:idx + m]]\n    order = sorted(range(m), key=car.__getitem__)\n    tree = [0] * (m + 1)\n    prev = 0\n    for i in range(1, m + 1):\n        v = car[order[i - 1]]\n        tree[i] += v - prev\n        prev = v\n        j = i + (i & -i)\n        if j <= m:\n            tree[j] += tree[i]\n    log = m.bit_length() - 1\n    for e in range(k):\n        p = spots[e]\n        pos = 0\n        rem = p - 1\n        pw = 1 << log\n        while pw:\n            nxt = pos + pw\n            if nxt <= m:\n                t = tree[nxt]\n                if t <= rem:\n                    pos = nxt\n                    rem -= t\n            pw >>= 1\n        i = pos + 1\n        if i <= m:\n            s = signs[e]\n            while i <= m:\n                tree[i] += s\n                i += i & -i\n    for i in range(m, 0, -1):\n        j = i + (i & -i)\n        if j <= m:\n            tree[j] -= tree[i]\n    res = [0] * m\n    run = 0\n    for i in range(1, m + 1):\n        run += tree[i]\n        res[order[i - 1]] = run\n    sys.stdout.write(\" \".join(map(str, res)))\n    sys.stdout.write(\"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Replays every edit against every caret, O(k * m). This caps the cross-checked sizes: the tests\n# push k and m to the stated maximum one at a time, since both at 2 * 10^5 is 4 * 10^10 steps here.\nimport sys\n\ndata = sys.stdin.read().split()\nk = int(data[1])\nm = int(data[2])\nidx = 3\nops = []\nfor _ in range(k):\n    ops.append((data[idx], int(data[idx + 1])))\n    idx += 2\ncar = [int(x) for x in data[idx:idx + m]]\nfor t, p in ops:\n    if t == 'I':\n        car = [c + 1 if c >= p else c for c in car]\n    else:\n        car = [c - 1 if c >= p else c for c in car]\nprint(\" \".join(map(str, car)))\n"
+  }
+}

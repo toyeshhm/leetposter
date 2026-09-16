@@ -1,0 +1,42 @@
+{
+  "id": "the-oracle-quorum",
+  "title": "The Oracle's Quorum",
+  "lore": "Every hint card carries the name of the scribe who wrote it, and the Company keeps a private tally of who is being blamed. The same questions about the tally get asked all night.",
+  "statement": "The Oracle reads n hint cards in order. Card i was written by scribe s_i, where scribes are numbered 1 to n.\n\nYou are asked q questions. Question j gives two integers l_j and k_j and asks: among the first l_j cards, how many distinct scribes have written at least k_j of them?\n\nExample 1:\nInput:\n6 5\n2 1 2 3 1 2\n3 1\n3 2\n6 2\n6 3\n2 1\nOutput:\n2\n1\n2\n1\n2\nExplanation: The first 3 cards are by scribes 2, 1, 2. Two scribes appear at all, and only scribe 2 appears twice. Over all 6 cards scribe 1 has 2, scribe 2 has 3 and scribe 3 has 1, so two scribes reach 2 and one reaches 3. Among the first 2 cards both scribes 2 and 1 appear once.\n\nExample 2:\nInput:\n4 3\n1 1 1 1\n4 4\n3 4\n1 1\nOutput:\n1\n0\n1\nExplanation: A single scribe wrote every card. All four cards reach k = 4, but the first three do not.",
+  "inputFormat": "The first line contains two integers n and q. The second line contains n integers s_1, ..., s_n, the scribe of each card in reading order. Each of the next q lines contains two integers l_j and k_j.",
+  "outputFormat": "Print q lines. Line j contains the number of scribes who wrote at least k_j of the first l_j cards.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n1 <= s_i <= n\n1 <= l_j <= n\n1 <= k_j <= n",
+  "tags": [
+    "hashing",
+    "binary-search",
+    "sorting"
+  ],
+  "hints": [
+    "Recounting the first l cards for every question costs n times q steps, which is far too many at the top of the bounds; the answers have to come from something built once.",
+    "Card i is the c-th card of its scribe for exactly one c; a scribe has written at least k of the first l cards exactly when its k-th card has index at most l.",
+    "Group the card indices by that count c: the list for c holds, in increasing order, the index of every card that was some scribe's c-th card, and all the lists together hold n indices.",
+    "A question (l, k) is answered by the number of entries in the list for k that are at most l, which a binary search finds in logarithmic time."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "6 5\n2 1 2 3 1 2\n3 1\n3 2\n6 2\n6 3\n2 1\n",
+      "output": "2\n1\n2\n1\n2\n"
+    },
+    {
+      "input": "4 3\n1 1 1 1\n4 4\n3 4\n1 1\n",
+      "output": "1\n0\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    count = [0] * (n + 1)\n    reached = [[] for _ in range(n + 2)]\n    for i in range(n):\n        s = int(data[2 + i])\n        count[s] += 1\n        reached[count[s]].append(i + 1)\n    out = []\n    pos = 2 + n\n    for _ in range(q):\n        l = int(data[pos])\n        k = int(data[pos + 1])\n        pos += 2\n        out.append(bisect_right(reached[k], l))\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, q = int(data[0]), int(data[1])\npositions = {}\nfor i in range(n):\n    positions.setdefault(int(data[2 + i]), []).append(i + 1)\npos = 2 + n\nfor _ in range(q):\n    l, k = int(data[pos]), int(data[pos + 1])\n    pos += 2\n    answer = 0\n    for p in positions.values():\n        if len(p) >= k and p[k - 1] <= l:\n            answer += 1\n    print(answer)\n"
+  }
+}

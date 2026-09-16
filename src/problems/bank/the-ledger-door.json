@@ -1,0 +1,41 @@
+{
+  "title": "The Judge's Door",
+  "lore": "Four attempts, then the Judge closes the door. Dov the Herald keeps the ledger of who went to the door and what came back, and swears he never lost a line.",
+  "statement": "The Judge's door opens for each Herald only so many times. The ledger of one night lists, in order, every trip a Herald made to the Judge and the verdict that was waiting there: A for Accepted, R for Rejected.\n\nThe Judge applies one rule to every Herald independently. A Herald's door is open at the start of the night. Each line of that Herald is read only while the door is open: if the verdict is A, the Herald is Accepted and the door closes; if the verdict is R and it is the fourth R that Herald has been read, the door closes. Once a Herald's door is closed, every later line of that Herald is turned away and its written verdict is ignored.\n\nGiven the ledger, print how many distinct Heralds were Accepted and how many lines were turned away.\n\nExample 1:\nInput:\n6\n3 R\n3 R\n5 A\n3 R\n3 R\n3 A\nOutput:\n1 1\nExplanation: Herald 5 is Accepted on the first trip. Herald 3 collects four R and the door closes; the final A of Herald 3 is turned away.\n\nExample 2:\nInput:\n4\n9 A\n9 A\n9 R\n2 R\nOutput:\n1 2\nExplanation: Herald 9 is Accepted on line 1, so lines 2 and 3 are turned away. Herald 2 has one R and is neither Accepted nor closed.",
+  "inputFormat": "The first line contains an integer n, the number of lines in the ledger.\nEach of the next n lines contains an integer h, the Herald's number, and a letter v, the verdict, separated by a space. v is either A or R. Lines are given in the order they were written.",
+  "outputFormat": "Print two integers separated by a space: the number of distinct Heralds who were Accepted, and the number of lines that were turned away.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= h <= 10^9\nv is A or R",
+  "tags": [
+    "implementation",
+    "hashing",
+    "simulation"
+  ],
+  "hints": [
+    "Each Herald is judged independently, so keep the state of every Herald separately as you read the ledger once from top to bottom.",
+    "For each Herald you only need two facts: whether the door is still open, and how many R verdicts have been read so far.",
+    "Store those facts in a map keyed by the Herald's number; a line whose Herald is already closed just adds one to the turned-away count."
+  ],
+  "difficulty": "easy",
+  "rating": 900,
+  "timeLimitMs": 2000,
+  "id": "the-ledger-door",
+  "samples": [
+    {
+      "input": "6\n3 R\n3 R\n5 A\n3 R\n3 R\n3 A\n",
+      "output": "1 1\n"
+    },
+    {
+      "input": "4\n9 A\n9 A\n9 R\n2 R\n",
+      "output": "1 2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    rejections = {}\n    closed = set()\n    accepted = 0\n    turned_away = 0\n    idx = 1\n    for _ in range(n):\n        herald = data[idx]\n        verdict = data[idx + 1]\n        idx += 2\n        if herald in closed:\n            turned_away += 1\n            continue\n        if verdict == b\"A\":\n            accepted += 1\n            closed.add(herald)\n        else:\n            c = rejections.get(herald, 0) + 1\n            rejections[herald] = c\n            if c == 4:\n                closed.add(herald)\n    print(accepted, turned_away)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nlines = [(data[1 + 2 * i], data[2 + 2 * i]) for i in range(n)]\naccepted = 0\nturned_away = 0\nfor herald in sorted(set(h for h, _ in lines)):\n    door_open = True\n    rejected = 0\n    for h, v in lines:\n        if h != herald:\n            continue\n        if not door_open:\n            turned_away += 1\n        elif v == \"A\":\n            accepted += 1\n            door_open = False\n        else:\n            rejected += 1\n            if rejected == 4:\n                door_open = False\nprint(accepted, turned_away)\n"
+  },
+  "cluster": "the-ledger"
+}

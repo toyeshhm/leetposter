@@ -1,0 +1,42 @@
+{
+  "title": "The Impartial Stretch",
+  "lore": "The Judge names a category and never explains. Cass has decided a stretch of the night is impartial when no category is left over, and the Company is counting them before the candle dies.",
+  "statement": "The Judge's transcript for the night is a string of n letters. Each letter names one verdict category: A for Accepted, W for WrongAnswer, T for TimeLimit, R for RuntimeError, M for MemoryLimit and C for CompileError.\n\nA stretch is a contiguous, non-empty block of the transcript. A stretch is impartial if each of the six categories appears an even number of times inside it. Zero is even, so a category that never appears in the stretch is fine.\n\nFor each transcript, count the impartial stretches. Two stretches are different when they start or end at different positions, even if they read the same.\n\nExample 1:\nInput:\n3\n4\nAAWW\n6\nAWAWAW\n1\nC\nOutput:\n3\n3\n0\nExplanation: In the first transcript the impartial stretches are AA, WW and AAWW. In the second they are the three stretches of length four. In the third the only stretch is a single C, which is one C, and one is odd.\n\nExample 2:\nInput:\n1\n8\nTTTTTTTT\nOutput:\n16\nExplanation: Only the category T appears, so a stretch is impartial exactly when its length is even. There are 7 stretches of length 2, 5 of length 4, 3 of length 6 and 1 of length 8.",
+  "inputFormat": "The first line contains t, the number of transcripts. Each transcript is given on two lines: n, then a string of n letters drawn from A, W, T, R, M, C.",
+  "outputFormat": "For each transcript print one line: the number of impartial stretches.",
+  "constraints": "1 <= t <= 10^4\n1 <= n <= 2 * 10^5\nThe sum of n over all transcripts does not exceed 2 * 10^5\nEvery letter of a transcript is one of A, W, T, R, M, C",
+  "tags": [
+    "strings",
+    "prefix-sums",
+    "bitmasks",
+    "hashing"
+  ],
+  "hints": [
+    "Only the parity of each category count matters, and the counts inside a stretch are the difference between the counts of two prefixes of the transcript.",
+    "Give every prefix a fingerprint made of its six parities; the stretch that runs from just after prefix i to prefix j is impartial exactly when those two fingerprints are equal.",
+    "There are only sixty four possible fingerprints, so sweep the transcript once and, at each prefix, add the number of earlier prefixes that already carried the same fingerprint, remembering that the empty prefix counts as one of them."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "id": "the-judge-transcript",
+  "samples": [
+    {
+      "input": "3\n4\nAAWW\n6\nAWAWAW\n1\nC\n",
+      "output": "3\n3\n0\n"
+    },
+    {
+      "input": "1\n8\nTTTTTTTT\n",
+      "output": "16\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    t = int(data[0])\n    pos = 1\n    bit = {ord(\"A\"): 1, ord(\"W\"): 2, ord(\"T\"): 4, ord(\"R\"): 8, ord(\"M\"): 16, ord(\"C\"): 32}\n    out = []\n    for _ in range(t):\n        s = data[pos + 1]\n        pos += 2\n        seen = [0] * 64\n        seen[0] = 1\n        mask = 0\n        total = 0\n        for ch in s:\n            mask ^= bit[ch]\n            total += seen[mask]\n            seen[mask] += 1\n        out.append(str(total))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nt = int(data[0])\npos = 1\nanswers = []\nfor _ in range(t):\n    s = data[pos + 1]\n    pos += 2\n    keys = [\"A\", \"W\", \"T\", \"R\", \"M\", \"C\"]\n    counts = {k: 0 for k in keys}\n    prefixes = [tuple(counts[k] % 2 for k in keys)]\n    for ch in s:\n        counts[ch] += 1\n        prefixes.append(tuple(counts[k] % 2 for k in keys))\n    prefixes.sort()\n    total = 0\n    i = 0\n    while i < len(prefixes):\n        j = i\n        while j < len(prefixes) and prefixes[j] == prefixes[i]:\n            j += 1\n        run = j - i\n        total += run * (run - 1) // 2\n        i = j\n    answers.append(total)\nprint(\"\\n\".join(str(a) for a in answers))\n"
+  },
+  "cluster": "the-judge"
+}

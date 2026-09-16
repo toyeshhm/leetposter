@@ -1,0 +1,45 @@
+{
+  "id": "the-oracle-echo",
+  "title": "The Oracle's Echo",
+  "lore": "Brin the Oracle reads the same hint twice when the night runs long, and the Hall only notices when it has been long enough to have forgotten it. A hint heard and forgotten is worth no more than a hint never read.",
+  "statement": "The Oracle reads n cards in order. Card i names hint a_i, and the same hint may be named on several cards.\n\nThe Company's memory is short. After a hint is named on card j they remember it while cards j+1, j+2, ..., j+k are read, and by card j+k+1 it is gone again.\n\nClassify every card i:\n\n- card i is fresh if hint a_i is named on no earlier card;\n- card i is a groan if hint a_i is named on some earlier card and the latest such card j has i - j > k, so the Company had already forgotten it;\n- otherwise card i is nothing worth writing down.\n\nPrint how many cards are fresh and how many cards are groans.\n\nExample 1:\nInput:\n6 2\n4 7 4 9 7 4\nOutput:\n3 2\nExplanation: Cards 1, 2 and 4 name hints 4, 7 and 9 for the first time, so three cards are fresh. Card 3 names 4 again two cards after card 1, which is still remembered. Card 5 names 7 three cards after card 2 and card 6 names 4 three cards after card 3, and three is more than k = 2, so both are groans.\n\nExample 2:\nInput:\n5 1\n2 2 2 2 2\nOutput:\n1 0\nExplanation: Only card 1 is fresh. Every later card repeats hint 2 exactly one card after the last time it was named, and the Company still remembers it, so nobody groans.\n\nExample 3:\nInput:\n7 3\n1 2 1 3 1 2 2\nOutput:\n3 1\nExplanation: Cards 1, 2 and 4 are fresh. Card 3 repeats hint 1 after two cards and card 5 repeats it after two cards, both remembered. Card 6 repeats hint 2 four cards after card 2, which is a groan. Card 7 repeats hint 2 one card later, still remembered.",
+  "inputFormat": "The first line contains two integers n and k, the number of cards and how many cards a hint survives in the Company's memory. The second line contains n integers a_1, ..., a_n, the hint named on each card in reading order.",
+  "outputFormat": "Print one line with two integers: the number of fresh cards and the number of groans.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= k <= n\n1 <= a_i <= 10^9",
+  "tags": [
+    "implementation",
+    "hashing",
+    "simulation"
+  ],
+  "hints": [
+    "Only the most recent earlier naming of a hint can matter, because any naming before that one is even further back and was forgotten too.",
+    "Walk the cards once in order and remember, for every hint number seen so far, the index of the card that named it last.",
+    "A dictionary from hint number to last card index answers both counts in one pass: the card is fresh when the hint is missing from the dictionary, and a groan when the stored index is more than k cards behind the current one."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "cluster": "the-oracle",
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    k = int(data[1])\n    last = {}\n    fresh = 0\n    groans = 0\n    for i in range(1, n + 1):\n        v = data[1 + i]\n        j = last.get(v)\n        if j is None:\n            fresh += 1\n        elif i - j > k:\n            groans += 1\n        last[v] = i\n    sys.stdout.write(\"%d %d\\n\" % (fresh, groans))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nk = int(data[1])\na = data[2:2 + n]\nwhere = {}\nfor i in range(n):\n    where.setdefault(a[i], []).append(i + 1)\nfresh = len(where)\ngroans = 0\nfor positions in where.values():\n    for x in range(1, len(positions)):\n        if positions[x] - positions[x - 1] > k:\n            groans += 1\nprint(fresh, groans)\n"
+  },
+  "samples": [
+    {
+      "input": "6 2\n4 7 4 9 7 4\n",
+      "output": "3 2\n"
+    },
+    {
+      "input": "5 1\n2 2 2 2 2\n",
+      "output": "1 0\n"
+    },
+    {
+      "input": "7 3\n1 2 1 3 1 2 2\n",
+      "output": "3 1\n"
+    }
+  ]
+}

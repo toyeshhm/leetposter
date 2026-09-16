@@ -1,0 +1,45 @@
+{
+  "id": "dov-forgot-the-link-satchel",
+  "title": "The Fragments in the Satchel",
+  "lore": "Dov the Herald took the chain of halls to the Judge and came back with a satchel of loose slips. Each slip still names one hall and the hall that followed it.",
+  "statement": "The chain visited each of the n halls exactly once. The chain itself is lost. What Dov brought back is m slips; a slip naming halls a and b means that in the chain, hall a was immediately followed by hall b.\n\nA slip may have been copied twice, so the same pair can appear more than once, but the slips never disagree: two slips with the same first hall name the same second hall, and two slips with the same second hall name the same first hall. The slips also never close a loop.\n\nThe slips therefore cut the halls into fragments. A fragment is a run of halls linked end to end by the slips, every hall belongs to exactly one fragment, and a hall named on no slip is a fragment of one hall.\n\nPrint the number of fragments and the number of halls in the largest fragment.\n\nExample 1:\nInput:\n6 4\n1 3\n3 5\n2 4\n6 1\nOutput:\n2 4\nExplanation: The slips give the runs 6, 1, 3, 5 and 2, 4. Two fragments, and the larger one holds four halls.\n\nExample 2:\nInput:\n3 0\nOutput:\n3 1\nExplanation: No slip survived, so each of the three halls is a fragment on its own.\n\nExample 3:\nInput:\n4 3\n1 2\n1 2\n3 4\nOutput:\n2 2\nExplanation: The first slip was copied twice and says nothing new. The fragments are the runs 1, 2 and 3, 4.",
+  "inputFormat": "The first line contains two integers n and m, the number of halls and the number of slips. Each of the next m lines contains two integers a and b: one slip, saying hall a was immediately followed by hall b.",
+  "outputFormat": "Print two integers separated by one space: the number of fragments, and the number of halls in the largest fragment.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= m <= 2 * 10^5\n1 <= a, b <= n and a != b on every slip\nTwo slips with the same first hall name the same second hall, and two slips with the same second hall name the same first hall\nThe slips never form a cycle",
+  "tags": [
+    "implementation",
+    "graphs",
+    "dsu"
+  ],
+  "hints": [
+    "Walking forward from every hall in turn costs O(n^2) on one long fragment, which the bound on n will not forgive. Only a few halls are worth walking from.",
+    "A fragment is a run, so exactly one of its halls is named on no slip as a second hall. That hall is where the run begins, and it is the only hall in the fragment worth walking from.",
+    "Keep two arrays of size n: the successor of each hall and its predecessor, both filled straight from the slips (a repeated slip just writes the same value again). The halls with no predecessor are the fragment starts, and walking from each start visits every hall exactly once, so the whole sweep is linear."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    succ = [0] * (n + 1)\n    pred = [0] * (n + 1)\n    idx = 2\n    for _ in range(m):\n        a = int(data[idx])\n        b = int(data[idx + 1])\n        idx += 2\n        succ[a] = b\n        pred[b] = a\n    frags = 0\n    best = 0\n    for v in range(1, n + 1):\n        if pred[v] == 0:\n            frags += 1\n            length = 0\n            cur = v\n            while cur != 0:\n                length += 1\n                cur = succ[cur]\n            if length > best:\n                best = length\n    sys.stdout.write(str(frags) + \" \" + str(best) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nparent = list(range(n + 1))\nsize = [1] * (n + 1)\n\ndef find(x):\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]\n        x = parent[x]\n    return x\n\nidx = 2\nfor _ in range(m):\n    a = int(data[idx])\n    b = int(data[idx + 1])\n    idx += 2\n    ra = find(a)\n    rb = find(b)\n    if ra != rb:\n        if size[ra] < size[rb]:\n            ra, rb = rb, ra\n        parent[rb] = ra\n        size[ra] += size[rb]\nroots = set()\nfor v in range(1, n + 1):\n    roots.add(find(v))\nprint(len(roots), max(size[r] for r in roots))\n"
+  },
+  "cluster": "dov-forgot-the-link",
+  "samples": [
+    {
+      "input": "6 4\n1 3\n3 5\n2 4\n6 1\n",
+      "output": "2 4\n"
+    },
+    {
+      "input": "3 0\n",
+      "output": "3 1\n"
+    },
+    {
+      "input": "4 3\n1 2\n1 2\n3 4\n",
+      "output": "2 2\n"
+    }
+  ]
+}

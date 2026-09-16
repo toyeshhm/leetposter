@@ -1,0 +1,45 @@
+{
+  "title": "Four Attempts",
+  "lore": "The Judge answers Accepted or Rejected and names a category, and after the fourth rejection the door closes for good. Dov keeps pushing files under it anyway.",
+  "statement": "The Judge answers every submission with one of six verdicts: Accepted, WrongAnswer, TimeLimit, RuntimeError, MemoryLimit or CompileError. The last five are rejections.\n\nEach Herald submits under a name. A Herald's door starts open and closes the moment either of these happens:\n- the Judge answers Accepted, and that Herald's seal is sealed;\n- the Judge hands that Herald a fourth rejection, and the seal is broken.\n\nOnce a door is closed the Judge reads nothing more from that Herald: every later submission under that name is ignored and changes nothing.\n\nYou are given the night's log of n submissions, in the order the Judge answered them. For every Herald that appears in the log, print the state of their door after the whole log has been read: sealed, broken, or open. Print the Heralds in the order of their first submission.\n\nExample 1:\nInput:\n6\ndov Accepted\nada WrongAnswer\ndov TimeLimit\nada TimeLimit\nada RuntimeError\nada MemoryLimit\nOutput:\ndov sealed\nada broken\nExplanation: Dov is Accepted on his first submission, so the TimeLimit that follows is never read. Ada collects four rejections and her door closes.\n\nExample 2:\nInput:\n4\ncass WrongAnswer\nbrin CompileError\ncass CompileError\nbrin Accepted\nOutput:\ncass open\nbrin sealed\nExplanation: Cass has two rejections, which is not yet four, so her door is still open. Brin is Accepted on his second submission. Cass submitted first, so she is printed first.\n\nExample 3:\nInput:\n5\nada WrongAnswer\nada WrongAnswer\nada WrongAnswer\nada WrongAnswer\nada Accepted\nOutput:\nada broken\nExplanation: The fourth rejection closes the door, so the Accepted that follows it is not read at all.",
+  "inputFormat": "The first line contains n, the number of submissions. Each of the next n lines contains a Herald's name and a verdict separated by one space, in the order the Judge answered them.",
+  "outputFormat": "Print one line for each distinct Herald in the log, in the order of their first submission: the name, one space, and sealed, broken or open.",
+  "constraints": "1 <= n <= 2 * 10^5\nEach name is 1 to 10 lowercase latin letters\nEach verdict is one of Accepted, WrongAnswer, TimeLimit, RuntimeError, MemoryLimit, CompileError",
+  "tags": [
+    "implementation",
+    "strings",
+    "hashing"
+  ],
+  "hints": [
+    "Every Herald is independent, and the only things worth remembering about a name are how many rejections it has collected so far and whether its door is already closed.",
+    "Keep a map from name to that pair and a separate list of names in the order they first appear, so the answer can be printed back in that order.",
+    "A submission that arrives after the door is closed must be skipped before anything is counted, otherwise a fifth rejection or a late Accepted would overwrite a state that is already final."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "id": "the-judge-seal",
+  "samples": [
+    {
+      "input": "6\ndov Accepted\nada WrongAnswer\ndov TimeLimit\nada TimeLimit\nada RuntimeError\nada MemoryLimit\n",
+      "output": "dov sealed\nada broken\n"
+    },
+    {
+      "input": "4\ncass WrongAnswer\nbrin CompileError\ncass CompileError\nbrin Accepted\n",
+      "output": "cass open\nbrin sealed\n"
+    },
+    {
+      "input": "5\nada WrongAnswer\nada WrongAnswer\nada WrongAnswer\nada WrongAnswer\nada Accepted\n",
+      "output": "ada broken\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    state = {}\n    order = []\n    pos = 1\n    for _ in range(n):\n        name = data[pos]\n        verdict = data[pos + 1]\n        pos += 2\n        cur = state.get(name)\n        if cur is None:\n            cur = [0, 0]\n            state[name] = cur\n            order.append(name)\n        if cur[1] != 0:\n            continue\n        if verdict == b\"Accepted\":\n            cur[1] = 1\n        else:\n            cur[0] += 1\n            if cur[0] == 4:\n                cur[1] = 2\n    words = (\"open\", \"sealed\", \"broken\")\n    out = []\n    for name in order:\n        out.append(name.decode() + \" \" + words[state[name][1]])\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nentries = []\nfor i in range(n):\n    entries.append((data[1 + 2 * i], data[2 + 2 * i], i))\nentries.sort(key=lambda e: (e[0], e[2]))\ngroups = []\ni = 0\nwhile i < len(entries):\n    j = i\n    while j < len(entries) and entries[j][0] == entries[i][0]:\n        j += 1\n    rejections = 0\n    word = \"open\"\n    for k in range(i, j):\n        if word != \"open\":\n            break\n        if entries[k][1] == \"Accepted\":\n            word = \"sealed\"\n        else:\n            rejections += 1\n            if rejections == 4:\n                word = \"broken\"\n    groups.append((entries[i][2], entries[i][0], word))\n    i = j\ngroups.sort()\nprint(\"\\n\".join(name + \" \" + word for _, name, word in groups))\n"
+  },
+  "cluster": "the-judge"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "the-oracle-faith",
+  "title": "The Oracle's Faith",
+  "lore": "Every hall hears the same Oracle, but each Company has its own patience and its own breaking point. The candle does not care either way.",
+  "statement": "The Oracle will read n hints in order. Hint i changes a listener's certainty by w_i, which is negative when the hint contradicts what came before. Certainty is 0 before the first hint.\n\nq Companies listen to the same hints in the same order, each in its own hall. Company j has a bell threshold T_j and a breaking point L_j. After hearing each hint it checks its certainty:\n- if certainty is at least T_j, it rings the bell and stops listening;\n- otherwise, if certainty is at most -L_j, it loses faith, walks out, and never rings the bell.\nA Company that hears all n hints without ringing the bell never rings it.\n\nFor each Company print the index of the hint after which it rings the bell, or -1 if it never does.\n\nExample 1:\nInput:\n6 3\n3 -5 4 4 -1 2\n5 3\n5 2\n7 10\nOutput:\n4\n-1\n6\nExplanation: Certainty after each hint is 3, -2, 2, 6, 5, 7. The first Company survives -2 (its breaking point is -3) and reaches 5 after hint 4. The second Company walks out after hint 2, when certainty is -2. The third needs 7, which first happens after hint 6.\n\nExample 2:\nInput:\n3 2\n-1 -1 -1\n1 5\n1 2\nOutput:\n-1\n-1\nExplanation: Certainty only falls. The first Company hears everything and never rings; the second walks out after hint 2.\n\nExample 3:\nInput:\n1 1\n1000000000\n1 1\nOutput:\n1\nExplanation: The single hint is enough.",
+  "inputFormat": "The first line contains two integers n and q: the number of hints and the number of Companies.\nThe second line contains n integers w_1 ... w_n.\nEach of the next q lines contains two integers T_j and L_j.",
+  "outputFormat": "q lines. Line j is the index of the hint after which Company j rings the bell, or -1.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n-10^9 <= w_i <= 10^9\n1 <= T_j <= 10^18\n1 <= L_j <= 10^18",
+  "tags": [
+    "prefix-sums",
+    "binary-search"
+  ],
+  "hints": [
+    "Whether a Company rings the bell after hint i depends only on the first i hints, so compute the running certainty once and share it among all Companies.",
+    "The first hint at which certainty reaches T is the first hint at which the running maximum of certainty reaches T, and the running maximum never decreases.",
+    "Binary search the running maximum for T, then compare the running minimum up to that hint against -L to see whether the Company already walked out.",
+    "Simulating every Company on its own costs n times q steps; two prefix arrays and one bisect per Company bring it to (n + q) log n."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    running_max = [0] * n\n    running_min = [0] * n\n    s = 0\n    hi = -(1 << 62)\n    lo = 1 << 62\n    for i in range(n):\n        s += int(data[2 + i])\n        if s > hi:\n            hi = s\n        if s < lo:\n            lo = s\n        running_max[i] = hi\n        running_min[i] = lo\n    out = []\n    pos = 2 + n\n    for _ in range(q):\n        t = int(data[pos])\n        l = int(data[pos + 1])\n        pos += 2\n        i = bisect_left(running_max, t)\n        if i == n or running_min[i] <= -l:\n            out.append(-1)\n        else:\n            out.append(i + 1)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, q = int(data[0]), int(data[1])\nw = list(map(int, data[2:2 + n]))\npos = 2 + n\nfor _ in range(q):\n    t, l = int(data[pos]), int(data[pos + 1])\n    pos += 2\n    certainty = 0\n    answer = -1\n    for i in range(n):\n        certainty += w[i]\n        if certainty >= t:\n            answer = i + 1\n            break\n        if certainty <= -l:\n            break\n    print(answer)\n"
+  },
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "6 3\n3 -5 4 4 -1 2\n5 3\n5 2\n7 10\n",
+      "output": "4\n-1\n6\n"
+    },
+    {
+      "input": "3 2\n-1 -1 -1\n1 5\n1 2\n",
+      "output": "-1\n-1\n"
+    },
+    {
+      "input": "1 1\n1000000000\n1 1\n",
+      "output": "1\n"
+    }
+  ]
+}

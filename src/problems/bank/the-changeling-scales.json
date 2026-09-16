@@ -1,0 +1,45 @@
+{
+  "id": "the-changeling-scales",
+  "title": "Weighed in the Dark",
+  "lore": "The Warden of the North Gate counts everything twice and weighs it once. One token on the table is not the Hall's, and the balance is the only thing in the room that does not lie.",
+  "statement": "The Hall holds n tokens, one to a seat, numbered 1 to n. Every honest token weighs the same. Exactly one token is the Changeling's: it weighs either strictly more or strictly less than an honest token, and nobody knows which way.\n\nThe Warden made m weighings on a balance. Weighing i put p_i tokens on the left pan and p_i other tokens on the right pan, the same count on each side and no token twice in one weighing, and recorded L if the left pan went down, R if the right pan went down, and = if the pans stayed level. Since the pans carry equal counts, a weighing without the Changeling's token stays level; a weighing holding it tips towards the pan it sits on when it is the heavier token, and away from that pan when it is the lighter one. Take the records as written; nothing promises they hang together.\n\nReport every seat whose token could be the Changeling's given all m records, and for each of them whether that token would have to be heavier, would have to be lighter, or could be either. The records may fit no token at all, in which case report none.\n\nExample 1:\nInput:\n5 2\n2 1 2 3 4 L\n1 1 3 =\nOutput:\n2\n2 heavy\n4 light\nExplanation: The second weighing stayed level, so tokens 1 and 3 are honest. The first weighing tipped, so it held the Changeling's token: either a heavier token on the left, which leaves seat 2, or a lighter token on the right, which leaves seat 4. Token 5 was never weighed, so it cannot explain the first weighing tipping.\n\nExample 2:\nInput:\n4 1\n1 1 2 =\nOutput:\n2\n3 either\n4 either\nExplanation: Nothing tipped all night. Tokens 1 and 2 are cleared by the level pans, and tokens 3 and 4 were never weighed, so either of them could be the Changeling's, heavier or lighter.\n\nExample 3:\nInput:\n4 2\n1 1 2 L\n1 1 2 R\nOutput:\n0\nExplanation: The same two tokens were weighed twice with opposite results, which no single odd token can explain.",
+  "inputFormat": "The first line contains two integers n and m, the number of seats and the number of weighings.\nEach of the next m lines describes one weighing: the integer p_i, then p_i seat numbers on the left pan, then p_i seat numbers on the right pan, then the result, one of the characters L, R and =. All 2 * p_i seats named in one weighing are distinct.",
+  "outputFormat": "On the first line print k, the number of seats whose token could be the Changeling's.\nThen print k lines in increasing order of seat number: the seat number, a space, and heavy if that token must be heavier, light if it must be lighter, either if both are possible.\nIf k is 0, print only the first line.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= m <= 10^5\n1 <= p_i and 2 * p_i <= n\nThe sum of p_i over all weighings is at most 2 * 10^5\nEach result is one of L, R and =",
+  "tags": [
+    "implementation",
+    "math"
+  ],
+  "hints": [
+    "There are 2 * n stories to test: for each seat, that its token is the heavy one, and that its token is the light one. Testing every story against every weighing is 2 * n * m work, which is 4 * 10^10 at the top of the bounds, so let each weighing mark instead.",
+    "A level weighing clears every token on either of its pans: the Changeling's token cannot have been on it.",
+    "A weighing that tipped must have held the Changeling's token, so a surviving story sits on the pan that went down (heavier) or the pan that went up (lighter) in every weighing that tipped. Count for each seat how many tipped weighings had it on the sinking pan and how many on the rising pan, and compare each count with the total number of tipped weighings.",
+    "Both stories survive for one seat only when no weighing tipped at all, since one seat cannot be on the sinking pan and the rising pan of the same weighing."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "cluster": "the-changeling",
+  "samples": [
+    {
+      "input": "5 2\n2 1 2 3 4 L\n1 1 3 =\n",
+      "output": "2\n2 heavy\n4 light\n"
+    },
+    {
+      "input": "4 1\n1 1 2 =\n",
+      "output": "2\n3 either\n4 either\n"
+    },
+    {
+      "input": "4 2\n1 1 2 L\n1 1 2 R\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    seen = [0] * (n + 1)\n    heavy = [0] * (n + 1)\n    light = [0] * (n + 1)\n    tips = 0\n    p = 2\n    for _ in range(m):\n        c = int(data[p])\n        p += 1\n        left = data[p:p + c]\n        p += c\n        right = data[p:p + c]\n        p += c\n        res = data[p]\n        p += 1\n        if res == b\"=\":\n            for t in left:\n                seen[int(t)] += 1\n            for t in right:\n                seen[int(t)] += 1\n        else:\n            tips += 1\n            hi, lo = (left, right) if res == b\"L\" else (right, left)\n            for t in hi:\n                heavy[int(t)] += 1\n            for t in lo:\n                light[int(t)] += 1\n    out = []\n    for i in range(1, n + 1):\n        if seen[i]:\n            continue\n        h = heavy[i] == tips\n        l = light[i] == tips\n        if h and l:\n            out.append(\"%d either\" % i)\n        elif h:\n            out.append(\"%d heavy\" % i)\n        elif l:\n            out.append(\"%d light\" % i)\n    sys.stdout.write(\"%d\\n\" % len(out))\n    if out:\n        sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nmaybe_heavy = set(range(1, n + 1))\nmaybe_light = set(range(1, n + 1))\np = 2\nfor _ in range(m):\n    c = int(data[p])\n    p += 1\n    left = set(map(int, data[p:p + c]))\n    p += c\n    right = set(map(int, data[p:p + c]))\n    p += c\n    res = data[p]\n    p += 1\n    if res == \"=\":\n        on_pan = left | right\n        maybe_heavy -= on_pan\n        maybe_light -= on_pan\n    elif res == \"L\":\n        maybe_heavy &= left\n        maybe_light &= right\n    else:\n        maybe_heavy &= right\n        maybe_light &= left\nseats = sorted(maybe_heavy | maybe_light)\nprint(len(seats))\nlines = []\nfor i in seats:\n    if i in maybe_heavy and i in maybe_light:\n        lines.append(\"%d either\" % i)\n    elif i in maybe_heavy:\n        lines.append(\"%d heavy\" % i)\n    else:\n        lines.append(\"%d light\" % i)\nif lines:\n    print(\"\\n\".join(lines))\n"
+  }
+}

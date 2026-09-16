@@ -1,0 +1,45 @@
+{
+  "id": "the-reading-glance",
+  "title": "The Backward Glance",
+  "lore": "The Reading gives every scribe five minutes alone with the statement and nobody to ask. Ada times it with the candle and says nothing while the eyes go back and back over the same lines.",
+  "statement": "The statement is a line of n words w_1 w_2 ... w_n, and a scribe reads it once, left to right.\n\nReading word w_i, the scribe's eye jumps back to the most recent earlier position holding the same word: if the largest j < i with w_j = w_i exists, the jump has length i - j. If the word has not been seen before, there is no jump.\n\nPrint the total length of all jumps made during the reading, and the length of the longest single jump. If no word is ever repeated, both numbers are 0.\n\nExample 1:\nInput:\n6\nada dov nell ada dov nell\nOutput:\n9 3\nExplanation: The eye jumps at positions 4, 5 and 6, each time back three places, so the total is 9 and the longest jump is 3.\n\nExample 2:\nInput:\n4\nink ink ink ink\nOutput:\n3 1\nExplanation: Positions 2, 3 and 4 each jump back one place.\n\nExample 3:\nInput:\n3\nada dov nell\nOutput:\n0 0\nExplanation: Every word is new, so the eye never goes back.",
+  "inputFormat": "The first line contains one integer n, the number of words in the statement.\nThe second line contains the n words w_1 ... w_n, separated by single spaces.",
+  "outputFormat": "One line with two integers: the total length of all jumps, then the length of the longest single jump.",
+  "constraints": "1 <= n <= 2 * 10^5\neach word is 1 to 10 lowercase English letters",
+  "tags": [
+    "implementation",
+    "strings",
+    "hashing"
+  ],
+  "hints": [
+    "Only one thing about the past matters at position i: where that same word last stood. A dictionary from a word to its last position holds everything the pass needs.",
+    "Walk the line once. At each position read the remembered position of that word, account for the jump, then overwrite the remembered position with the current one.",
+    "Searching backwards from every position for the previous copy compares words all the way back, which is n squared work once the same word starts returning from far away; the total and the maximum both fit inside the single forward pass."
+  ],
+  "difficulty": "easy",
+  "rating": 900,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "6\nada dov nell ada dov nell\n",
+      "output": "9 3\n"
+    },
+    {
+      "input": "4\nink ink ink ink\n",
+      "output": "3 1\n"
+    },
+    {
+      "input": "3\nada dov nell\n",
+      "output": "0 0\n"
+    }
+  ],
+  "cluster": "the-reading",
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    words = data[1:1 + n]\n    last: dict[bytes, int] = {}\n    total = 0\n    longest = 0\n    for i in range(n):\n        w = words[i]\n        p = last.get(w)\n        if p is not None:\n            jump = i + 1 - p\n            total += jump\n            if jump > longest:\n                longest = jump\n        last[w] = i + 1\n    print(total, longest)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nwords = data[1:1 + n]\nwhere = {}\nfor i, w in enumerate(words, 1):\n    where.setdefault(w, []).append(i)\ntotal = 0\nlongest = 0\nfor positions in where.values():\n    for a, b in zip(positions, positions[1:]):\n        gap = b - a\n        total += gap\n        if gap > longest:\n            longest = gap\nprint(total, longest)\n"
+  }
+}

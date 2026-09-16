@@ -1,0 +1,45 @@
+{
+  "id": "the-four-attempts-armful",
+  "title": "Four Armfuls",
+  "lore": "The Judge weighs every armful a Herald brings and has never once counted the heaviest scroll in it. The Hall has argued for years about whether that is mercy or arithmetic.",
+  "statement": "The Herald must carry n scrolls to the Judge. The scrolls lie in a fixed order and scroll i weighs w_i. He is allowed at most k attempts.\nEach attempt picks up a non-empty run of consecutive scrolls, the attempts happen in order, and between them they must carry every scroll: the first attempt takes scrolls 1 through some index, the next attempt continues from the scroll after it, and so on until scroll n has gone through the door.\nThe Judge weighs an armful and forgives its single heaviest scroll, so the burden of an attempt is the sum of the weights it carries minus the largest single weight it carries. An attempt carrying one scroll has burden 0.\nThe Warden sets a limit P on the door before the night begins, and every attempt must have burden at most P. Find the smallest P for which at most k attempts are enough.\n\nExample 1:\nInput:\n6 2\n3 1 4 1 5 9\nOutput:\n5\nExplanation: Cut after the fourth scroll. The first attempt carries 3 1 4 1, which weighs 9 and loses its heaviest scroll 4, so its burden is 5. The second carries 5 9, which weighs 14 and loses 9, so its burden is 5 as well. No cut does better: cutting after the third scroll leaves an armful of burden 6.\n\nExample 2:\nInput:\n5 5\n7 7 7 7 7\nOutput:\n0\nExplanation: With five attempts every scroll travels alone, and a lone scroll is always forgiven.\n\nExample 3:\nInput:\n4 1\n2 2 2 10\nOutput:\n6\nExplanation: One attempt must carry everything. The armful weighs 16 and the Judge forgives the 10, leaving a burden of 6.",
+  "inputFormat": "The first line contains two integers n and k, the number of scrolls and the number of attempts allowed. The second line contains n integers w_1 ... w_n, the weights in the order the scrolls lie.",
+  "outputFormat": "One integer, the smallest limit P for which at most k attempts are enough.",
+  "constraints": "1 <= k <= n <= 10^5\n1 <= w_i <= 10^9",
+  "tags": [
+    "binary-search",
+    "greedy",
+    "implementation"
+  ],
+  "hints": [
+    "Ask the question backwards. For a fixed limit P, how few attempts can the Herald manage? The answer is the smallest P whose count is at most k, and that count only falls as P grows.",
+    "Dropping scrolls from an armful never raises its burden, so every run inside a legal armful is legal too. That means filling each attempt as far as it will go and only then cutting is optimal.",
+    "An armful only ever grows, so its running total and its heaviest scroll fit in two variables and the count for a given P is one pass over the scrolls. Binary search P between 0 and the burden of carrying everything in one go."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "6 2\n3 1 4 1 5 9\n",
+      "output": "5\n"
+    },
+    {
+      "input": "5 5\n7 7 7 7 7\n",
+      "output": "0\n"
+    },
+    {
+      "input": "4 1\n2 2 2 10\n",
+      "output": "6\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); k = int(data[1])\n    w = list(map(int, data[2:2 + n]))\n\n    def attempts(p):\n        used = 1\n        s = 0\n        mx = 0\n        for x in w:\n            ns = s + x\n            nm = mx if mx > x else x\n            if ns - nm <= p:\n                s = ns\n                mx = nm\n            else:\n                used += 1\n                s = x\n                mx = x\n        return used\n\n    lo = 0\n    hi = sum(w) - max(w)\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if attempts(mid) <= k:\n            hi = mid\n        else:\n            lo = mid + 1\n    print(lo)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nk = int(data[1])\nw = [int(x) for x in data[2:2 + n]]\nif n * n * k <= 5000000:\n    INF = float(\"inf\")\n    prev = [INF] * (n + 1)\n    prev[0] = 0\n    answer = INF\n    for _ in range(k):\n        cur = [INF] * (n + 1)\n        for i in range(1, n + 1):\n            total = 0\n            heaviest = 0\n            best = INF\n            for t in range(i - 1, -1, -1):\n                x = w[t]\n                total += x\n                if x > heaviest:\n                    heaviest = x\n                if prev[t] == INF:\n                    continue\n                v = total - heaviest\n                if prev[t] > v:\n                    v = prev[t]\n                if v < best:\n                    best = v\n            cur[i] = best\n        prev = cur\n        if prev[n] < answer:\n            answer = prev[n]\n    print(answer)\nelse:\n    # Same question, answered from the far end: pack armfuls greedily walking backwards.\n    def used(limit):\n        count = 1\n        total = 0\n        heaviest = 0\n        for x in reversed(w):\n            nt = total + x\n            nh = heaviest if heaviest > x else x\n            if nt - nh <= limit:\n                total = nt\n                heaviest = nh\n            else:\n                count += 1\n                total = x\n                heaviest = x\n        return count\n    low = 0\n    high = sum(w) - max(w)\n    while low < high:\n        mid = (low + high) // 2\n        if used(mid) <= k:\n            high = mid\n        else:\n            low = mid + 1\n    print(low)\n"
+  },
+  "cluster": "the-four-attempts"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "the-candle-count",
+  "title": "Hours of Light",
+  "lore": "Ada opens the hall by lighting every candle on the long table at once. The Warden of the North Gate counts the flames at the top of every hour, twice, and the Company may sit only while enough of them still burn.",
+  "statement": "There are n candles on the table. Candle i has height h_i and burns at r_i units per hour. All n candles are lit at the start of hour 1. A candle burns during an hour if its height at the start of that hour is greater than 0, and at the end of that hour its height drops by r_i. If the drop would take it below 0, the candle simply goes out during that hour; it still counts as burning during that hour, and it never burns again.\n\nThe Company may sit through an hour only if at least k candles are burning during that hour. Since candles only ever go out, the Company sits through hours 1, 2, ..., t for some t and then stops. Find t, the number of hours during which at least k candles burn.\n\nExample 1:\nInput:\n4 2\n5 2\n3 3\n7 1\n4 4\nOutput:\n3\nExplanation: Candle 3 burns for 7 hours. Candle 1 has heights 5, 3, 1 at the starts of hours 1, 2, 3 and goes out during hour 3, so it burns for 3 hours. Candles 2 and 4 burn for one hour each. During hours 1 to 3 at least two candles burn; during hour 4 only candle 3 does.\n\nExample 2:\nInput:\n1 1\n10 3\nOutput:\n4\nExplanation: The single candle has heights 10, 7, 4, 1 at the starts of hours 1 to 4 and goes out during hour 4. Four hours, not three.\n\nExample 3:\nInput:\n3 3\n6 2\n6 3\n6 6\nOutput:\n1\nExplanation: The candles burn for 3, 2 and 1 hours. All three burn only during hour 1.",
+  "inputFormat": "The first line contains two integers n and k. Each of the next n lines contains two integers h_i and r_i, the height and the burn rate of candle i.",
+  "outputFormat": "Print a single integer, the number of hours during which at least k candles are burning.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= k <= n\n1 <= h_i <= 10^9\n1 <= r_i <= 10^9",
+  "tags": [
+    "implementation",
+    "sorting",
+    "math"
+  ],
+  "hints": [
+    "Work out for a single candle how many hours it burns; it is not simply its height divided by its rate rounded down.",
+    "A candle with height h and rate r burns during exactly (h + r - 1) // r hours, and once it is out it stays out, so the set of burning candles only shrinks from hour to hour.",
+    "Compute every candle's number of burning hours, sort them in decreasing order, and the k-th value is the answer."
+  ],
+  "difficulty": "easy",
+  "rating": 900,
+  "timeLimitMs": 2000,
+  "cluster": "the-candle",
+  "samples": [
+    {
+      "input": "4 2\n5 2\n3 3\n7 1\n4 4\n",
+      "output": "3\n"
+    },
+    {
+      "input": "1 1\n10 3\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 3\n6 2\n6 3\n6 6\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); k = int(data[1])\n    lives = []\n    for i in range(n):\n        h = int(data[2 + 2 * i]); r = int(data[3 + 2 * i])\n        lives.append((h + r - 1) // r)\n    lives.sort(reverse=True)\n    print(lives[k - 1])\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.read().split()\n    n = int(data[0]); k = int(data[1])\n    lives = []\n    for i in range(n):\n        h = int(data[2 + 2 * i]); r = int(data[3 + 2 * i])\n        hours = h // r\n        if h % r != 0:\n            hours += 1\n        lives.append(hours)\n    # take away the k-1 longest-burning candles; the next longest sets the answer\n    for _ in range(k - 1):\n        lives.remove(max(lives))\n    print(max(lives))\n\nmain()\n"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "the-drink-owed-strike",
+  "title": "Struck From the Slate",
+  "lore": "The table will be owed drinks and it will buy drinks, but it will not sit in debt for a single moment of the night. Ada strikes out whatever favours she must, as few as she can, and keeps the table standing as high as she can while she is at it.",
+  "statement": "The slate lists n favours in the order they were called. Favour i changes the table's standing by a_i drinks: a positive a_i means the table is bought that many drinks, a negative a_i means the table owes that many and pays them out. The standing starts at zero.\n\nThe table will not sit in debt. After every favour that happens, the standing must be zero or more.\n\nBefore the night begins Ada may strike any favours off the slate. A struck favour never happens; the favours she keeps happen in their original order, and the standing must be zero or more after each of them.\n\nAda keeps as many favours as she can. Among all the ways to keep that many, she takes the one that leaves the table standing highest at the end of the night.\n\nPrint how many favours are kept and what the standing is at the end.\n\nExample 1:\nInput:\n5\n5 -3 -3 -3 1\nOutput:\n3 3\nExplanation: Striking two of the three payouts leaves 5, -3, 1 with standings 5, 2, 3, and no set of four favours is legal. Three favours are kept and the night ends on three drinks. Keeping 5, -3, -3 instead is not legal, since the second payout would leave -1.\n\nExample 2:\nInput:\n4\n-2 1 1 -1\nOutput:\n3 1\nExplanation: The first favour would put the standing at -2 before anything else happens, so it is struck. The other three give standings 1, 2, 1, and no other three are legal.\n\nExample 3:\nInput:\n6\n3 -1 -5 2 -2 4\nOutput:\n5 6\nExplanation: Striking the payout of five leaves standings 3, 2, 4, 2, 6. Keeping all six fails at the third favour, where the standing would be -3. Striking the payout of two instead also keeps five favours, but the night would end on three drinks, which is lower.",
+  "inputFormat": "The first line contains an integer n, the number of favours on the slate. The second line contains n integers a_1, ..., a_n, the change each favour makes to the table's standing, in the order they were called.",
+  "outputFormat": "Print one line with two integers separated by a space: the largest number of favours that can be kept, and the highest standing the night can end on while keeping that many.",
+  "constraints": "1 <= n <= 2 * 10^5\n-10^9 <= a_i <= 10^9\nThe standing starts at 0 and may reach 2 * 10^14",
+  "tags": [
+    "greedy",
+    "heap",
+    "implementation"
+  ],
+  "hints": [
+    "A favour with a_i >= 0 is never worth striking: keeping it only raises the standing for everything after it, so it never puts another favour at risk.",
+    "Read the slate in order and keep everything. The first time the standing would fall below zero, strike exactly one favour you had kept, the one that took the most drinks out. That repairs the standing and costs you one favour, which is the least a repair can cost.",
+    "The same rule settles the second number for free. After every favour read, the set you hold is a legal set of the largest possible size, and among the legal sets of that size it is the one standing highest, since striking the worst payout gives up the fewest drinks. So the running standing at the end is the answer.",
+    "A min-heap of the kept favours hands you the worst one in O(log n). Every favour is pushed once and struck at most once, so the night is O(n log n). An O(n^2) table over (favours read, favours kept) proves the same two numbers but will not survive the bound."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 4000,
+  "cluster": "the-drink-owed",
+  "samples": [
+    {
+      "input": "5\n5 -3 -3 -3 1\n",
+      "output": "3 3\n"
+    },
+    {
+      "input": "4\n-2 1 1 -1\n",
+      "output": "3 1\n"
+    },
+    {
+      "input": "6\n3 -1 -5 2 -2 4\n",
+      "output": "5 6\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nimport heapq\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    kept = []\n    standing = 0\n    for i in range(1, n + 1):\n        a = int(data[i])\n        heapq.heappush(kept, a)\n        standing += a\n        while standing < 0:\n            standing -= heapq.heappop(kept)\n    sys.stdout.write(str(len(kept)) + \" \" + str(standing) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\n# best[k] is the largest standing reachable by keeping k favours so far, or -1 if impossible.\nbest = [0] + [-1] * n\nfor i in range(1, n + 1):\n    a = int(data[i])\n    grown = [-1] + [(s + a) if s >= 0 and s + a >= 0 else -1 for s in best[:n]]\n    best = [x if x > y else y for x, y in zip(best, grown)]\nanswer = 0\nfor k in range(n + 1):\n    if best[k] >= 0:\n        answer = k\nprint(answer, best[answer])\n"
+  }
+}

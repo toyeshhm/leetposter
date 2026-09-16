@@ -1,0 +1,46 @@
+{
+  "id": "the-bell-vigil",
+  "title": "No Long Silence",
+  "lore": "The Hall is content so long as the bell is heard now and then. The heralds who ring it are less easily contented and name a fee.",
+  "statement": "The night runs from minute 0 to minute T. n heralds have offered to ring the bell: herald i will ring at minute t_i and asks a fee of f_i. The offers are listed in increasing order of minute and no two name the same minute. Any non-empty set of the offers may be taken; a herald who is not taken does not ring.\n\nTwo rules bind the night.\n\nThe bell needs c minutes of rest: no two rings taken may be less than c minutes apart.\n\nThe Hall must not go quiet for longer than w minutes. Count the stretch from the start of the night to the first ring, every stretch between two consecutive rings, and the stretch from the last ring to the end of the night: none of them may be longer than w. In other words the first ring is at minute w or earlier, consecutive rings are at most w minutes apart, and the last ring is at minute T - w or later.\n\nPrint the smallest total fee of a set of offers that satisfies both rules, or -1 if no set does.\n\nExample 1:\nInput:\n5 20 4 8\n2 3\n6 1\n9 5\n14 2\n19 4\nOutput:\n3\nExplanation: Take the offers at minutes 6 and 14, for a fee of 1 + 2 = 3. The Hall is quiet for 6 minutes at the start, 8 minutes between the rings and 6 at the end, none longer than w = 8, and the rings are 8 minutes apart, which is at least c = 4. Nothing cheaper works: the offer at minute 6 alone leaves 14 quiet minutes at the end.\n\nExample 2:\nInput:\n2 20 4 8\n2 1\n3 1\nOutput:\n-1\nExplanation: The last ring would be at minute 3 at best, leaving 17 quiet minutes before the night ends, and w is 8.\n\nExample 3:\nInput:\n2 5 4 10\n0 7\n3 2\nOutput:\n2\nExplanation: The night is short enough that a single ring covers it, and the cheaper offer asks 2. Both offers together are not allowed anyway: minutes 0 and 3 are 3 apart and the bell rests for 4.",
+  "inputFormat": "The first line contains four integers n, T, c and w: the number of offers, the last minute of the night, the rest the bell needs, and the longest stretch the Hall may go quiet.\nEach of the next n lines contains two integers t_i and f_i, the minute of offer i and its fee. The offers are given in strictly increasing order of t_i.",
+  "outputFormat": "One integer: the smallest total fee, or -1 if no set of offers satisfies both rules. The answer can exceed 2^31.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= T <= 10^9\n1 <= c <= w <= 10^9\n0 <= t_1 < t_2 < ... < t_n <= T\n1 <= f_i <= 10^9",
+  "tags": [
+    "dp",
+    "queue",
+    "sliding-window"
+  ],
+  "hints": [
+    "Work forward through the offers and keep, for each one, the smallest fee of a set that covers the night up to that ring and ends with it.",
+    "The rings that may come immediately before a ring at minute t are exactly the offers in the window [t - w, t - c], and a ring at minute t may instead be the first one when t is at most w. As t moves forward, both ends of that window move forward too.",
+    "So the recurrence asks for the smallest value computed so far inside a sliding window. A deque of indices whose values increase answers that in constant amortised time; rescanning the window costs O(n^2), and n is 2 * 10^5.",
+    "The answer is the smallest value over the offers at minute T - w or later, and -1 when no such offer can be reached at all."
+  ],
+  "difficulty": "hard",
+  "rating": 1900,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "5 20 4 8\n2 3\n6 1\n9 5\n14 2\n19 4\n",
+      "output": "3\n"
+    },
+    {
+      "input": "2 20 4 8\n2 1\n3 1\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "2 5 4 10\n0 7\n3 2\n",
+      "output": "2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    T = int(data[1])\n    c = int(data[2])\n    w = int(data[3])\n    t = [0] * n\n    f = [0] * n\n    pos = 4\n    for i in range(n):\n        t[i] = int(data[pos])\n        f[i] = int(data[pos + 1])\n        pos += 2\n    INF = 1 << 62\n    dp = [INF] * n\n    dq: deque[int] = deque()\n    hi = 0\n    best = INF\n    for i in range(n):\n        ti = t[i]\n        lim = ti - c\n        while hi < i and t[hi] <= lim:\n            v = dp[hi]\n            while dq and dp[dq[-1]] >= v:\n                dq.pop()\n            dq.append(hi)\n            hi += 1\n        low = ti - w\n        while dq and t[dq[0]] < low:\n            dq.popleft()\n        cur = 0 if ti <= w else INF\n        if dq and dp[dq[0]] < cur:\n            cur = dp[dq[0]]\n        if cur < INF:\n            d = cur + f[i]\n            dp[i] = d\n            if ti >= T - w and d < best:\n                best = d\n    sys.stdout.write(str(best if best < INF else -1) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import bisect\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nT = int(data[1])\nc = int(data[2])\nw = int(data[3])\nt = []\nf = []\npos = 4\nfor _ in range(n):\n    t.append(int(data[pos]))\n    f.append(int(data[pos + 1]))\n    pos += 2\nINF = 1 << 62\nsize = 1\nwhile size < n:\n    size *= 2\ntree = [INF] * (2 * size)\n\n\ndef upd(i, v):\n    i += size\n    tree[i] = v\n    i //= 2\n    while i:\n        a = tree[2 * i]\n        b = tree[2 * i + 1]\n        tree[i] = a if a < b else b\n        i //= 2\n\n\ndef qry(a, b):\n    res = INF\n    a += size\n    b += size\n    while a < b:\n        if a & 1:\n            if tree[a] < res:\n                res = tree[a]\n            a += 1\n        if b & 1:\n            b -= 1\n            if tree[b] < res:\n                res = tree[b]\n        a //= 2\n        b //= 2\n    return res\n\n\nbest = INF\nfor i in range(n):\n    lo = bisect.bisect_left(t, t[i] - w)\n    hi = bisect.bisect_right(t, t[i] - c)\n    cur = 0 if t[i] <= w else INF\n    if lo < hi:\n        v = qry(lo, hi)\n        if v < cur:\n            cur = v\n    if cur < INF:\n        d = cur + f[i]\n        upd(i, d)\n        if t[i] >= T - w and d < best:\n            best = d\nprint(best if best < INF else -1)\n"
+  },
+  "cluster": "the-bell"
+}

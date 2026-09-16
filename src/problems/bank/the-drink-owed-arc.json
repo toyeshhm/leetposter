@@ -1,0 +1,47 @@
+{
+  "id": "the-drink-owed-arc",
+  "title": "Passing Down the Table",
+  "lore": "The Company sits shoulder to shoulder, and a drink owed can only be handed to a neighbour. The Warden names one stretch of seats at a time and swears each one squares itself, which is the sort of thing the Warden says.",
+  "statement": "The Company sits shoulder to shoulder in one long row, seats 1 to n. Seat i holds b_i: a positive b_i means that scribe holds that many drinks more than they are due, a negative b_i means the table owes them that many.\n\nA pass hands one drink from a seat to the seat immediately beside it, on either side, and counts as one pass.\n\nThe Warden asks q questions. Each names a stretch of seats l to r. Seats outside the stretch take no part: no drink may leave the stretch, enter it, or skip a seat.\n\nAnswer each question. If b_l + b_{l+1} + ... + b_r is not zero, the stretch cannot square itself and the answer is -1. Otherwise print the least number of passes after which every seat from l to r holds exactly what it is due.\n\nExample 1:\nInput:\n5 4\n2 -1 -1 3 -3\n1 3\n4 5\n1 4\n1 5\nOutput:\n3\n3\n-1\n6\nExplanation: In seats 1 to 3 the first scribe holds two drinks too many and the other two are owed one each. One pass gives seat 2 its drink and two more carry a drink along to seat 3, so three passes. Seats 4 and 5 need three drinks over a single gap. Seats 1 to 4 hold three drinks too many between them, so they cannot square themselves. Over all five seats the four gaps carry 2, 1, 0 and 3 drinks.\n\nExample 2:\nInput:\n3 2\n0 0 0\n1 1\n2 3\nOutput:\n0\n0\nExplanation: Everyone is already square, and a stretch of one square seat needs no passes at all.\n\nExample 3:\nInput:\n6 3\n4 -2 -2 1 -1 0\n1 3\n2 6\n4 6\nOutput:\n6\n-1\n1\nExplanation: In seats 1 to 3 the first gap carries four drinks and the second carries two. Seats 2 to 6 are four drinks short between them. In seats 4 to 6 one drink crosses the first gap and nothing crosses the second.",
+  "inputFormat": "The first line contains two integers n and q. The second line contains n integers b_1, ..., b_n. Each of the next q lines contains two integers l and r describing one question.",
+  "outputFormat": "Print q lines. Line i is -1 if the stretch of question i does not sum to zero, and otherwise the least number of passes needed to square every seat in it.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n-10^9 <= b_i <= 10^9\n1 <= l <= r <= n\nAn answer can reach 2 * 10^19",
+  "tags": [
+    "fenwick",
+    "prefix-sums",
+    "sorting",
+    "intervals"
+  ],
+  "hints": [
+    "Take one gap inside the stretch, between seats i and i + 1. Everything to its left must end square, so exactly the net of seats l to i has to cross that gap, in one direction or the other. No choice you make changes that number, so the cost is forced before you move a single drink.",
+    "With S_i = b_1 + ... + b_i, the stretch squares itself only when S_r = S_{l-1}, and the cost is then the sum of |S_i - S_{l-1}| over i from l to r - 1. One question is now a single line of work, but 2 * 10^5 of them are not.",
+    "That sum is a range query: over a window of positions, the total distance from the values stored there to a fixed number c. Sort the positions by their value and the questions by their c, then sweep c upward, inserting each position into two Fenwick trees, one counting positions and one totalling their values, as its value falls below c.",
+    "The values at or below c contribute c * (how many) - (their total); the values above contribute (their total) - c * (how many). Four prefix reads give the counts and totals inside the window, and a plain prefix array of S gives the window's full total."
+  ],
+  "difficulty": "hard",
+  "rating": 2500,
+  "timeLimitMs": 6000,
+  "cluster": "the-drink-owed",
+  "samples": [
+    {
+      "input": "5 4\n2 -1 -1 3 -3\n1 3\n4 5\n1 4\n1 5\n",
+      "output": "3\n3\n-1\n6\n"
+    },
+    {
+      "input": "3 2\n0 0 0\n1 1\n2 3\n",
+      "output": "0\n0\n"
+    },
+    {
+      "input": "6 3\n4 -2 -2 1 -1 0\n1 3\n2 6\n4 6\n",
+      "output": "6\n-1\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    pre = [0] * (n + 1)\n    s = 0\n    for i in range(n):\n        s += int(data[2 + i])\n        pre[i + 1] = s\n    whole = [0] * (n + 1)\n    for i in range(1, n + 1):\n        whole[i] = whole[i - 1] + pre[i]\n    pos = 2 + n\n    out = [\"-1\"] * q\n    asked = []\n    for k in range(q):\n        l = int(data[pos])\n        r = int(data[pos + 1])\n        pos += 2\n        c = pre[l - 1]\n        if pre[r] != c:\n            continue\n        if l <= r - 1:\n            asked.append((c, l, r - 1, k))\n        else:\n            out[k] = \"0\"\n    asked.sort()\n    order = sorted(range(1, n + 1), key=lambda i: pre[i])\n    cnt = [0] * (n + 1)\n    tot = [0] * (n + 1)\n    j = 0\n    for c, l, r, k in asked:\n        while j < n and pre[order[j]] <= c:\n            i = order[j]\n            v = pre[i]\n            while i <= n:\n                cnt[i - 1] += 1\n                tot[i - 1] += v\n                i += i & -i\n            j += 1\n        below = 0\n        weight = 0\n        i = r\n        while i > 0:\n            below += cnt[i - 1]\n            weight += tot[i - 1]\n            i -= i & -i\n        i = l - 1\n        while i > 0:\n            below -= cnt[i - 1]\n            weight -= tot[i - 1]\n            i -= i & -i\n        span = whole[r] - whole[l - 1]\n        length = r - l + 1\n        out[k] = str(c * below - weight + (span - weight) - c * (length - below))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nq = int(data[1])\nb = [int(x) for x in data[2:2 + n]]\npos = 2 + n\nout = []\nfor _ in range(q):\n    l = int(data[pos])\n    r = int(data[pos + 1])\n    pos += 2\n    carry = 0\n    passes = 0\n    for i in range(l - 1, r - 1):\n        carry += b[i]\n        passes += abs(carry)\n    carry += b[r - 1]\n    out.append(\"-1\" if carry != 0 else str(passes))\nprint(\"\\n\".join(out))\n"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "title": "The Forge Reads Last",
+  "lore": "The Warden of the North Gate files the halls in order and reads the last sigil aloud, twice, and the Company would rather that reading began with an A.",
+  "statement": "The Company files n halls in the order it means to visit them. Hall i starts with sigil s_i, exactly five uppercase letters.\n\nBefore the file is handed over, any hall may be reforged: its five letters may be put in any order, and the order chosen becomes its sigil. Letters are never added, removed or changed, and no hall moves from its place in the file.\n\nThe Warden accepts the file only when the sigils are in non-decreasing lexicographic order, that is the sigil of hall i is not greater than the sigil of hall i+1 for every i from 1 to n-1. Sigils are compared as five-letter strings, position by position from the left.\n\nThe Warden then reads out the sigil of hall n, and the Company would like that reading to be as early in the alphabet as possible. Print the lexicographically smallest sigil hall n can hold in an accepted file, or -1 if no reforging of the halls is accepted.\n\nExample 1:\nInput:\n3\nBAAAA\nAABAA\nAAABB\nOutput:\nAAABB\nExplanation: Hall 1 reforges to AAAAB, hall 2 to AAAAB as well, and hall 3 holds A, A, A, B, B, whose smallest arrangement that is not below AAAAB is AAABB. Leaving hall 1 as BAAAA would force hall 3 higher still.\n\nExample 2:\nInput:\n2\nBBBBB\nAAAAA\nOutput:\n-1\nExplanation: Hall 1 can only ever hold BBBBB and hall 2 can only ever hold AAAAA, so the file cannot be made non-decreasing.\n\nExample 3:\nInput:\n3\nTGLWX\nKANEP\nNEPAK\nOutput:\nKAENP\nExplanation: Hall 1 reforges to GLTWX. The smallest arrangement of K, A, N, E, P that is not below GLTWX is KAENP, and hall 3 holds the same five letters, so it can hold KAENP too.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls in the file.\nEach of the next n lines contains one sigil: exactly five uppercase letters with no spaces.",
+  "outputFormat": "One line: the lexicographically smallest sigil hall n can hold in an accepted file, or -1 if the file cannot be made non-decreasing.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "greedy",
+    "strings",
+    "constructive",
+    "implementation"
+  ],
+  "hints": [
+    "Walk the file from left to right and ask one question per hall: given the sigil the previous hall ended up holding, what is the smallest arrangement of this hall's letters that is not smaller than it?",
+    "Holding the smallest valid arrangement at every step is never worse than holding a larger one, since any arrangement of a later hall that clears a larger previous sigil also clears a smaller one, so the greedy also leaves hall n as small as it can be.",
+    "To build that arrangement, copy the leading letters of the previous sigil for as long as this hall's letters allow; if all five can be copied the answer is the previous sigil itself, otherwise at the first position where copying stops, place the smallest available letter strictly greater than the previous sigil's letter there and pour the remaining letters out in alphabetical order.",
+    "If no strictly greater letter is available, hand back the last copied letter, shorten the copied prefix by one and try that position instead; with 26 letter counters each hall costs a constant number of steps, so the whole file is O(n)."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 4000,
+  "cluster": "the-sigils",
+  "id": "the-sigils-forge",
+  "samples": [
+    {
+      "input": "3\nBAAAA\nAABAA\nAAABB\n",
+      "output": "AAABB\n"
+    },
+    {
+      "input": "2\nBBBBB\nAAAAA\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "3\nTGLWX\nKANEP\nNEPAK\n",
+      "output": "KAENP\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    codes = data[1:1 + n]\n    prev = bytearray(b\"AAAAA\")\n    have = [0] * 26\n    for idx in range(n):\n        code = codes[idx]\n        for t in range(26):\n            have[t] = 0\n        for ch in code:\n            have[ch - 65] += 1\n        # copy the previous sigil letter for letter while the letters are in stock\n        cut = 0\n        while cut < 5:\n            t = prev[cut] - 65\n            if have[t] == 0:\n                break\n            have[t] -= 1\n            cut += 1\n        forged = None\n        while True:\n            if cut == 5:\n                forged = bytes(prev)\n                break\n            pick = -1\n            for t in range(prev[cut] - 64, 26):\n                if have[t] > 0:\n                    pick = t\n                    break\n            if pick >= 0:\n                have[pick] -= 1\n                tail = bytearray()\n                for t in range(26):\n                    c = have[t]\n                    if c > 0:\n                        tail += bytes([65 + t]) * c\n                forged = bytes(prev[:cut]) + bytes([65 + pick]) + bytes(tail)\n                break\n            if cut == 0:\n                break\n            cut -= 1\n            have[prev[cut] - 65] += 1\n        if forged is None:\n            sys.stdout.write(\"-1\\n\")\n            return\n        prev = bytearray(forged)\n    sys.stdout.write(prev.decode() + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\nfrom itertools import permutations\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncodes = data[1:1 + n]\ncache = {}\n# lo = the smallest sigil the previous hall can end up holding; any arrangement of the\n# current hall that is at least lo may follow it, and the smallest such one is kept.\nlo = \"\"\nok = True\nfor code in codes:\n    key = \"\".join(sorted(code))\n    options = cache.get(key)\n    if options is None:\n        options = sorted(set(\"\".join(p) for p in permutations(key)))\n        cache[key] = options\n    i = bisect_left(options, lo)\n    if i == len(options):\n        ok = False\n        break\n    lo = options[i]\nprint(lo if ok else -1)\n"
+  }
+}

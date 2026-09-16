@@ -1,0 +1,47 @@
+{
+  "id": "the-bell-roster",
+  "title": "One Pull Each",
+  "lore": "The Tribunal counts only the rings it asked for, at the minutes it wrote down. A herald who is elsewhere at the time is simply elsewhere.",
+  "statement": "The Tribunal has written down m appointed minutes x_1, ..., x_m, all different. A ring of the bell counts only if it falls on an appointed minute.\n\nThere are n heralds. Herald j is in the Hall from minute l_j to minute r_j inclusive, and will ring the bell at most once in the whole night, at an appointed minute inside that stretch. The rope holds one hand, so no two heralds may ring at the same appointed minute.\n\nPrint the largest number of appointed minutes at which the bell can be rung.\n\nExample 1:\nInput:\n3 3\n2 5 9\n1 5\n4 6\n1 5\nOutput:\n2\nExplanation: Minute 9 falls in nobody's stay. Herald 2 can ring only at minute 5, so that minute has to be his; herald 1 takes minute 2, and herald 3 is left with nothing, since both appointed minutes inside his stay are taken.\n\nExample 2:\nInput:\n3 1\n4\n1 10\n2 6\n3 9\nOutput:\n1\nExplanation: All three heralds are in the Hall at minute 4, but the rope holds one hand and there is no other appointed minute.\n\nExample 3:\nInput:\n2 2\n3 8\n5 7\n1 2\nOutput:\n0\nExplanation: Herald 1 is in the Hall from minute 5 to minute 7 and neither appointed minute falls in that stretch. Herald 2 has left before minute 3.",
+  "inputFormat": "The first line contains two integers n and m, the number of heralds and the number of appointed minutes.\nThe second line contains m distinct integers x_1, ..., x_m in no particular order.\nEach of the next n lines contains two integers l_j and r_j, the first and the last minute of herald j's stay.",
+  "outputFormat": "One integer: the largest number of appointed minutes at which the bell can be rung.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= m <= 2 * 10^5\n1 <= x_i <= 10^9\nAll x_i are distinct\n1 <= l_j <= r_j <= 10^9",
+  "tags": [
+    "greedy",
+    "sorting",
+    "heap",
+    "intervals"
+  ],
+  "hints": [
+    "Each herald is an interval and each appointed minute is a point; you are pairing points with intervals, one point to at most one interval.",
+    "Walk the appointed minutes from the earliest to the latest. Standing on a minute, the heralds who could take it are exactly those who have already arrived and have not yet left.",
+    "Give the minute to the candidate who leaves soonest. He has the fewest chances after this one, and exchanging him for any other candidate never improves the count, which is the whole proof.",
+    "A heap keyed by the leaving minute holds the candidates: push heralds as their arrival minute goes by, drop from the top anyone who has already left, then pop one for the ring. Trying every herald at every minute is 4 * 10^10 pairs and will not finish."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "3 3\n2 5 9\n1 5\n4 6\n1 5\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3 1\n4\n1 10\n2 6\n3 9\n",
+      "output": "1\n"
+    },
+    {
+      "input": "2 2\n3 8\n5 7\n1 2\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import heapq\nimport sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    xs = sorted(int(v) for v in data[2:2 + m])\n    pos = 2 + m\n    heralds = []\n    for _ in range(n):\n        heralds.append((int(data[pos]), int(data[pos + 1])))\n        pos += 2\n    heralds.sort()\n    pool: list[int] = []\n    j = 0\n    rung = 0\n    for x in xs:\n        while j < n and heralds[j][0] <= x:\n            heapq.heappush(pool, heralds[j][1])\n            j += 1\n        while pool and pool[0] < x:\n            heapq.heappop(pool)\n        if pool:\n            heapq.heappop(pool)\n            rung += 1\n    sys.stdout.write(str(rung) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import bisect\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nxs = sorted(int(v) for v in data[2:2 + m])\npos = 2 + m\nheralds = []\nfor _ in range(n):\n    l = int(data[pos])\n    r = int(data[pos + 1])\n    pos += 2\n    heralds.append((r, l))\nheralds.sort()\nnxt = list(range(m + 1))\n\n\ndef find(a):\n    root = a\n    while nxt[root] != root:\n        root = nxt[root]\n    while nxt[a] != root:\n        nxt[a], a = root, nxt[a]\n    return root\n\n\nrung = 0\nfor r, l in heralds:\n    i = find(bisect.bisect_left(xs, l))\n    if i < m and xs[i] <= r:\n        rung += 1\n        nxt[i] = i + 1\nprint(rung)\n"
+  },
+  "cluster": "the-bell"
+}

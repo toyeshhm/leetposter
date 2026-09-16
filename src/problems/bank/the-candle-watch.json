@@ -1,0 +1,46 @@
+{
+  "id": "the-candle-watch",
+  "title": "The Long Watch",
+  "lore": "A watch is kept by lighting a run of candles side by side and sitting until the last of them gutters. The Warden rations the wax and Ada, who has sat through too many short watches, insists on a tall one in every run.",
+  "statement": "There are n candles in a row; candle i has height h_i. A watch is a block of consecutive candles l, l + 1, ..., r (1 <= l <= r <= n). To hold the watch, every candle in the block is lit at the same moment and each burns down at one unit per hour until it is gone. The watch lasts as long as the tallest candle in the block, and it consumes all the wax in the block, that is, the sum of the heights.\n\nThe Warden allows a watch only if it consumes at most W units of wax in total and lasts at least T hours. Count the number of pairs (l, r) that describe an allowed watch.\n\nExample 1:\nInput:\n5 7 3\n1 3 2 5 1\nOutput:\n7\nExplanation: The allowed blocks are [1, 3], [1, 3, 2], [3], [3, 2], [2, 5], [5] and [5, 1]. The block [1, 3, 2, 5] has total wax 11 > 7, and the block [2] lasts only 2 hours.\n\nExample 2:\nInput:\n3 2 1\n1 1 1\nOutput:\n5\nExplanation: Every single candle and every pair of neighbours fits in 2 units of wax and lasts at least 1 hour; the whole row would consume 3.\n\nExample 3:\nInput:\n4 100 10\n1 2 3 4\nOutput:\n0\nExplanation: No candle is 10 units tall, so no watch lasts long enough.",
+  "inputFormat": "The first line contains three integers n, W and T. The second line contains n integers h_1, ..., h_n.",
+  "outputFormat": "Print a single integer, the number of allowed watches.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= h_i <= 10^9\n1 <= W <= 10^15\n1 <= T <= 10^9",
+  "tags": [
+    "two-pointers",
+    "sliding-window",
+    "implementation"
+  ],
+  "hints": [
+    "Fix the right end r of the block. Because every height is positive, the left ends l whose block has total wax at most W form one contiguous range that ends at r.",
+    "As r moves right, the smallest left end with total wax at most W never moves left, so a two-pointer sweep finds it for every r in linear time overall.",
+    "The block [l, r] contains a candle of height at least T exactly when l is at most the position of the last such candle at or before r; keep that position as you sweep.",
+    "For each r add the size of the intersection of the two ranges of l, that is max(0, p - lmin + 1) where p is the last tall position and lmin the smallest left end within the wax budget."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "cluster": "the-candle",
+  "samples": [
+    {
+      "input": "5 7 3\n1 3 2 5 1\n",
+      "output": "7\n"
+    },
+    {
+      "input": "3 2 1\n1 1 1\n",
+      "output": "5\n"
+    },
+    {
+      "input": "4 100 10\n1 2 3 4\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); w = int(data[1]); t = int(data[2])\n    h = list(map(int, data[3:3 + n]))\n    left = 0\n    total = 0\n    tall = -1\n    ans = 0\n    for r in range(n):\n        total += h[r]\n        while total > w:\n            total -= h[left]\n            left += 1\n        if h[r] >= t:\n            tall = r\n        if tall >= left:\n            ans += tall - left + 1\n    print(ans)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.read().split()\n    n = int(data[0]); w = int(data[1]); t = int(data[2])\n    h = [int(x) for x in data[3:3 + n]]\n    ans = 0\n    for l in range(n):\n        total = 0\n        tallest = 0\n        for r in range(l, n):\n            total += h[r]\n            if total > w:\n                break\n            if h[r] > tallest:\n                tallest = h[r]\n            if tallest >= t:\n                ans += 1\n    print(ans)\n\nmain()\n"
+  }
+}

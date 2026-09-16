@@ -1,0 +1,45 @@
+{
+  "id": "the-stuck-door-rota",
+  "title": "Shoves in Rota",
+  "lore": "Heralds submit in Python because the Judge's C++ door has been stuck for years. What nobody writes down is that the door does open in the end, if enough scribes take a turn at it.",
+  "statement": "The door is opened by shoving, and the Company shoves in rota: scribe 1, then scribe 2, and so on to scribe n, then scribe 1 again, for as long as the night needs.\n\nScribe i adds f_i to the strain on the door with every shove. Strain is never lost between shoves. The door gives way at the first shove that brings the total strain to D or more.\n\nPrint how many shoves are made in all, counting the one that opens the door, and which scribe makes that last shove.\n\nExample 1:\n\nInput:\n3 10\n2 3 1\nOutput:\n5 2\nExplanation: The strain after each shove is 2, 5, 6, 8, 11. The fifth shove is the second shove of scribe 2, and it is the first to carry the strain to 10.\n\nExample 2:\n\nInput:\n1 7\n3\nOutput:\n3 1\nExplanation: One scribe shoves alone, reaching strain 3, then 6, then 9 on the third shove.\n\nExample 3:\n\nInput:\n4 12\n5 1 1 5\nOutput:\n4 4\nExplanation: The strain after each shove is 5, 6, 7, 12, so a single round is enough and scribe 4 lands the shove that opens the door.",
+  "inputFormat": "The first line contains two integers n and D: the number of scribes in the rota and the strain at which the door gives way. The second line contains n integers f_1 ... f_n, the strain each scribe adds with one shove.",
+  "outputFormat": "Print one line with two integers: the number of shoves made in all, and the number of the scribe who makes the last one.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= f_i <= 10^9\n1 <= D <= 10^18",
+  "tags": [
+    "math",
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "Every full round of the rota adds the same strain, so all the rounds are alike and only the last, unfinished one is worth looking at. D reaches 10^18, so the rounds cannot be walked one at a time.",
+    "Divide D by the strain of one full round to skip straight to the last round. Take care with a D that lands exactly at the end of a round: that shove belongs to the round that reached it, not to the next one.",
+    "Let S be the strain of one round and q the number of whole rounds finished before the door gives, so q = (D - 1) // S. What is left is r = D - q * S, which lies between 1 and S. Walk the prefix sums of f once and stop at the first scribe whose running total reaches r."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "cluster": "the-stuck-door",
+  "samples": [
+    {
+      "input": "3 10\n2 3 1\n",
+      "output": "5 2\n"
+    },
+    {
+      "input": "1 7\n3\n",
+      "output": "3 1\n"
+    },
+    {
+      "input": "4 12\n5 1 1 5\n",
+      "output": "4 4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "\nimport sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    d = int(data[1])\n    f = [int(x) for x in data[2:2 + n]]\n    total = sum(f)\n    rounds = (d - 1) // total\n    rest = d - rounds * total\n    acc = 0\n    for i in range(n):\n        acc += f[i]\n        if acc >= rest:\n            sys.stdout.write(\"%d %d\\n\" % (rounds * n + i + 1, i + 1))\n            return\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nd = int(data[1])\nf = [int(x) for x in data[2:2 + n]]\npre = [0] * (n + 1)\nfor i in range(n):\n    pre[i + 1] = pre[i] + f[i]\ntotal = pre[n]\n\n\ndef strain(t):\n    # strain after t shoves, counted straight from the definition\n    return (t // n) * total + pre[t % n]\n\n\nhi = 1\nwhile strain(hi) < d:\n    hi *= 2\nlo = 1\nwhile lo < hi:\n    mid = (lo + hi) // 2\n    if strain(mid) >= d:\n        hi = mid\n    else:\n        lo = mid + 1\nprint(lo, (lo - 1) % n + 1)\n"
+  }
+}

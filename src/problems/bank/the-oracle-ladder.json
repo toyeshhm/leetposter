@@ -1,0 +1,45 @@
+{
+  "id": "the-oracle-ladder",
+  "title": "The Oracle's Ladder",
+  "lore": "Brin the Oracle reads the hints in whatever order the cards were shuffled. A hint is no use until every hint numbered below it has been heard, which the Company discovers slowly.",
+  "statement": "The Oracle's hints are numbered by positive integers. She reads n cards in order; card i names hint a_i. A hint may be named more than once, and the numbers can be large.\n\nA hint is usable once it has been heard and every hint with a smaller number has been heard as well. In other words, after some cards have been read, the usable hints are exactly 1, 2, ..., k for the largest k such that every hint from 1 to k has been named on a card so far (k = 0 if hint 1 has not been named yet).\n\nAfter each card, print the number of usable hints.\n\nExample 1:\nInput:\n5\n3 1 4 2 2\nOutput:\n0\n1\n1\n4\n4\nExplanation: After the first card only hint 3 is heard, so nothing is usable. Card 2 names hint 1, so k = 1. Card 3 names hint 4, which does not help while 2 is missing. Card 4 names hint 2, and now 1, 2, 3, 4 have all been heard. Card 5 repeats 2 and changes nothing.\n\nExample 2:\nInput:\n3\n2 3 4\nOutput:\n0\n0\n0\nExplanation: Hint 1 is never named, so nothing is ever usable.\n\nExample 3:\nInput:\n4\n1 1 1000000000 2\nOutput:\n1\n1\n1\n2\nExplanation: Hint 1000000000 is heard but hints 3 to 999999999 are not, so it never counts.",
+  "inputFormat": "The first line contains an integer n, the number of cards. The second line contains n integers a_1, ..., a_n, the hint named on each card in reading order.",
+  "outputFormat": "Print n lines. Line i contains the number of usable hints after the first i cards have been read.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9",
+  "tags": [
+    "implementation",
+    "simulation",
+    "two-pointers"
+  ],
+  "hints": [
+    "The number of usable hints never decreases, so the answer after card i is at least the answer after card i - 1.",
+    "A hint numbered above n can never be usable, because fewer than n distinct hints are heard before it, so only numbers up to n need to be remembered.",
+    "Keep a boolean per hint number and a single pointer k; after each card, advance k while hint k + 1 is heard, and the pointer moves at most n times over the whole night."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "5\n3 1 4 2 2\n",
+      "output": "0\n1\n1\n4\n4\n"
+    },
+    {
+      "input": "3\n2 3 4\n",
+      "output": "0\n0\n0\n"
+    },
+    {
+      "input": "4\n1 1 1000000000 2\n",
+      "output": "1\n1\n1\n2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    heard = bytearray(n + 2)\n    k = 0\n    out = []\n    for i in range(1, n + 1):\n        v = int(data[i])\n        if v <= n:\n            heard[v] = 1\n        while heard[k + 1]:\n            k += 1\n        out.append(k)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nheard = set()\nfor i in range(1, n + 1):\n    heard.add(int(data[i]))\n    k = 0\n    while (k + 1) in heard:\n        k += 1\n    print(k)\n"
+  }
+}

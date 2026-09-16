@@ -1,0 +1,47 @@
+{
+  "id": "premium-lock-keyring",
+  "title": "The Rationed Ring",
+  "lore": "The gate at the North stair sells keys one at a time and buys none of them back. The ring holds k keys, and the Company has the whole corridor written down before they set out.",
+  "statement": "n doors stand in a row and must be passed in that order. Door i is locked with key type t_i.\n\nThe Company's ring holds at most k keys. To pass door i they must be holding a key of type t_i; if they are not, they buy one at the gate for one coin. A key is never used up: once bought it opens every later door of its type for as long as it stays on the ring. When a key is bought and the ring is already full, the Company first throws one key of their choice away, and a key thrown away must be bought again if it is wanted later.\n\nThe Company has read the whole corridor before setting out, so the discards may be chosen with every door in mind. Report the smallest number of coins they can spend.\n\nExample 1:\nInput:\n8 2\n1 2 3 1 2 3 1 2\nOutput:\n5\nExplanation: Buy 1 and 2, then at the third door throw away 2, whose next door is later than 1's, and buy 3. Door 4 is free. At door 5 throw away 1 and buy 2; door 6 is free; at door 7 throw away 3, which is never wanted again, and buy 1; door 8 is free. Five coins, and no choice of discards spends fewer.\n\nExample 2:\nInput:\n5 3\n4 4 4 4 4\nOutput:\n1\nExplanation: One key of type 4 is bought and never leaves the ring.\n\nExample 3:\nInput:\n6 1\n1 2 1 2 1 2\nOutput:\n6\nExplanation: The ring holds one key and the types alternate, so every door costs a coin.",
+  "inputFormat": "The first line contains two integers n and k, the number of doors and the size of the ring.\nThe second line contains n integers t_1, ..., t_n, the key type of each door in the order the doors are passed.",
+  "outputFormat": "Print a single integer, the smallest number of coins the Company can spend.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= k <= 1000\n1 <= t_i <= 10^9",
+  "tags": [
+    "greedy",
+    "heap",
+    "hashing",
+    "implementation"
+  ],
+  "hints": [
+    "Buying is forced and buying early never helps, so the only choice ever made is which key to throw away, and it is made only when the ring is full.",
+    "Throw away the key whose next door is furthest ahead, and a key wanted at no later door before any other. Swapping any other discard for that one can be undone step by step without ever costing an extra coin.",
+    "One walk backwards over the corridor gives, for every door, the next door of the same type, or infinity when there is none.",
+    "Walk forwards holding the ring in a heap keyed by that next door. An entry whose type is no longer on the ring, or whose next door has since moved, is stale and is thrown away when it surfaces. A scan of the whole ring at every door is 2 * 10^8 steps and will not fit the limit."
+  ],
+  "difficulty": "medium",
+  "rating": 1900,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "8 2\n1 2 3 1 2 3 1 2\n",
+      "output": "5\n"
+    },
+    {
+      "input": "5 3\n4 4 4 4 4\n",
+      "output": "1\n"
+    },
+    {
+      "input": "6 1\n1 2 1 2 1 2\n",
+      "output": "6\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    k = int(data[1])\n    types = data[2:2 + n]\n    nxt = [n] * n\n    last: dict[bytes, int] = {}\n    for i in range(n - 1, -1, -1):\n        t = types[i]\n        nxt[i] = last.get(t, n)\n        last[t] = i\n    held: dict[bytes, int] = {}\n    heap: list[tuple[int, bytes]] = []\n    coins = 0\n    for i in range(n):\n        t = types[i]\n        if t in held:\n            held[t] = nxt[i]\n            heappush(heap, (-nxt[i], t))\n            continue\n        coins += 1\n        if len(held) == k:\n            while True:\n                far, victim = heappop(heap)\n                if held.get(victim, -1) == -far:\n                    del held[victim]\n                    break\n        held[t] = nxt[i]\n        heappush(heap, (-nxt[i], t))\n    sys.stdout.write(str(coins) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Same rule, no heap: the ring is kept as a list sorted by the moment each key is next\n# needed, so the key needed furthest away is simply the last entry.\nimport sys\nfrom bisect import bisect_left, insort\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nk = int(data[1])\ntypes = data[2:2 + n]\nnxt = [n] * n\nlast = {}\nfor i in range(n - 1, -1, -1):\n    nxt[i] = last.get(types[i], n)\n    last[types[i]] = i\nring = []\nheld = {}\ncoins = 0\nfor i in range(n):\n    t = types[i]\n    if t in held:\n        old = held[t]\n        pos = bisect_left(ring, (old, t))\n        ring.pop(pos)\n    else:\n        coins += 1\n        if len(held) == k:\n            far, victim = ring.pop()\n            del held[victim]\n    held[t] = nxt[i]\n    insort(ring, (nxt[i], t))\nprint(coins)\n"
+  },
+  "cluster": "premium-lock"
+}

@@ -1,0 +1,47 @@
+{
+  "title": "The Docket",
+  "lore": "The Judge posts the night's verdicts as one long docket and the Company files it into sessions. A session that names the same category twice is thrown back, which the Warden mentions only after the first attempt.",
+  "statement": "The night's docket is a list of n verdicts. Verdict i carries a category written as an integer c_i; two verdicts share a category exactly when their integers are equal.\n\nThe Company files the docket into sessions. A filing cuts the docket into one or more contiguous, non-empty parts that cover it in order. A session is legal if it holds at most L verdicts and no two verdicts inside it share a category. A filing is legal if every one of its sessions is legal.\n\nCount the legal filings. The number can be enormous, so print it modulo 998244353.\n\nExample 1:\nInput:\n4 2\n7 7 3 7\nOutput:\n3\nExplanation: The legal filings are [7][7][3][7], [7][7 3][7] and [7][7][3 7]. The session [7 7] is not legal because it names the same category twice, and no session may hold three verdicts.\n\nExample 2:\nInput:\n5 5\n1 2 3 4 5\nOutput:\n16\nExplanation: Every category is different and no session is too long, so every one of the sixteen ways to cut a list of five into contiguous parts is legal.\n\nExample 3:\nInput:\n6 3\n4 4 4 4 4 4\nOutput:\n1\nExplanation: Any session holding two verdicts would name category 4 twice, so the only legal filing is the one that gives every verdict its own session.",
+  "inputFormat": "The first line contains n and L. The second line contains n integers c_1 ... c_n, the categories of the verdicts in docket order.",
+  "outputFormat": "Print one line: the number of legal filings modulo 998244353.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= L <= n\n1 <= c_i <= 10^9",
+  "tags": [
+    "dp",
+    "prefix-sums",
+    "two-pointers",
+    "hashing"
+  ],
+  "hints": [
+    "Let f(i) be the number of legal filings of the first i verdicts; every such filing ends with one session that finishes exactly at verdict i.",
+    "For a fixed end i the legal starting points form one contiguous range: the session may not hold more than L verdicts, and it may not reach back past the most recent repeat of a category, and that second bound never moves backwards as i grows.",
+    "Track the last position where each category was seen to push that bound forward in one pass, and keep running sums of f so that each f(i) costs one subtraction instead of a loop over the whole range.",
+    "Take the running sums modulo 998244353 and subtract before reducing, so the window sum stays correct even when the left end of the range is the empty prefix."
+  ],
+  "difficulty": "hard",
+  "rating": 1800,
+  "timeLimitMs": 4000,
+  "id": "the-judge-docket",
+  "samples": [
+    {
+      "input": "4 2\n7 7 3 7\n",
+      "output": "3\n"
+    },
+    {
+      "input": "5 5\n1 2 3 4 5\n",
+      "output": "16\n"
+    },
+    {
+      "input": "6 3\n4 4 4 4 4 4\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 998244353\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    limit = int(data[1])\n    c = data[2:2 + n]\n    dp = [0] * (n + 1)\n    pref = [0] * (n + 1)\n    dp[0] = 1\n    pref[0] = 1\n    last = {}\n    left = 1\n    for i in range(1, n + 1):\n        x = c[i - 1]\n        seen_at = last.get(x)\n        if seen_at is not None and seen_at >= left:\n            left = seen_at + 1\n        last[x] = i\n        lo = i - limit\n        if left - 1 > lo:\n            lo = left - 1\n        if lo < 0:\n            lo = 0\n        hi = i - 1\n        if lo > hi:\n            value = 0\n        else:\n            value = pref[hi] - (pref[lo - 1] if lo >= 1 else 0)\n        dp[i] = value % MOD\n        pref[i] = (pref[i - 1] + dp[i]) % MOD\n    print(dp[n])\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 998244353\ndata = sys.stdin.read().split()\nn = int(data[0])\nlimit = int(data[1])\nc = data[2:2 + n]\ndp = [0] * (n + 1)\ndp[0] = 1\nfor i in range(1, n + 1):\n    seen = set()\n    total = 0\n    j = i - 1\n    while j >= 0 and i - j <= limit:\n        x = c[j]\n        if x in seen:\n            break\n        seen.add(x)\n        total += dp[j]\n        j -= 1\n    dp[i] = total % MOD\nprint(dp[n])\n"
+  },
+  "cluster": "the-judge"
+}

@@ -1,0 +1,47 @@
+{
+  "id": "the-drink-owed-cushion",
+  "title": "How Far the Cushion Goes",
+  "lore": "The table drinks on credit all night, and the moment its standing goes under it stops dead. Ada keeps a cushion behind the bar and wants to know, at any point in the evening, how far the night would run from here.",
+  "statement": "The slate holds n favours in the order they will be called. Favour i changes the table's standing by a_i drinks: a positive a_i means the table is bought that many drinks, a negative a_i means the table pays that many out.\n\nThe Company works through q records in order. Each record is of one of two kinds.\n\n1 p x: favour p is rewritten, and from now on it changes the standing by x.\n\n2 l c: the table starts at favour l holding a cushion of c drinks and calls favours l, l + 1, and so on in order. It stops before the first favour that would leave its standing below zero, and it stops in any case after favour n. Print how many favours it calls. This record changes nothing on the slate.\n\nAnswer every record of the second kind.\n\nExample 1:\nInput:\n6 5\n3 -1 -5 2 -2 4\n2 1 0\n2 1 3\n2 4 0\n1 3 -2\n2 1 0\nOutput:\n2\n6\n3\n6\nExplanation: From favour 1 with no cushion the standing runs 3 then 2, and the payout of five would take it to -3, so two favours are called. With a cushion of three the standing never dips under zero and the whole slate is called. From favour 4 the standing runs 2, 0, 4. After the payout of five is rewritten as a payout of two, the whole slate survives from favour 1.\n\nExample 2:\nInput:\n3 2\n-1 5 5\n2 1 0\n2 1 1\nOutput:\n0\n3\nExplanation: With no cushion the very first favour would put the table in debt, so nothing is called. One drink in hand is enough to carry it, and the rest of the night is bought drinks.\n\nExample 3:\nInput:\n5 4\n2 2 2 2 2\n2 1 0\n1 2 -5\n2 1 0\n2 3 0\nOutput:\n5\n1\n3\nExplanation: Every favour is a drink bought, so the whole slate survives. Once favour 2 becomes a payout of five, the night stops after one favour, but a night starting at favour 3 is untouched.",
+  "inputFormat": "The first line contains two integers n and q, the number of favours and the number of records. The second line contains n integers a_1, ..., a_n. Each of the next q lines is a record: either 1 p x, rewriting favour p to change the standing by x, or 2 l c, asking how many favours are called starting at favour l with a cushion of c drinks.",
+  "outputFormat": "For every record of the second kind print one line with the number of favours the table calls.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n-10^9 <= a_i <= 10^9\n1 <= p <= n and -10^9 <= x <= 10^9\n1 <= l <= n and 0 <= c <= 10^14\nAt least one record is of the second kind",
+  "tags": [
+    "segment-tree",
+    "prefix-sums",
+    "binary-search",
+    "implementation"
+  ],
+  "hints": [
+    "Write the running totals of the stretch that starts at l. The table survives favour j exactly when c + a_l + a_{l+1} + ... + a_j is at least zero, so the answer is decided by the first running total that dips below -c. Rewriting one favour shifts every running total that starts before it and ends after it, which is why a stored array of totals is no use.",
+    "Build a tree over the slate. Each node covers a block and keeps two numbers: the total of the block, and the lowest running total inside the block counted from the block's own start. Two blocks merge in constant time: the totals add, and the low is the smaller of the left low and the left total plus the right low. A rewrite fixes one leaf and walks up.",
+    "A question walks the O(log n) blocks that cover l to n, from left to right, carrying the running total so far. The first block whose low, offset by that carried total, drops below -c is the block where the night ends; every block before it is survived whole, so add its total and move on.",
+    "Then walk down inside that one block. Look at its left half: if the carried total plus the left half's low is already below -c the answer is in there, otherwise add the left half's total and go right. After O(log n) steps you stand on the exact favour that breaks the night. Scanning the slate favour by favour is 2 * 10^5 times 2 * 10^5 and will not finish."
+  ],
+  "difficulty": "hard",
+  "rating": 2300,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "6 5\n3 -1 -5 2 -2 4\n2 1 0\n2 1 3\n2 4 0\n1 3 -2\n2 1 0\n",
+      "output": "2\n6\n3\n6\n"
+    },
+    {
+      "input": "3 2\n-1 5 5\n2 1 0\n2 1 1\n",
+      "output": "0\n3\n"
+    },
+    {
+      "input": "5 4\n2 2 2 2 2\n2 1 0\n1 2 -5\n2 1 0\n2 3 0\n",
+      "output": "5\n1\n3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    size = 1\n    while size < n:\n        size <<= 1\n    INF = 1 << 62\n    total = [0] * (2 * size)\n    low = [INF] * (2 * size)\n    for i in range(n):\n        v = int(data[2 + i])\n        total[size + i] = v\n        low[size + i] = v\n    for node in range(size - 1, 0, -1):\n        left = node << 1\n        right = left | 1\n        total[node] = total[left] + total[right]\n        a = low[left]\n        b = total[left] + low[right]\n        low[node] = a if a < b else b\n    out = []\n    pos = 2 + n\n    for _ in range(q):\n        kind = data[pos]\n        if kind == b\"1\":\n            p = int(data[pos + 1]) - 1\n            x = int(data[pos + 2])\n            pos += 3\n            node = size + p\n            total[node] = x\n            low[node] = x\n            node >>= 1\n            while node:\n                left = node << 1\n                right = left | 1\n                total[node] = total[left] + total[right]\n                a = low[left]\n                b = total[left] + low[right]\n                low[node] = a if a < b else b\n                node >>= 1\n            continue\n        start = int(data[pos + 1]) - 1\n        limit = -int(data[pos + 2])\n        pos += 3\n        lo = size + start\n        hi = size + n\n        left_parts = []\n        right_parts = []\n        while lo < hi:\n            if lo & 1:\n                left_parts.append(lo)\n                lo += 1\n            if hi & 1:\n                hi -= 1\n                right_parts.append(hi)\n            lo >>= 1\n            hi >>= 1\n        right_parts.reverse()\n        run = 0\n        stop = n\n        for node in left_parts:\n            if run + low[node] < limit:\n                while node < size:\n                    node <<= 1\n                    if run + low[node] >= limit:\n                        run += total[node]\n                        node += 1\n                stop = node - size\n                break\n            run += total[node]\n        else:\n            for node in right_parts:\n                if run + low[node] < limit:\n                    while node < size:\n                        node <<= 1\n                        if run + low[node] >= limit:\n                            run += total[node]\n                            node += 1\n                    stop = node - size\n                    break\n                run += total[node]\n        out.append(stop - start)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nq = int(data[1])\na = [int(x) for x in data[2:2 + n]]\npos = 2 + n\nout = []\nfor _ in range(q):\n    kind = data[pos]\n    if kind == \"1\":\n        a[int(data[pos + 1]) - 1] = int(data[pos + 2])\n        pos += 3\n        continue\n    start = int(data[pos + 1]) - 1\n    standing = int(data[pos + 2])\n    pos += 3\n    honoured = 0\n    for i in range(start, n):\n        standing += a[i]\n        if standing < 0:\n            break\n        honoured += 1\n    out.append(honoured)\nprint(\"\\n\".join(map(str, out)))\n"
+  },
+  "cluster": "the-drink-owed"
+}

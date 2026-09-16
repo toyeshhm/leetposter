@@ -1,0 +1,44 @@
+{
+  "id": "the-oracle-runes",
+  "title": "The Oracle's Runes",
+  "lore": "Brin the Oracle reads hints in a monotone and will not read the next one until it is paid for. Nobody in the Hall has ever heard her read the last one.",
+  "statement": "The Oracle knows m runes, numbered 1 to m. She holds n hints; hint i names rune a_i and costs c_i candles. The Company starts the night with B candles.\n\nThe hints are given strictly in order. Before hearing hint i the Company must pay c_i candles; if they cannot afford it, they stop asking and hear nothing more. The riddle is solved the moment every rune from 1 to m has been named at least once, and the Company stops asking at that moment.\n\nPrint the number of hints the Company has heard when the riddle is solved, or -1 if they run out of candles or run out of hints first.\n\nExample 1:\nInput:\n5 3 12\n1 2 2 3 1\n3 3 3 3 3\nOutput:\n4\nExplanation: Hints 1 to 4 cost 12 candles in total, which the Company can afford, and rune 3 is first named by hint 4. All three runes are named after 4 hints.\n\nExample 2:\nInput:\n5 3 11\n1 2 2 3 1\n3 3 3 3 3\nOutput:\n-1\nExplanation: After three hints the Company has 2 candles left and cannot pay for hint 4, which is the one that would have named rune 3.\n\nExample 3:\nInput:\n3 3 100\n1 1 2\n5 5 5\nOutput:\n-1\nExplanation: Rune 3 is never named, so the riddle is never solved.",
+  "inputFormat": "The first line contains three integers n, m and B: the number of hints, the number of runes and the starting candles.\nThe second line contains n integers a_1 ... a_n, the rune named by each hint.\nThe third line contains n integers c_1 ... c_n, the cost of each hint.",
+  "outputFormat": "One integer: the number of hints heard when the riddle is solved, or -1.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= m <= 1000\n1 <= a_i <= m\n1 <= c_i <= 10^9\n1 <= B <= 10^18",
+  "tags": [
+    "implementation",
+    "simulation"
+  ],
+  "hints": [
+    "Nothing after the solving hint matters, so walk the hints once from the start and stop the moment the riddle is solved or the candles run out.",
+    "Keep one boolean per rune and a counter of runes not yet named; both update in constant time per hint.",
+    "Recounting the named runes after every hint costs n times m steps, which is too slow at the top of the bounds; the count must be maintained, not recomputed."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n, m, budget = int(data[0]), int(data[1]), int(data[2])\n    runes = data[3:3 + n]\n    costs = data[3 + n:3 + 2 * n]\n    seen = [False] * (m + 1)\n    left = m\n    spent = 0\n    for i in range(n):\n        spent += int(costs[i])\n        if spent > budget:\n            print(-1)\n            return\n        r = int(runes[i])\n        if not seen[r]:\n            seen[r] = True\n            left -= 1\n            if left == 0:\n                print(i + 1)\n                return\n    print(-1)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn, m, budget = int(data[0]), int(data[1]), int(data[2])\na = list(map(int, data[3:3 + n]))\nc = list(map(int, data[3 + n:3 + 2 * n]))\n# The riddle is solved at the latest first occurrence among all runes.\nif any(r not in a for r in range(1, m + 1)):\n    print(-1)\nelse:\n    k = max(a.index(r) for r in range(1, m + 1)) + 1\n    print(k if sum(c[:k]) <= budget else -1)\n"
+  },
+  "cluster": "the-oracle",
+  "samples": [
+    {
+      "input": "5 3 12\n1 2 2 3 1\n3 3 3 3 3\n",
+      "output": "4\n"
+    },
+    {
+      "input": "5 3 11\n1 2 2 3 1\n3 3 3 3 3\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "3 3 100\n1 1 2\n5 5 5\n",
+      "output": "-1\n"
+    }
+  ]
+}

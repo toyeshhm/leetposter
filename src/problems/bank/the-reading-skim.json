@@ -1,0 +1,45 @@
+{
+  "id": "the-reading-skim",
+  "title": "The Skim",
+  "lore": "Five minutes alone with the statement, and it runs to n lines. Nobody in the Hall has ever read all of them; the trick is choosing which ones to read properly and which to let the eye slide over.",
+  "statement": "The statement has n lines and the Reading lasts T seconds.\n\nLine i can be glanced at, which takes g_i seconds, or read properly, which takes t_i seconds. Every line must be dealt with one way or the other, and a line is understood only if it is read properly. The lines may be handled in any order, and nothing else takes time.\n\nChoose which lines to read properly so that the total time is at most T and as many lines as possible are understood. Print the largest number of lines that can be understood, or -1 if glancing at every line already takes more than T seconds.\n\nExample 1:\nInput:\n4 20\n1 1 1 1\n5 4 9 3\nOutput:\n3\nExplanation: Glancing at all four lines costs 4 seconds. Upgrading a glance to a proper read costs 4, 3, 8 and 2 extra seconds. The three cheapest upgrades cost 2 + 3 + 4 = 9, for a total of 13 seconds; adding the fourth would cost 21 seconds, which is over the limit.\n\nExample 2:\nInput:\n3 2\n1 1 1\n2 2 2\nOutput:\n-1\nExplanation: Even glancing at every line costs 3 seconds, and the Reading lasts 2.\n\nExample 3:\nInput:\n2 100\n1 2\n2 3\nOutput:\n2\nExplanation: Reading both lines properly costs 5 seconds, well inside the limit.",
+  "inputFormat": "The first line contains two integers n and T: the number of lines and the length of the Reading in seconds.\nThe second line contains n integers g_1 ... g_n, the glance times.\nThe third line contains n integers t_1 ... t_n, the proper reading times.",
+  "outputFormat": "One integer: the largest number of lines that can be understood, or -1 if the lines cannot all be dealt with in time.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= T <= 10^18\n1 <= g_i < t_i <= 10^9",
+  "tags": [
+    "greedy",
+    "sorting",
+    "prefix-sums"
+  ],
+  "hints": [
+    "Every line is paid for at least once, so start from the cheapest plan of all: glance at every line. If that alone is over T, no plan fits.",
+    "From there, reading line i properly instead of glancing at it costs exactly t_i - g_i extra seconds, and that price does not depend on which other lines are read.",
+    "To understand as many lines as possible, buy the cheapest upgrades first: sort the n differences and take them while the remaining budget allows. Rebuilding the sum for every candidate count instead costs n squared steps, which the bound does not allow."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4 20\n1 1 1 1\n5 4 9 3\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3 2\n1 1 1\n2 2 2\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "2 100\n1 2\n2 3\n",
+      "output": "2\n"
+    }
+  ],
+  "cluster": "the-reading",
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    budget = int(data[1])\n    base = 0\n    extra = []\n    for i in range(n):\n        g = int(data[2 + i])\n        t = int(data[2 + n + i])\n        base += g\n        extra.append(t - g)\n    if base > budget:\n        print(-1)\n        return\n    left = budget - base\n    extra.sort()\n    read = 0\n    for d in extra:\n        if d > left:\n            break\n        left -= d\n        read += 1\n    print(read)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\nfrom itertools import accumulate\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nbudget = int(data[1])\ng = [int(x) for x in data[2:2 + n]]\nt = [int(x) for x in data[2 + n:2 + 2 * n]]\nbase = sum(g)\nif base > budget:\n    print(-1)\nelse:\n    # Reading exactly k lines properly costs base plus the k cheapest upgrades, a total that\n    # only grows with k, so the prefix sums of the sorted upgrades answer the question directly.\n    upgrades = sorted(t[i] - g[i] for i in range(n))\n    running = list(accumulate(upgrades))\n    print(bisect_right(running, budget - base))\n"
+  }
+}

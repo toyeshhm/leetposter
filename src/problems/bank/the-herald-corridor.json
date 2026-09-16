@@ -1,0 +1,41 @@
+{
+  "id": "the-herald-corridor",
+  "title": "The Long Corridor",
+  "lore": "The North Gate is one corridor of halls in a row, and the Warden of the North Gate counts every crossing twice. A herald walks it once, forward only, and is judged on what arrives in time.",
+  "statement": "The halls of the North Gate stand in a row, numbered 1 to n. Crossing from hall i to hall i + 1 takes t_i minutes.\n\nA herald leaves hall 1 at minute 0 and walks forward for the rest of the night. The herald never stops and never turns back, so the herald stands in hall 1 at minute 0 and in hall i at minute t_1 + t_2 + ... + t_(i-1).\n\nThere are m letters. Letter j is written in hall a_j and must be carried to hall b_j, with a_j < b_j. The letter is not sealed before minute r_j, so the herald may take it only if the herald stands in hall a_j at minute r_j or later. The letter is late if the herald reaches hall b_j after minute d_j.\n\nThe herald may carry any number of letters at once, and taking a letter costs no time. Report how many of the m letters can be both taken and delivered on time.\n\nExample 1:\n\nInput:\n5 3\n2 3 1 4\n1 5 0 10\n2 4 3 6\n3 5 4 9\nOutput:\n1\nExplanation: The herald is in halls 1..5 at minutes 0, 2, 5, 6, 10. Letter 1 is sealed at minute 0 and needs hall 5 by minute 10, and the herald is there at exactly minute 10, so it counts. Letter 2 is sealed at minute 3 but the herald left hall 2 at minute 2. Letter 3 reaches hall 5 at minute 10, one minute after its deadline.\n\nExample 2:\n\nInput:\n3 2\n5 5\n1 3 0 10\n2 3 5 10\nOutput:\n2\nExplanation: The herald is in halls 1, 2, 3 at minutes 0, 5, 10. Both letters are sealed by the time the herald passes, and both reach hall 3 at minute 10, which is not late.",
+  "inputFormat": "The first line contains two integers n and m: the number of halls and the number of letters.\nThe second line contains n - 1 integers t_1 ... t_(n-1), the crossing times.\nEach of the next m lines contains four integers a_j, b_j, r_j, d_j describing one letter.",
+  "outputFormat": "Print one integer: the number of letters that can be taken and delivered on time.",
+  "constraints": "2 <= n <= 2*10^5\n1 <= m <= 2*10^5\n1 <= t_i <= 10^9\n1 <= a_j < b_j <= n\n0 <= r_j <= 10^18\n0 <= d_j <= 10^18",
+  "tags": [
+    "prefix-sums",
+    "implementation",
+    "math"
+  ],
+  "hints": [
+    "The herald's route never changes, so the minute the herald stands in each hall is fixed before any letter is read.",
+    "Compute the arrival minute of every hall once, in a single pass, and store it in an array.",
+    "A letter counts exactly when arrival[a_j] >= r_j and arrival[b_j] <= d_j, so each letter is an O(1) lookup after the array is built."
+  ],
+  "difficulty": "easy",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "5 3\n2 3 1 4\n1 5 0 10\n2 4 3 6\n3 5 4 9\n",
+      "output": "1\n"
+    },
+    {
+      "input": "3 2\n5 5\n1 3 0 10\n2 3 5 10\n",
+      "output": "2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1])\n    arrive = [0] * (n + 1)\n    acc = 0\n    for i in range(1, n):\n        acc += int(data[1 + i])\n        arrive[i + 1] = acc\n    pos = n + 1\n    count = 0\n    for _ in range(m):\n        a = int(data[pos]); b = int(data[pos + 1]); r = int(data[pos + 2]); d = int(data[pos + 3])\n        pos += 4\n        if arrive[a] >= r and arrive[b] <= d:\n            count += 1\n    print(count)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nn = int(data[0]); m = int(data[1])\nt = [int(x) for x in data[2:1 + n]]\npos = 1 + n\ncount = 0\nfor _ in range(m):\n    a, b, r, d = (int(x) for x in data[pos:pos + 4])\n    pos += 4\n    arrive_a = sum(t[:a - 1])\n    arrive_b = sum(t[:b - 1])\n    if arrive_a >= r and arrive_b <= d:\n        count += 1\nprint(count)\n"
+  },
+  "cluster": "the-herald"
+}

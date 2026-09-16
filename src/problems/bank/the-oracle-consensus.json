@@ -1,0 +1,45 @@
+{
+  "id": "the-oracle-consensus",
+  "title": "The Oracle's Consensus",
+  "lore": "Cass the Cartographer wants to know, after every single card, whether the Hall has already made up its mind. The Oracle keeps reading either way.",
+  "statement": "The Oracle reads n hint cards in order. Card i was written by scribe a_i, and a scribe may have written many of the cards.\n\nA scribe holds the room after the first i cards if strictly more than i / 2 of those cards are theirs. At most one scribe can hold the room at any moment, because two scribes cannot both own more than half of the same cards.\n\nAfter each card, print the number of the scribe who holds the room, or 0 if no scribe does.\n\nExample 1:\nInput:\n7\n5 5 2 5 2 2 2\nOutput:\n5\n5\n5\n5\n5\n0\n2\nExplanation: Scribe 5 wrote the first two cards and then three of the first five, which is more than half each time. After card 6 the count is three each out of six, so nobody holds the room. After card 7 scribe 2 owns four of seven.\n\nExample 2:\nInput:\n4\n1 2 3 4\nOutput:\n1\n0\n0\n0\nExplanation: After the first card scribe 1 owns all of it. From card 2 on, every scribe owns exactly one card out of at least two, which is never more than half.\n\nExample 3:\nInput:\n5\n9 9 1 1 9\nOutput:\n9\n9\n9\n0\n9\nExplanation: Scribe 9 owns two of the first three cards, then two of four, which is not more than half, and then three of five.",
+  "inputFormat": "The first line contains an integer n, the number of cards. The second line contains n integers a_1, ..., a_n, the number of the scribe who wrote each card, in reading order.",
+  "outputFormat": "Print n lines. Line i contains the number of the scribe who holds the room after the first i cards, or 0 if no scribe holds it.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9",
+  "tags": [
+    "hashing",
+    "greedy",
+    "implementation"
+  ],
+  "hints": [
+    "At most one scribe can hold the room after any given card, so the answer for each prefix is a single scribe and you never have to list several.",
+    "If a scribe holds the room after card i but did not write card i, then their count is the same as after card i - 1, so they already held the room then.",
+    "Keep a dictionary of counts and one remembered candidate: after reading card i the new holder is either the writer of card i or the previous holder, and comparing twice a count against i decides between them and 0."
+  ],
+  "difficulty": "medium",
+  "rating": 1400,
+  "timeLimitMs": 3000,
+  "cluster": "the-oracle",
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    count = {}\n    cand = b\"0\"\n    cand_count = 0\n    out = []\n    for i in range(1, n + 1):\n        v = data[i]\n        c = count.get(v, 0) + 1\n        count[v] = c\n        if c + c > i:\n            cand = v\n            cand_count = c\n        elif cand_count + cand_count <= i:\n            cand = b\"0\"\n            cand_count = 0\n        out.append(cand)\n    sys.stdout.write(b\"\\n\".join(out).decode() + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import heapq\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncount = {}\nheap = []\nout = []\nfor i in range(1, n + 1):\n    v = data[i]\n    count[v] = count.get(v, 0) + 1\n    heapq.heappush(heap, (-count[v], v))\n    while -heap[0][0] != count[heap[0][1]]:\n        heapq.heappop(heap)\n    best = -heap[0][0]\n    out.append(heap[0][1] if best * 2 > i else \"0\")\nprint(\"\\n\".join(out))\n"
+  },
+  "samples": [
+    {
+      "input": "7\n5 5 2 5 2 2 2\n",
+      "output": "5\n5\n5\n5\n5\n0\n2\n"
+    },
+    {
+      "input": "4\n1 2 3 4\n",
+      "output": "1\n0\n0\n0\n"
+    },
+    {
+      "input": "5\n9 9 1 1 9\n",
+      "output": "9\n9\n9\n0\n9\n"
+    }
+  ]
+}

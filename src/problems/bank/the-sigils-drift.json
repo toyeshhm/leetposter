@@ -1,0 +1,47 @@
+{
+  "title": "One Letter Adrift",
+  "lore": "A sigil one letter off is a different hall entirely, which is how Dov the Herald once carried a file to the wrong door and came back with a verdict nobody had asked for.",
+  "statement": "The Company keeps a roll of n hall sigils, each exactly five uppercase letters. The same sigil may appear more than once.\n\nTwo halls i and j with i < j are adrift when their sigils differ in exactly one of the five positions, the other four positions holding the same letter in the same place. Identical sigils are not adrift, and sigils differing in two or more positions are not adrift.\n\nPrint the number of adrift pairs on the roll.\n\nExample 1:\nInput:\n4\nABCDE\nABCDF\nABCDG\nABCDE\nOutput:\n5\nExplanation: Halls 1, 2, 3 and 4 share the prefix ABCD. Pairs (1,2), (1,3), (2,3), (2,4) and (3,4) differ only in the fifth position. Pair (1,4) holds the same sigil twice and is not adrift.\n\nExample 2:\nInput:\n2\nABCDE\nEDCBA\nOutput:\n0\nExplanation: These two sigils agree only in the middle position, so they differ in four positions.\n\nExample 3:\nInput:\n3\nAAAAA\nAAAAB\nAABAA\nOutput:\n2\nExplanation: Pairs (1,2) and (1,3) each differ in one position. Halls 2 and 3 differ in the third and the fifth position, so they are not adrift.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls on the roll.\nEach of the next n lines contains one sigil: exactly five uppercase letters with no spaces.",
+  "outputFormat": "One integer: the number of pairs i < j whose sigils differ in exactly one position. The answer can exceed 2^31.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "hashing",
+    "strings",
+    "combinatorics",
+    "implementation"
+  ],
+  "hints": [
+    "Two sigils differ in exactly one position only if the other four letters match position for position, so consider each of the five positions in turn and delete it from every sigil.",
+    "For a fixed deleted position, group the sigils by the remaining four-letter key; every pair inside a group agrees on those four positions, so a group of size k gives k * (k - 1) / 2 candidate pairs.",
+    "A pair that truly differs in one position is found by exactly one of the five deletions, and a pair of identical sigils is found by all five, so add up the five groupings and subtract five times the number of identical pairs.",
+    "Comparing all pairs directly is 2 * 10^10 comparisons at the top of the bounds, while the five groupings are five dictionary passes over n sigils."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "cluster": "the-sigils",
+  "id": "the-sigils-drift",
+  "samples": [
+    {
+      "input": "4\nABCDE\nABCDF\nABCDG\nABCDE\n",
+      "output": "5\n"
+    },
+    {
+      "input": "2\nABCDE\nEDCBA\n",
+      "output": "0\n"
+    },
+    {
+      "input": "3\nAAAAA\nAAAAB\nAABAA\n",
+      "output": "2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    codes = data[1:1 + n]\n    total = 0\n    for p in range(5):\n        counts: dict[bytes, int] = {}\n        for c in codes:\n            key = c[:p] + c[p + 1:]\n            counts[key] = counts.get(key, 0) + 1\n        for k in counts.values():\n            total += k * (k - 1) // 2\n    same: dict[bytes, int] = {}\n    for c in codes:\n        same[c] = same.get(c, 0) + 1\n    for k in same.values():\n        total -= 5 * (k * (k - 1) // 2)\n    print(total)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncount = Counter(data[1:1 + n])\nletters = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"\ntotal = 0\nfor code, k in count.items():\n    for p in range(5):\n        for ch in letters:\n            if ch != code[p]:\n                total += k * count.get(code[:p] + ch + code[p + 1:], 0)\nprint(total // 2)\n"
+  }
+}

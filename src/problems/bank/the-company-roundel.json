@@ -1,0 +1,45 @@
+{
+  "id": "the-company-roundel",
+  "title": "The Table Turns",
+  "lore": "Ada seats the Company and finds that nobody is where they asked to be. The table turns, both ways, and someone at the far end says off by one and then apologises for the language.",
+  "statement": "The round table has n seats numbered 0 to n - 1 clockwise, so seat n - 1 and seat 0 are neighbours. The Company has n scribes, also numbered 0 to n - 1, and at the start scribe i sits in seat i. Scribe i asked for seat p_i. Several scribes may have asked for the same seat.\n\nThe Company reseats itself exactly once. It picks a shift k with 0 <= k <= n - 1 and one of two directions:\n\nsunwise: scribe i takes seat (i + k) mod n\nwiddershins: scribe i takes seat (k - i) mod n\n\nEither way every seat ends up holding exactly one scribe. A scribe is content if the seat taken is the seat asked for.\n\nPrint the greatest number of scribes that can be content, over all shifts and both directions.\n\nExample 1:\nInput:\n4\n1 2 3 0\nOutput:\n4\nExplanation: Turning sunwise by k = 1 sends scribe 0 to seat 1, scribe 1 to seat 2, scribe 2 to seat 3 and scribe 3 to seat 0. Every scribe is content.\n\nExample 2:\nInput:\n4\n0 3 2 1\nOutput:\n4\nExplanation: No sunwise turn contents more than two scribes. Seating widdershins with k = 0 sends scribe i to seat (0 - i) mod 4, that is to seats 0, 3, 2, 1, which is exactly what was asked.\n\nExample 3:\nInput:\n3\n0 0 0\nOutput:\n1\nExplanation: All three scribes asked for seat 0 and only one of them can have it. Every shift, in either direction, contents exactly one scribe.",
+  "inputFormat": "The first line contains an integer n, the number of seats and of scribes. The second line contains n integers p_0, p_1, ..., p_(n-1), the seat each scribe asked for.",
+  "outputFormat": "One integer: the greatest number of scribes that can be content.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= p_i <= n - 1",
+  "tags": [
+    "math",
+    "hashing",
+    "implementation"
+  ],
+  "hints": [
+    "Fix a direction and a shift k. A scribe is content or not on its own, so count the scribes the shift contents rather than trying to build the seating.",
+    "Sunwise, scribe i is content exactly when (i + k) mod n = p_i, that is when k = (p_i - i) mod n. Widdershins, scribe i is content exactly when k = (p_i + i) mod n. Each scribe votes for one shift in each direction.",
+    "Tally the two lists of votes in two arrays of n counters and print the largest count anywhere in them. Rebuilding the seating for every k is n^2 work and will not finish for n = 2 * 10^5."
+  ],
+  "difficulty": "easy",
+  "rating": 1200,
+  "timeLimitMs": 2000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    sun = [0] * n\n    wid = [0] * n\n    for i in range(n):\n        v = int(data[1 + i])\n        a = v - i\n        if a < 0:\n            a += n\n        b = v + i\n        if b >= n:\n            b -= n\n        sun[a] += 1\n        wid[b] += 1\n    print(max(max(sun), max(wid)))\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\np = [int(x) for x in data[1:1 + n]]\nif n <= 700:\n    best = 0\n    for k in range(n):\n        s = 0\n        w = 0\n        for i in range(n):\n            if (i + k) % n == p[i]:\n                s += 1\n            if (k - i) % n == p[i]:\n                w += 1\n        if s > best:\n            best = s\n        if w > best:\n            best = w\n    print(best)\nelse:\n    best = 1\n    for arr in (sorted((p[i] - i) % n for i in range(n)), sorted((p[i] + i) % n for i in range(n))):\n        run = 1\n        for j in range(1, n):\n            run = run + 1 if arr[j] == arr[j - 1] else 1\n            if run > best:\n                best = run\n    print(best)\n"
+  },
+  "samples": [
+    {
+      "input": "4\n1 2 3 0\n",
+      "output": "4\n"
+    },
+    {
+      "input": "4\n0 3 2 1\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3\n0 0 0\n",
+      "output": "1\n"
+    }
+  ],
+  "cluster": "the-company"
+}

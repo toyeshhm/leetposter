@@ -1,0 +1,45 @@
+{
+  "id": "the-four-attempts-transcript",
+  "title": "The Transcript",
+  "lore": "The Judge normally says only Accepted or Rejected, but on the night of a guessing game he stoops to higher and lower. Dov the Herald wrote every reply down, which is not the same as writing them down correctly.",
+  "statement": "The Judge has chosen a secret integer s with 1 <= s <= m and will not say which.\nThe Company made n guesses, one after another. Guess i named the integer x_i, and the Judge answered with exactly one word:\nhigher, meaning s > x_i\nlower, meaning s < x_i\nright, meaning s = x_i\nThe transcript was written down by a Herald, so the replies are not promised to agree with one another.\nAfter each reply, report how many integers in the range 1 to m are still consistent with every reply read so far, counting the reply just heard. Once that count reaches zero it stays zero, because no later reply can bring a secret back.\n\nExample 1:\nInput:\n4 10\n3 higher\n8 lower\n5 higher\n6 lower\nOutput:\n7\n4\n2\n0\nExplanation: After higher than 3 the secret lies in 4 to 10, which is 7 values. Lower than 8 cuts it to 4 to 7. Higher than 5 cuts it to 6 to 7. Lower than 6 demands s < 6 while s >= 6 is already known, so nothing is left.\n\nExample 2:\nInput:\n3 1000000000000000000\n500000000000000000 higher\n999999999999999999 lower\n700000000000000000 right\nOutput:\n500000000000000000\n499999999999999998\n1\nExplanation: The range never needs to be listed, only measured. The last reply pins the secret to one value, and that value is inside the range the first two replies left, so the transcript stays possible.\n\nExample 3:\nInput:\n3 5\n3 right\n4 higher\n1 lower\nOutput:\n1\n0\n0\nExplanation: The first reply fixes s = 3. The second demands s > 4 and contradicts it, so the count falls to zero and stays there.",
+  "inputFormat": "The first line contains two integers n and m, the number of guesses and the upper end of the Judge's range. Each of the next n lines contains an integer x_i and one word, either higher or lower or right, describing the i-th guess and the Judge's reply to it.",
+  "outputFormat": "Print n lines. Line i is the number of integers in 1 to m consistent with the first i replies.",
+  "constraints": "1 <= n <= 10^5\n1 <= m <= 10^18\n1 <= x_i <= m\nEach reply is one of the words higher, lower, right",
+  "tags": [
+    "implementation",
+    "math",
+    "simulation"
+  ],
+  "hints": [
+    "Every reply is a statement about a range: higher rules out everything up to x, lower rules out everything from x upward, and right rules out everything except x.",
+    "The secrets still consistent with a set of such replies always form one block of consecutive integers, so the only things worth remembering are its two ends.",
+    "Carry lo and hi, starting at 1 and m. A higher reply raises lo to x + 1, a lower reply drops hi to x - 1, a right reply does both. Print max(0, hi - lo + 1); m is far too large to keep a flag per candidate."
+  ],
+  "difficulty": "easy",
+  "rating": 1200,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4 10\n3 higher\n8 lower\n5 higher\n6 lower\n",
+      "output": "7\n4\n2\n0\n"
+    },
+    {
+      "input": "3 1000000000000000000\n500000000000000000 higher\n999999999999999999 lower\n700000000000000000 right\n",
+      "output": "500000000000000000\n499999999999999998\n1\n"
+    },
+    {
+      "input": "3 5\n3 right\n4 higher\n1 lower\n",
+      "output": "1\n0\n0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1])\n    lo = 1\n    hi = m\n    out = []\n    p = 2\n    for _ in range(n):\n        x = int(data[p]); w = data[p + 1]; p += 2\n        if w == b\"higher\":\n            if x + 1 > lo:\n                lo = x + 1\n        elif w == b\"lower\":\n            if x - 1 < hi:\n                hi = x - 1\n        else:\n            if x > lo:\n                lo = x\n            if x < hi:\n                hi = x\n        out.append(hi - lo + 1 if hi >= lo else 0)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import accumulate\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\nlows = []\nhighs = []\np = 2\nfor _ in range(n):\n    x = int(data[p])\n    word = data[p + 1]\n    p += 2\n    if word == \"higher\":\n        lows.append(x + 1)\n        highs.append(m)\n    elif word == \"lower\":\n        lows.append(1)\n        highs.append(x - 1)\n    else:\n        lows.append(x)\n        highs.append(x)\nlo = list(accumulate(lows, max, initial=1))\nhi = list(accumulate(highs, min, initial=m))\nprint(\"\\n\".join(str(max(0, hi[i] - lo[i] + 1)) for i in range(1, n + 1)))\n"
+  },
+  "cluster": "the-four-attempts"
+}

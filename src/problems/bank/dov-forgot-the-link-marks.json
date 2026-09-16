@@ -1,0 +1,46 @@
+{
+  "id": "dov-forgot-the-link-marks",
+  "title": "The Strip of Marks",
+  "lore": "Dov kept the strip of marks and lost the chain it described. The ink has gone from some of them, which the Hall has decided to call an improvement.",
+  "statement": "The chain was an ordering of n halls, and the halls carry the numbers 1 to n, each number once. The ordering is lost. What survives is Dov's strip of n - 1 marks, one for each step of the chain. Mark i reads\n\n< if the hall in position i + 1 carried a larger number than the hall in position i,\n> if it carried a smaller number,\n? if the ink has gone and the mark cannot be read.\n\nA ? puts no condition on that step. Count the orderings of the n halls that agree with every legible mark, and print the count modulo 998244353.\n\nExample 1:\nInput:\n3\n<>\nOutput:\n2\nExplanation: The chain rises then falls, so the largest hall sits in the middle: 1 3 2 and 2 3 1.\n\nExample 2:\nInput:\n3\n??\nOutput:\n6\nExplanation: Nothing is legible, so all six orderings of three halls agree.\n\nExample 3:\nInput:\n4\n<?<\nOutput:\n6\nExplanation: The chain must rise on the first step and on the third, and the middle step is free. Six of the twenty-four orderings of four halls do that.",
+  "inputFormat": "The first line contains the integer n, the number of halls. The second line contains a string of exactly n - 1 characters, each one of <, > or ?, the marks in order.",
+  "outputFormat": "Print one integer: the number of orderings that agree with every legible mark, modulo 998244353.",
+  "constraints": "2 <= n <= 3000\nThe second line has exactly n - 1 characters, each of them <, > or ?",
+  "tags": [
+    "dp",
+    "combinatorics",
+    "prefix-sums"
+  ],
+  "hints": [
+    "Build the chain one position at a time and never track the actual numbers, only the rank: after placing i halls, all that matters is how many of them carry a number no larger than the one in position i.",
+    "Let dp[i][j] count the arrangements of the first i positions in which the hall in position i has rank j among those i halls. Going from i to i + 1, a < mark sends rank j to any rank strictly above j, and a > mark sends it to any rank at most j.",
+    "A ? mark allows both, and together those two cases hit every rank of the new row exactly once. So a ? turns the whole next row into one constant, the sum of the current row, which is what stops the wildcards from costing anything.",
+    "Every row is then a prefix sum of the previous row, or the row total minus that prefix, so the whole table costs O(n^2). With n up to 3000 that is the answer; enumerating orderings never was."
+  ],
+  "difficulty": "hard",
+  "rating": 2200,
+  "timeLimitMs": 4000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import accumulate\nMOD = 998244353\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    marks = data[1].decode()\n    dp = [1]\n    for ch in marks:\n        pref = [0]\n        pref.extend(accumulate(dp))\n        total = pref[-1] % MOD\n        if ch == \"<\":\n            dp = [x % MOD for x in pref]\n        elif ch == \">\":\n            dp = [(total - x) % MOD for x in pref]\n        else:\n            dp = [total] * (len(pref))\n    print(sum(dp) % MOD)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import permutations\nMOD = 998244353\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nmarks = data[1]\nif n <= 8:\n    cnt = 0\n    for perm in permutations(range(1, n + 1)):\n        ok = True\n        for i, ch in enumerate(marks):\n            if ch == \"<\" and perm[i] > perm[i + 1]:\n                ok = False\n                break\n            if ch == \">\" and perm[i] < perm[i + 1]:\n                ok = False\n                break\n        if ok:\n            cnt += 1\n    print(cnt % MOD)\nelse:\n    # flipping every mark maps each chain to the chain of complements, so the count is unchanged\n    flip = {\"<\": \">\", \">\": \"<\", \"?\": \"?\"}\n    dp = [1]\n    for ch0 in marks:\n        ch = flip[ch0]\n        pref = [0] * (len(dp) + 1)\n        run = 0\n        for idx, value in enumerate(dp):\n            run = (run + value) % MOD\n            pref[idx + 1] = run\n        if ch == \"<\":\n            dp = pref\n        elif ch == \">\":\n            dp = [(run - x) % MOD for x in pref]\n        else:\n            dp = [run] * len(pref)\n    print(sum(dp) % MOD)\n"
+  },
+  "cluster": "dov-forgot-the-link",
+  "samples": [
+    {
+      "input": "3\n<>\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3\n??\n",
+      "output": "6\n"
+    },
+    {
+      "input": "4\n<?<\n",
+      "output": "6\n"
+    }
+  ]
+}

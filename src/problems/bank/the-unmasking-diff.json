@@ -1,0 +1,46 @@
+{
+  "id": "the-unmasking-diff",
+  "title": "Cards Above the Truth",
+  "lore": "No seat at the Unmasking has ever claimed fewer solves than it had. The Changeling spends the night nudging whole rows of cards up and down, and the table keeps asking how many of them still tell the truth.",
+  "statement": "The n seats sit in a row. Seat i's card shows c_i and the truth behind it is t_i, and a card never understates: c_i is at least t_i. Seat i tells the truth when c_i = t_i.\n\nThe night runs q operations, given in order:\n\n1 l r x: the Changeling adds x to the card of every seat from l to r. The truths do not move. x may be negative.\n\n2 l r: print how many seats from l to r tell the truth.\n\nIt is guaranteed that no card ever falls below its truth: after every operation of the first kind, c_i is still at least t_i for every seat.\n\nExample 1:\nInput:\n5 5\n4 7 2 9 5\n4 5 2 9 1\n2 1 5\n1 2 2 -2\n2 1 5\n1 1 3 1\n2 1 5\nOutput:\n3\n4\n1\nExplanation: The cards overshoot the truths by 0, 2, 0, 0 and 4, so three seats tell the truth. Taking 2 off the second card brings it down to its truth and makes four. Adding 1 to the first three cards lifts all three off their truths, and only the fourth seat is left.\n\nExample 2:\nInput:\n3 5\n5 5 5\n5 5 5\n2 1 3\n1 1 3 4\n2 2 3\n1 2 3 -4\n2 1 3\nOutput:\n3\n0\n2\nExplanation: Every seat starts honest. Lifting every card by 4 makes all three wrong, and putting the last two back down makes those two honest again.\n\nExample 3:\nInput:\n1 3\n10\n3\n2 1 1\n1 1 1 -7\n2 1 1\nOutput:\n0\n1\nExplanation: The single card overshoots by 7 until the Changeling takes exactly 7 off it.",
+  "inputFormat": "The first line contains two integers n and q. The second line contains n integers c_1, ..., c_n. The third line contains n integers t_1, ..., t_n. Each of the next q lines is an operation: \"1 l r x\" or \"2 l r\".",
+  "outputFormat": "Print one line for each operation of the second kind: the number of seats in that range whose card equals its truth.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 10^5\n0 <= t_i <= c_i <= 10^9\n1 <= l <= r <= n\n-10^9 <= x <= 10^9\nAt least one operation is of the second kind\nAfter every operation of the first kind, c_i >= t_i holds for every i",
+  "tags": [
+    "segment-tree",
+    "implementation",
+    "intervals"
+  ],
+  "hints": [
+    "Only the overshoot d_i = c_i - t_i matters. An operation of the first kind is a range add on d, and an operation of the second kind counts the zeros of d in a range. Counting zeros in a range under range adds is hopeless in general.",
+    "The guarantee is the whole problem: d_i is never negative. So a zero in a range is the same thing as an entry attaining the smallest value in that range, and there are zeros exactly when that smallest value is 0.",
+    "Keep a segment tree over d where each node stores the minimum of its part and how many entries attain it. Two children merge in constant time: take the smaller minimum, or add the counts when they tie.",
+    "A range add shifts a node's minimum by x and leaves the count alone, so ordinary lazy propagation works. Answer a query with the pair (minimum, count) over the range, and print the count when the minimum is 0 and 0 otherwise."
+  ],
+  "difficulty": "hard",
+  "rating": 2300,
+  "timeLimitMs": 6000,
+  "samples": [
+    {
+      "input": "5 5\n4 7 2 9 5\n4 5 2 9 1\n2 1 5\n1 2 2 -2\n2 1 5\n1 1 3 1\n2 1 5\n",
+      "output": "3\n4\n1\n"
+    },
+    {
+      "input": "3 5\n5 5 5\n5 5 5\n2 1 3\n1 1 3 4\n2 2 3\n1 2 3 -4\n2 1 3\n",
+      "output": "3\n0\n2\n"
+    },
+    {
+      "input": "1 3\n10\n3\n2 1 1\n1 1 1 -7\n2 1 1\n",
+      "output": "0\n1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    size = 1\n    while size < n:\n        size <<= 1\n    log = size.bit_length()\n    INF = 1 << 62\n    mn = [INF] * (2 * size)\n    cnt = [0] * (2 * size)\n    add = [0] * (2 * size)\n    base = 2 + n\n    for i in range(n):\n        mn[size + i] = int(data[2 + i]) - int(data[base + i])\n        cnt[size + i] = 1\n    for i in range(size - 1, 0, -1):\n        a = mn[2 * i]\n        b = mn[2 * i + 1]\n        if a < b:\n            mn[i] = a\n            cnt[i] = cnt[2 * i]\n        elif b < a:\n            mn[i] = b\n            cnt[i] = cnt[2 * i + 1]\n        else:\n            mn[i] = a\n            cnt[i] = cnt[2 * i] + cnt[2 * i + 1]\n\n    def push(x):\n        for s in range(log, 0, -1):\n            p = x >> s\n            v = add[p]\n            if v:\n                c = 2 * p\n                mn[c] += v\n                add[c] += v\n                c += 1\n                mn[c] += v\n                add[c] += v\n                add[p] = 0\n\n    def pull(x):\n        x >>= 1\n        while x:\n            c = 2 * x\n            a = mn[c]\n            b = mn[c + 1]\n            if a < b:\n                mn[x] = a + add[x]\n                cnt[x] = cnt[c]\n            elif b < a:\n                mn[x] = b + add[x]\n                cnt[x] = cnt[c + 1]\n            else:\n                mn[x] = a + add[x]\n                cnt[x] = cnt[c] + cnt[c + 1]\n            x >>= 1\n\n    out = []\n    pos = 2 + 2 * n\n    for _ in range(q):\n        kind = data[pos]\n        l = int(data[pos + 1]) - 1\n        r = int(data[pos + 2])\n        if kind == b\"1\":\n            v = int(data[pos + 3])\n            pos += 4\n            lo = l + size\n            hi = r + size\n            push(lo)\n            push(hi - 1)\n            a = lo\n            b = hi\n            while a < b:\n                if a & 1:\n                    mn[a] += v\n                    add[a] += v\n                    a += 1\n                if b & 1:\n                    b -= 1\n                    mn[b] += v\n                    add[b] += v\n                a >>= 1\n                b >>= 1\n            pull(lo)\n            pull(hi - 1)\n        else:\n            pos += 3\n            lo = l + size\n            hi = r + size\n            push(lo)\n            push(hi - 1)\n            best = INF\n            total = 0\n            a = lo\n            b = hi\n            while a < b:\n                if a & 1:\n                    m = mn[a]\n                    if m < best:\n                        best = m\n                        total = cnt[a]\n                    elif m == best:\n                        total += cnt[a]\n                    a += 1\n                if b & 1:\n                    b -= 1\n                    m = mn[b]\n                    if m < best:\n                        best = m\n                        total = cnt[b]\n                    elif m == best:\n                        total += cnt[b]\n                a >>= 1\n                b >>= 1\n            out.append(total if best == 0 else 0)\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\n# square root decomposition: every block keeps its own pending add, the smallest\n# raw difference inside it and how many entries attain that smallest value\ndata = sys.stdin.buffer.read().split()\nn = int(data[0])\nq = int(data[1])\nd = [int(data[2 + i]) - int(data[2 + n + i]) for i in range(n)]\nB = max(1, int(n ** 0.5))\nnb = (n + B - 1) // B\nbadd = [0] * nb\nbmin = [0] * nb\nbcnt = [0] * nb\nfor k in range(nb):\n    part = d[k * B:(k + 1) * B]\n    bmin[k] = min(part)\n    bcnt[k] = part.count(bmin[k])\nout = []\npos = 2 + 2 * n\nfor _ in range(q):\n    kind = data[pos]\n    l = int(data[pos + 1]) - 1\n    r = int(data[pos + 2]) - 1\n    kl = l // B\n    kr = r // B\n    if kind == b\"1\":\n        x = int(data[pos + 3])\n        pos += 4\n        if kl == kr:\n            for i in range(l, r + 1):\n                d[i] += x\n            part = d[kl * B:(kl + 1) * B]\n            bmin[kl] = min(part)\n            bcnt[kl] = part.count(bmin[kl])\n        else:\n            for i in range(l, (kl + 1) * B):\n                d[i] += x\n            part = d[kl * B:(kl + 1) * B]\n            bmin[kl] = min(part)\n            bcnt[kl] = part.count(bmin[kl])\n            for i in range(kr * B, r + 1):\n                d[i] += x\n            part = d[kr * B:(kr + 1) * B]\n            bmin[kr] = min(part)\n            bcnt[kr] = part.count(bmin[kr])\n            for k in range(kl + 1, kr):\n                badd[k] += x\n    else:\n        pos += 3\n        total = 0\n        if kl == kr:\n            a = badd[kl]\n            for i in range(l, r + 1):\n                if d[i] + a == 0:\n                    total += 1\n        else:\n            a = badd[kl]\n            for i in range(l, (kl + 1) * B):\n                if d[i] + a == 0:\n                    total += 1\n            a = badd[kr]\n            for i in range(kr * B, r + 1):\n                if d[i] + a == 0:\n                    total += 1\n            for k in range(kl + 1, kr):\n                if bmin[k] + badd[k] == 0:\n                    total += bcnt[k]\n        out.append(total)\nsys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n"
+  },
+  "cluster": "the-unmasking"
+}

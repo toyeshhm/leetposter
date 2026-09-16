@@ -1,0 +1,46 @@
+{
+  "id": "the-tribunal-tally",
+  "title": "The Tally Cards",
+  "lore": "At the Unmasking every card is laid next to the truth. Tonight only the tallies survived; the ballots themselves burned with the candle, and Cass wants to know how many ballots could have produced them.",
+  "statement": "A Hall has n seats numbered 1 to n. At the Reckoning every seat cast exactly one ballot naming a seat other than itself. The ballots are gone, but the tally cards remain: card j says that seat j was named on exactly c_j ballots.\n\nA ballot assignment is a choice, for every seat i, of the seat t_i it named, with t_i not equal to i. Two assignments are different if some seat named a different seat. Count the assignments in which every seat j is named on exactly c_j ballots, and print the count modulo 998244353. If the cards cannot be true, the count is 0.\n\nExample 1:\nInput:\n3\n1 1 1\nOutput:\n2\nExplanation: Every seat is named once and nobody names itself, so the ballots form a derangement of three seats: (2, 3, 1) or (3, 1, 2).\n\nExample 2:\nInput:\n3\n2 1 0\nOutput:\n1\nExplanation: Seat 1 cannot name itself and seat 3 is named by nobody, so seat 1 names seat 2. Seat 1 needs two ballots, which must come from seats 2 and 3. That is the only assignment.\n\nExample 3:\nInput:\n4\n4 0 0 0\nOutput:\n0\nExplanation: Seat 1 would have to be named by all four seats, including itself.",
+  "inputFormat": "The first line contains n. The second line contains n integers c_1 ... c_n, the tally cards.",
+  "outputFormat": "Print one integer: the number of ballot assignments consistent with the cards, modulo 998244353.",
+  "constraints": "1 <= n <= 2000\n0 <= c_j <= n",
+  "tags": [
+    "combinatorics",
+    "dp",
+    "math"
+  ],
+  "hints": [
+    "Without the rule that nobody names itself, the count is the multinomial n! divided by the product of c_j!, and it is 0 unless the tallies sum to n.",
+    "Handle the forbidden self-ballots with inclusion-exclusion over the set S of seats that name themselves: fixing S leaves (n - |S|)! divided by the product of (c_j - 1)! for j in S and c_j! for the rest.",
+    "Since 1 / (c_j - 1)! equals c_j / c_j!, the sum over all sets S of size k collapses to (n - k)! times the k-th elementary symmetric polynomial of the values c_j, divided by the product of all c_j!.",
+    "All elementary symmetric polynomials e_0 ... e_n can be computed in O(n^2) by multiplying the polynomials (1 + c_j * z) one at a time; then the answer is the alternating sum over k times the modular inverse of the product of factorials."
+  ],
+  "difficulty": "hard",
+  "rating": 2200,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "3\n1 1 1\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3\n2 1 0\n",
+      "output": "1\n"
+    },
+    {
+      "input": "4\n4 0 0 0\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nMOD = 998244353\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    c = [int(v) for v in data[1:1 + n]]\n    if sum(c) != n:\n        print(0); return\n    e = [0] * (n + 1)\n    e[0] = 1\n    top = 0\n    for cj in c:\n        if cj == 0:\n            continue\n        top += 1\n        for k in range(top, 0, -1):\n            e[k] = (e[k] + e[k - 1] * cj) % MOD\n    fact = [1] * (n + 1)\n    for i in range(1, n + 1):\n        fact[i] = fact[i - 1] * i % MOD\n    total = 0\n    for k in range(top + 1):\n        term = fact[n - k] * e[k] % MOD\n        total = (total - term) if k & 1 else (total + term)\n    total %= MOD\n    denom = 1\n    for cj in c:\n        denom = denom * fact[cj] % MOD\n    print(total * pow(denom, MOD - 2, MOD) % MOD)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import product\nfrom math import factorial\nMOD = 998244353\ndata = sys.stdin.read().split()\nn = int(data[0])\nc = [int(v) for v in data[1:1 + n]]\nif n <= 7:\n    count = 0\n    for targets in product(range(1, n + 1), repeat=n):\n        if any(t == i for i, t in enumerate(targets, start=1)):\n            continue\n        if all(targets.count(j) == c[j - 1] for j in range(1, n + 1)):\n            count += 1\n    print(count % MOD)\nelse:\n    # exact integers, no modular arithmetic: inclusion-exclusion over the self-voting seats\n    if sum(c) != n:\n        print(0)\n    else:\n        poly = [1]\n        for cj in c:\n            nxt = poly + [0]\n            for k in range(len(poly)):\n                nxt[k + 1] += poly[k] * cj\n            poly = nxt\n        total = sum((-1) ** k * factorial(n - k) * poly[k] for k in range(n + 1))\n        denom = 1\n        for cj in c:\n            denom *= factorial(cj)\n        assert total % denom == 0\n        print((total // denom) % MOD)\n"
+  },
+  "cluster": "the-tribunal"
+}

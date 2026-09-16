@@ -1,0 +1,46 @@
+{
+  "id": "the-stuck-door-heave",
+  "title": "The Shortest Heave",
+  "lore": "A run of heaves moves the door by less than the arithmetic promises, because the hinge swallows the weakest of them. The Warden of the North Gate calls that the tax and counts it twice.",
+  "statement": "The door is heaved at n times, one heave after another. Heave i has strength a_i.\n\nA run is a block of consecutive heaves l, l + 1, ..., r. The hinge swallows the weakest heave of a run entirely, so a run moves the door by the sum of the strengths in it minus the smallest strength in it. A run of one heave therefore moves the door not at all.\n\nThe door opens if some run moves it by F or more. Print the length of the shortest run that opens the door, or 0 if no run opens it.\n\nExample 1:\n\nInput:\n6 10\n3 1 4 1 5 9\nOutput:\n3\nExplanation: Heaves 4, 5, 6 have strengths 1, 5, 9, a sum of 15 and a weakest heave of 1, so they move the door by 14. No run of one or two heaves is enough: the best pair is heaves 5 and 6, which move it by 14 - 5 = 9.\n\nExample 2:\n\nInput:\n4 100\n1 2 3 4\nOutput:\n0\nExplanation: Even the whole night moves the door by 10 - 1 = 9, so the door never opens.\n\nExample 3:\n\nInput:\n5 6\n3 3 3 3 3\nOutput:\n3\nExplanation: Any two heaves move the door by 6 - 3 = 3, and any three move it by 9 - 3 = 6, which is exactly enough.",
+  "inputFormat": "The first line contains two integers n and F: the number of heaves and how far the door must move to open. The second line contains n integers a_1 ... a_n, the strength of each heave in order.",
+  "outputFormat": "Print one integer: the length of the shortest run that moves the door by at least F, or 0 if no run does.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9\n1 <= F <= 10^14",
+  "tags": [
+    "two-pointers",
+    "sliding-window",
+    "queue",
+    "implementation"
+  ],
+  "hints": [
+    "Every strength is at least 1, so stretching a run by one heave at either end never makes it move the door less: the sum grows by the new strength, and the weakest heave can only fall by at most that much.",
+    "So for a fixed left end the right ends that work form a tail, and for a fixed right end the left ends that work form a head. One pass with two pointers that only ever move forward is enough, if the weakest heave of the current window is always at hand. Trying every window costs O(n^2), which 2 * 10^5 heaves will not forgive.",
+    "Hold the window's minimum in a deque of indices whose strengths increase from front to back. To add an index, pop from the back while the back is at least as strong, then append. To drop the left end of the window, pop the front if it is that index. The front is always the weakest heave in the window."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "cluster": "the-stuck-door",
+  "samples": [
+    {
+      "input": "6 10\n3 1 4 1 5 9\n",
+      "output": "3\n"
+    },
+    {
+      "input": "4 100\n1 2 3 4\n",
+      "output": "0\n"
+    },
+    {
+      "input": "5 6\n3 3 3 3 3\n",
+      "output": "3\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "\nimport sys\nfrom collections import deque\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    need = int(data[1])\n    a = [int(x) for x in data[2:2 + n]]\n    dq = deque()\n    best = 0\n    left = 0\n    s = 0\n    for r in range(n):\n        x = a[r]\n        s += x\n        while dq and a[dq[-1]] >= x:\n            dq.pop()\n        dq.append(r)\n        while dq and s - a[dq[0]] >= need:\n            length = r - left + 1\n            if best == 0 or length < best:\n                best = length\n            s -= a[left]\n            if dq[0] == left:\n                dq.popleft()\n            left += 1\n    print(best)\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nneed = int(data[1])\na = [int(x) for x in data[2:2 + n]]\npre = [0] * (n + 1)\nfor i in range(n):\n    pre[i + 1] = pre[i] + a[i]\n# sparse table of minima, then a binary search on the length: a run that moves the door\n# far enough keeps doing so when it is made longer, so the workable lengths are an upper range.\nsp = [a]\nstep = 1\nwhile step * 2 <= n:\n    prev = sp[-1]\n    sp.append([x if x < y else y for x, y in zip(prev, prev[step:])])\n    step *= 2\n\n\ndef ok(length):\n    j = length.bit_length() - 1\n    row = sp[j]\n    off = length - (1 << j)\n    for i in range(0, n - length + 1):\n        lo = row[i]\n        hi = row[i + off]\n        m = lo if lo < hi else hi\n        if pre[i + length] - pre[i] - m >= need:\n            return True\n    return False\n\n\nif not ok(n):\n    print(0)\nelse:\n    lo = 1\n    hi = n\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if ok(mid):\n            hi = mid\n        else:\n            lo = mid + 1\n    print(lo)\n"
+  }
+}

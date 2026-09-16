@@ -1,0 +1,47 @@
+{
+  "id": "the-four-attempts-card",
+  "title": "The Warden's Card",
+  "lore": "Four attempts and the Judge closes the door, so the Hall has always preferred guessing to reasoning. The Warden allows only the numbers written on his card, and he counts them twice before every night.",
+  "statement": "The Judge has chosen a secret integer s with 1 <= s <= n. The Company may guess, and a guess is an integer x; the Judge answers lower if s < x, higher if s > x, and right if s = x. The Company may choose each guess after hearing every earlier answer.\nThe Warden will only allow guesses that are written on his card. The card holds q distinct integers c_1 ... c_q, all between 1 and n, and no other guess may be made.\nThe Company knows s once only one candidate is left, whether or not that candidate was ever guessed aloud.\nReport the smallest number of guesses that is enough in the worst case, that is, the smallest d such that the Company has a plan that always identifies s within d guesses. If no plan identifies s for every secret, report -1.\n\nExample 1:\nInput:\n8 8\n1 2 3 4 5 6 7 8\nOutput:\n3\nExplanation: Every number may be guessed. Two guesses settle at most seven candidates, because one guess names a value and leaves two sides that each take one more guess, so 3 + 1 + 3 = 7. Eight candidates need a third guess.\n\nExample 2:\nInput:\n6 3\n2 4 6\nOutput:\n2\nExplanation: Guess 4. On lower the candidates are 1 to 3 and guessing 2 finishes them, since lower means 1 and higher means 3. On higher the candidates are 5 and 6 and guessing 6 finishes them. On right the secret is 4.\n\nExample 3:\nInput:\n5 2\n1 5\nOutput:\n-1\nExplanation: Guessing 1 leaves the candidates 2 to 5 on higher, and the only other allowed guess is 5, which leaves 2 to 4 on lower with nothing left to ask. The candidates 2, 3 and 4 can never be told apart.",
+  "inputFormat": "The first line contains two integers n and q, the number of candidates and the number of guesses written on the card. The second line contains q distinct integers c_1 ... c_q in increasing order, the allowed guesses.",
+  "outputFormat": "One integer: the smallest number of guesses that always identifies the secret, or -1 if no number of guesses is enough.",
+  "constraints": "1 <= q <= n <= 2 * 10^5\n1 <= c_1 < c_2 < ... < c_q <= n",
+  "tags": [
+    "games",
+    "dp",
+    "greedy",
+    "binary-search"
+  ],
+  "hints": [
+    "Do not look for the plan, look for how far a plan reaches. Write reach(l, d) for the largest r such that the candidates l to r can always be settled within d guesses; reach(l, 0) = l.",
+    "A guess at x cuts the run into the part below x, the value x itself, and the part above. The part below has to fit in d - 1 guesses, so x may be at most reach(l, d - 1) + 1, and since reach is increasing in its first argument the largest allowed such x is always the best choice. That gives reach(l, d) = reach(x + 1, d - 1).",
+    "Write step(l) for the position reached by taking the largest allowed guess x with x <= l + 1 and moving to x + 1. Unfolding the recurrence twice shows that reach with d guesses is exactly 2^d - 1 applications of step, so the whole d-dimension collapses.",
+    "Walk step from candidate 1 and count the applications K needed to pass n, reporting -1 the moment the walk stands still. The answer is the smallest d with 2^d - 1 >= K."
+  ],
+  "difficulty": "hard",
+  "rating": 2400,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "8 8\n1 2 3 4 5 6 7 8\n",
+      "output": "3\n"
+    },
+    {
+      "input": "6 3\n2 4 6\n",
+      "output": "2\n"
+    },
+    {
+      "input": "5 2\n1 5\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); q = int(data[1])\n    allowed = bytearray(n + 2)\n    for i in range(q):\n        allowed[int(data[2 + i])] = 1\n    prev = [0] * (n + 2)\n    last = 0\n    for v in range(1, n + 1):\n        if allowed[v]:\n            last = v\n        prev[v] = last\n    l = 1\n    steps = 0\n    while l < n:\n        nxt = prev[l + 1 if l + 1 < n else n] + 1\n        if nxt <= l:\n            sys.stdout.write(\"-1\\n\")\n            return\n        l = nxt\n        steps += 1\n    d = 0\n    while (1 << d) - 1 < steps:\n        d += 1\n    sys.stdout.write(str(d) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    allowed = set(int(v) for v in data[2:2 + q])\n    below = [0] * (n + 2)\n    last = 0\n    for v in range(1, n + 1):\n        if v in allowed:\n            last = v\n        below[v] = last\n    below[n + 1] = below[n]\n    # reach[l] is one past the largest candidate that l can still be told apart from,\n    # after the number of guesses played so far.\n    reach = list(range(1, n + 3))\n    reach[0] = 0\n    reach[n + 1] = n + 1\n    small = n <= 3000\n    guesses = 0\n    while reach[1] < n + 1:\n        nxt = [0] * (n + 2)\n        nxt[n + 1] = n + 1\n        changed = False\n        for l in range(1, n + 1):\n            best = reach[l]\n            if small:\n                top = reach[l] if reach[l] < n else n\n                for x in range(l, top + 1):\n                    if x in allowed and reach[x + 1] > best:\n                        best = reach[x + 1]\n            else:\n                x = below[reach[l] if reach[l] <= n else n]\n                if x >= l and reach[x + 1] > best:\n                    best = reach[x + 1]\n            nxt[l] = best\n            if best != reach[l]:\n                changed = True\n        reach = nxt\n        guesses += 1\n        if not changed:\n            guesses = -1\n            break\n    print(guesses)\n\nmain()\n"
+  },
+  "cluster": "the-four-attempts"
+}

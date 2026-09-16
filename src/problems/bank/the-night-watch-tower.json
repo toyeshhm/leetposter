@@ -1,0 +1,47 @@
+{
+  "id": "the-night-watch-tower",
+  "title": "Towers of Watches",
+  "lore": "Nobody stands a watch unwatched. A watchman whose hours fall strictly inside another's is being supervised, and Ada wants to know how deep the supervision went and in how many ways it reaches that deep.",
+  "statement": "The Hall keeps n watches through one night. Watch i covers every hour h with s_i <= h < e_i.\n\nWatch j sits inside watch i when s_i < s_j and e_j < e_i, both strictly. A tower is a sequence of one or more watches w_1, w_2, ..., w_k in which each watch after the first sits inside the watch before it.\n\nPrint how many watches the tallest tower holds, and how many towers hold that many watches. The second number can be enormous, so print it modulo 998244353. Watches are told apart by their place in the input, so two watches covering exactly the same hours are two different watches and give two different towers.\n\nExample 1:\nInput:\n5\n0 10\n2 8\n3 7\n4 6\n0 20\nOutput:\n4 2\nExplanation: (2, 8) sits inside both (0, 10) and (0, 20), and (3, 7) sits inside (2, 8), and (4, 6) inside (3, 7). The two tallest towers hold four watches each and differ only in which of the two outermost watches starts them. The watches (0, 10) and (0, 20) begin at the same hour, so neither sits inside the other.\n\nExample 2:\nInput:\n3\n1 4\n1 4\n1 4\nOutput:\n1 3\nExplanation: No watch sits inside another, so the tallest tower is a single watch and there are three of them.\n\nExample 3:\nInput:\n4\n0 100\n10 20\n30 40\n1 99\nOutput:\n3 2\nExplanation: (1, 99) sits inside (0, 100), and both (10, 20) and (30, 40) sit inside (1, 99), which gives two towers of three watches. Nothing sits inside (10, 20) or (30, 40).",
+  "inputFormat": "The first line contains one integer n, the number of watches.\nEach of the next n lines contains two integers s_i and e_i, the hour watch i begins and the hour it ends.",
+  "outputFormat": "Print two integers on one line: the number of watches in the tallest tower, and the number of towers of that height modulo 998244353.",
+  "constraints": "1 <= n <= 2 * 10^5\n0 <= s_i < e_i <= 10^9",
+  "tags": [
+    "dp",
+    "sorting",
+    "fenwick",
+    "combinatorics"
+  ],
+  "hints": [
+    "Sort the watches by the hour they begin. A tower is then a subsequence whose beginning hours strictly increase and whose ending hours strictly decrease, so this is a longest strictly decreasing subsequence question with a count attached.",
+    "Two watches that begin at the same hour can never sit one inside the other, so every watch of one such group must be answered from the state that held before any watch of the group was filed, and only then may the whole group be filed.",
+    "Keep a Fenwick tree over the ending hours holding, for each suffix of ending hours, the tallest tower whose innermost watch ends there together with how many such towers there are. A watch queries the suffix of ending hours strictly greater than its own and files itself one taller.",
+    "Merge two entries by taking the larger height and summing the counts of the entries that reach it; reduce the counts modulo 998244353 as you go, and remember that a count reduced to zero still belongs to a real tower, so compare heights only."
+  ],
+  "difficulty": "hard",
+  "rating": 1900,
+  "timeLimitMs": 2500,
+  "samples": [
+    {
+      "input": "5\n0 10\n2 8\n3 7\n4 6\n0 20\n",
+      "output": "4 2\n"
+    },
+    {
+      "input": "3\n1 4\n1 4\n1 4\n",
+      "output": "1 3\n"
+    },
+    {
+      "input": "4\n0 100\n10 20\n30 40\n1 99\n",
+      "output": "3 2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\nMOD = 998244353\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    watches = [(int(data[1 + 2 * i]), int(data[2 + 2 * i])) for i in range(n)]\n    watches.sort()\n    ends = sorted({e for _, e in watches})\n    m = len(ends)\n    # Rank 1 is the largest ending hour, so \"ends strictly after mine\" is a prefix of the tree.\n    rank = {v: m - i for i, v in enumerate(ends)}\n    best = [0] * (m + 1)\n    count = [0] * (m + 1)\n\n    def insert(i, b, c):\n        while i <= m:\n            if best[i] < b:\n                best[i] = b\n                count[i] = c\n            elif best[i] == b:\n                count[i] = (count[i] + c) % MOD\n            i += i & -i\n\n    def prefix(i):\n        b = 0\n        c = 0\n        while i > 0:\n            if best[i] > b:\n                b = best[i]\n                c = count[i]\n            elif best[i] == b and b > 0:\n                c = (c + count[i]) % MOD\n            i -= i & -i\n        return b, c\n\n    top = 0\n    tops = 0\n    i = 0\n    while i < n:\n        j = i\n        while j < n and watches[j][0] == watches[i][0]:\n            j += 1\n        # Watches that begin at the same hour can never sit one inside the other, so the whole\n        # group is answered from the state before any of it is filed.\n        pending = []\n        for k in range(i, j):\n            r = rank[watches[k][1]]\n            b, c = prefix(r - 1)\n            if b == 0:\n                deep, ways = 1, 1\n            else:\n                deep, ways = b + 1, c\n            pending.append((r, deep, ways))\n            if deep > top:\n                top = deep\n                tops = ways\n            elif deep == top:\n                tops = (tops + ways) % MOD\n        for r, deep, ways in pending:\n            insert(r, deep, ways)\n        i = j\n    sys.stdout.write(str(top) + \" \" + str(tops % MOD) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# The plain quadratic count: every watch against every earlier one, simple enough to trust.\n# The largest tests here hold 6500 watches rather than the 2 * 10^5 the statement allows,\n# 6500 being the size at which this code takes about 6 seconds, well past the time limit, so\n# a quadratic contestant solution fails on the same tests it is used to check.\nimport sys\n\nMOD = 998244353\ndata = sys.stdin.read().split()\nn = int(data[0])\niv = sorted((int(data[1 + 2 * i]), int(data[2 + 2 * i])) for i in range(n))\ndeep = [1] * n\nways = [1] * n\nfor j in range(n):\n    sj, ej = iv[j]\n    for i in range(j):\n        si, ei = iv[i]\n        if si < sj and ei > ej:\n            if deep[i] + 1 > deep[j]:\n                deep[j] = deep[i] + 1\n                ways[j] = ways[i]\n            elif deep[i] + 1 == deep[j]:\n                ways[j] = (ways[j] + ways[i]) % MOD\ntop = max(deep)\nprint(top, sum(ways[j] for j in range(n) if deep[j] == top) % MOD)\n"
+  },
+  "cluster": "the-night-watch"
+}

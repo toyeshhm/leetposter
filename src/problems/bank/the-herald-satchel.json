@@ -1,0 +1,43 @@
+{
+  "id": "the-herald-satchel",
+  "title": "The Widest Road",
+  "lore": "Between the halls run old roads, each with a doorway of its own width. Dov the Herald, who once forgot the link, now measures his satchel before he leaves.",
+  "statement": "There are n halls and m two-way roads. Road k joins halls u_k and v_k and has a doorway of width w_k. There may be several roads between the same pair of halls.\n\nA herald carrying a satchel of size s may use a road only if s < w_k, strictly: a satchel exactly as wide as the doorway does not go through. Off by one is a curse word in this Hall.\n\nAnswer q questions. Each asks for two halls a and b: what is the largest satchel size s, a non-negative integer, that lets a herald travel from a to b along roads, using any number of roads in any order? If no route of any width exists, report -1.\n\nExample 1:\n\nInput:\n4 4 3\n1 2 5\n2 3 3\n1 3 4\n3 4 2\n1 3\n1 4\n2 4\nOutput:\n3\n1\n1\nExplanation: From hall 1 to hall 3 the direct road has width 4, so a satchel of size 3 fits and size 4 does not; going through hall 2 would be limited by the road of width 3, which is worse. Every route to hall 4 ends on the road of width 2, so the answer for the last two questions is 1.\n\nExample 2:\n\nInput:\n3 1 2\n1 2 7\n1 2\n1 3\nOutput:\n6\n-1\nExplanation: The only road has width 7, so a satchel of size 6 passes and size 7 does not. Hall 3 has no road at all, so the second question has no route.",
+  "inputFormat": "The first line contains three integers n, m and q.\nEach of the next m lines contains three integers u_k, v_k and w_k describing a road.\nEach of the next q lines contains two integers a and b: one question.",
+  "outputFormat": "Print q lines. Line i is the largest satchel size for question i, or -1 if the two halls are not connected.",
+  "constraints": "2 <= n <= 10^5\n1 <= m <= 2*10^5\n1 <= q <= 10^5\n1 <= u_k, v_k <= n\nu_k != v_k\n1 <= w_k <= 10^9\n1 <= a, b <= n\na != b",
+  "tags": [
+    "graphs",
+    "dsu",
+    "sorting",
+    "greedy"
+  ],
+  "hints": [
+    "A route is only as good as its narrowest doorway, so each question asks for the route whose narrowest doorway is as wide as possible, and the answer is that width minus one.",
+    "Add the roads to a disjoint set union in decreasing order of width; the moment two halls first share a component is the moment the widest bottleneck is fixed.",
+    "Answer all questions offline: keep, for every component, the list of questions that touch it, and when two components merge, walk the smaller list and settle any question whose two halls are now together.",
+    "Merging the smaller list into the larger one touches each question O(log n) times overall, so the whole run is O(m log m + q log n) and never re-runs the union for each question."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 5000,
+  "samples": [
+    {
+      "input": "4 4 3\n1 2 5\n2 3 3\n1 3 4\n3 4 2\n1 3\n1 4\n2 4\n",
+      "output": "3\n1\n1\n"
+    },
+    {
+      "input": "3 1 2\n1 2 7\n1 2\n1 3\n",
+      "output": "6\n-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); q = int(data[2])\n    pos = 3\n    edges = []\n    for _ in range(m):\n        edges.append((int(data[pos + 2]), int(data[pos]) - 1, int(data[pos + 1]) - 1))\n        pos += 3\n    edges.sort(reverse=True)\n    qa = [0] * q; qb = [0] * q\n    pending = [[] for _ in range(n)]\n    for i in range(q):\n        a = int(data[pos]) - 1; b = int(data[pos + 1]) - 1; pos += 2\n        qa[i] = a; qb[i] = b\n        pending[a].append(i); pending[b].append(i)\n    parent = list(range(n))\n    def find(x):\n        root = x\n        while parent[root] != root:\n            root = parent[root]\n        while parent[x] != root:\n            parent[x], x = root, parent[x]\n        return root\n    ans = [-1] * q\n    for f, u, v in edges:\n        ru = find(u); rv = find(v)\n        if ru == rv:\n            continue\n        if len(pending[ru]) < len(pending[rv]):\n            ru, rv = rv, ru\n        parent[rv] = ru\n        big = pending[ru]\n        for qi in pending[rv]:\n            if ans[qi] != -1:\n                continue\n            if find(qa[qi]) == find(qb[qi]):\n                ans[qi] = f - 1\n            else:\n                big.append(qi)\n        pending[rv] = []\n    sys.stdout.write(\"\\n\".join(map(str, ans)) + \"\\n\")\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nn = int(data[0]); m = int(data[1]); q = int(data[2])\npos = 3\nedges = []\nfor _ in range(m):\n    u, v, f = int(data[pos]), int(data[pos + 1]), int(data[pos + 2])\n    pos += 3\n    edges.append((f, u, v))\nedges.sort(reverse=True)\ndef find(parent, x):\n    while parent[x] != x:\n        x = parent[x]\n    return x\nout = []\nfor _ in range(q):\n    a, b = int(data[pos]), int(data[pos + 1])\n    pos += 2\n    parent = list(range(n + 1))\n    answer = -1\n    for f, u, v in edges:\n        ru, rv = find(parent, u), find(parent, v)\n        if ru != rv:\n            parent[ru] = rv\n        if find(parent, a) == find(parent, b):\n            answer = f - 1\n            break\n    out.append(str(answer))\nprint(\"\\n\".join(out))\n"
+  },
+  "cluster": "the-herald"
+}

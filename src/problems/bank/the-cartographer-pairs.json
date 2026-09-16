@@ -1,0 +1,45 @@
+{
+  "id": "the-cartographer-pairs",
+  "title": "Confusing Pairs of Tags",
+  "lore": "Cass pinned n tags along the corridor wall. Two tags close together that show different sigils confuse whoever reads them, and Cass would like a number for how confused the Company is going to be.",
+  "statement": "There are n tags on the corridor wall. Tag i is pinned at position x_i and shows the sigil s_i. Several tags may share a position.\n\nA pair of tags (i, j) with i < j is confusing if |x_i - x_j| <= d and s_i != s_j.\n\nCount the confusing pairs.\n\nExample 1:\nInput:\n5 3\n1 1\n2 2\n4 1\n5 2\n8 1\nOutput:\n4\nExplanation: The confusing pairs are tags (1, 2), (2, 3), (3, 4) and (4, 5). Tags 1 and 3 are within distance 3 but show the same sigil, and tags 2 and 4 likewise.\n\nExample 2:\nInput:\n3 0\n7 1\n7 2\n7 3\nOutput:\n3\nExplanation: All three tags share a position and all sigils differ, so every pair is confusing.\n\nExample 3:\nInput:\n4 100\n1 5\n2 5\n3 5\n4 5\nOutput:\n0\nExplanation: Every tag shows the same sigil, so no pair is confusing.",
+  "inputFormat": "The first line contains two integers n and d. Each of the next n lines contains two integers x_i and s_i, the position and the sigil of the i-th tag.",
+  "outputFormat": "One integer, the number of confusing pairs.",
+  "constraints": "1 <= n <= 10^5\n0 <= d <= 10^9\n1 <= x_i <= 10^9\n1 <= s_i <= 10^9",
+  "tags": [
+    "two-pointers",
+    "sorting",
+    "hashing"
+  ],
+  "hints": [
+    "Checking every pair costs about n^2 / 2 comparisons, which at n = 10^5 does not fit in the time limit, so the positions have to be exploited.",
+    "After sorting the tags by position, the tags within distance d of tag j form a contiguous block ending at j, and the left end of that block only ever moves to the right as j increases.",
+    "Count all pairs that tag j forms with the block and subtract the ones that share its sigil; a count of each sigil currently inside the block, updated as the block slides, gives that subtraction in constant time."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "5 3\n1 1\n2 2\n4 1\n5 2\n8 1\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 0\n7 1\n7 2\n7 3\n",
+      "output": "3\n"
+    },
+    {
+      "input": "4 100\n1 5\n2 5\n3 5\n4 5\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); d = int(data[1])\n    tags = sorted((int(data[2 + 2 * i]), int(data[3 + 2 * i])) for i in range(n))\n    cnt = {}\n    i = 0\n    ans = 0\n    for j in range(n):\n        xj, sj = tags[j]\n        while xj - tags[i][0] > d:\n            si = tags[i][1]\n            cnt[si] -= 1\n            i += 1\n        ans += (j - i) - cnt.get(sj, 0)\n        cnt[sj] = cnt.get(sj, 0) + 1\n    print(ans)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); d = int(data[1])\n    tags = sorted((int(data[2 + 2 * i]), int(data[3 + 2 * i])) for i in range(n))\n    ans = 0\n    for i in range(n):\n        xi, si = tags[i]\n        for j in range(i + 1, n):\n            xj, sj = tags[j]\n            if xj - xi > d:\n                break\n            if sj != si:\n                ans += 1\n    print(ans)\nmain()\n"
+  },
+  "cluster": "the-cartographer"
+}

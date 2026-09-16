@@ -1,0 +1,47 @@
+{
+  "id": "the-sigils-anvil",
+  "title": "No Two Alike",
+  "lore": "The Warden will not read two halls wearing the same sigil, so someone is always struck from the roll for it, and the table owes them a drink.",
+  "statement": "The roll holds n halls, hall i wearing a sigil of exactly five uppercase letters. The same sigil may appear on the roll more than once.\n\nBefore the Warden reads the roll, any hall may be reforged: the five letters of its sigil may be put in any order, and the order chosen becomes its sigil. Letters are never added, removed or changed, and a hall may also be left as it is.\n\nThe Warden refuses the roll if two halls wear the same sigil, so halls may be struck from the roll instead. Print the smallest number of halls that must be struck so that every hall left on the roll can be reforged into a sigil, all of them different.\n\nExample 1:\nInput:\n4\nAAAAA\nAAAAA\nAAAAB\nBAAAA\nOutput:\n1\nExplanation: The two halls holding five A's can only ever wear AAAAA, so one of them must be struck. The other two halls hold four A's and a B, which has five arrangements, so both of them stay.\n\nExample 2:\nInput:\n3\nABCDE\nEDCBA\nABCDF\nOutput:\n0\nExplanation: The first two halls hold the same five letters, but those letters have 120 arrangements, so one wears ABCDE and the other wears something else. The third hall holds a different set of letters entirely.\n\nExample 3:\nInput:\n6\nXXXXY\nXXXYX\nXXYXX\nXYXXX\nYXXXX\nXXXXY\nOutput:\n1\nExplanation: All six halls hold four X's and one Y, and those letters have only five arrangements, one for each place the Y can stand, so one hall must be struck.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls on the roll.\nEach of the next n lines contains one sigil: exactly five uppercase letters with no spaces.",
+  "outputFormat": "One integer: the smallest number of halls that must be struck from the roll.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "hashing",
+    "combinatorics",
+    "strings",
+    "math"
+  ],
+  "hints": [
+    "Two halls can be reforged into the same sigil only when they hold the same five letters, so sort the letters of each hall and group the roll by that key; halls in different groups never collide.",
+    "A group of halls that all hold the same letters can be given exactly as many different sigils as those letters have distinct arrangements, so a group of size k with r arrangements must lose k - r halls when k is larger than r and loses none otherwise.",
+    "Five letters with multiplicities m1, m2, ... have 120 divided by the product of the factorials of those multiplicities distinct arrangements, for example four X's and one Y give 120 / 24 = 5 and five equal letters give 120 / 120 = 1.",
+    "Listing the arrangements of every hall would build 120 strings for each of up to 2 * 10^5 halls, while the factorial formula costs a constant number of steps per group."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4\nAAAAA\nAAAAA\nAAAAB\nBAAAA\n",
+      "output": "1\n"
+    },
+    {
+      "input": "3\nABCDE\nEDCBA\nABCDF\n",
+      "output": "0\n"
+    },
+    {
+      "input": "6\nXXXXY\nXXXYX\nXXYXX\nXYXXX\nYXXXX\nXXXXY\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    groups: dict[bytes, int] = {}\n    for i in range(1, n + 1):\n        key = bytes(sorted(data[i]))\n        groups[key] = groups.get(key, 0) + 1\n    fact = [1, 1, 2, 6, 24, 120]\n    struck = 0\n    for key, k in groups.items():\n        room = 120\n        run = 1\n        for j in range(1, 5):\n            if key[j] == key[j - 1]:\n                run += 1\n            else:\n                room //= fact[run]\n                run = 1\n        room //= fact[run]\n        if k > room:\n            struck += k - room\n    print(struck)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import Counter\nfrom itertools import permutations\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncounts = Counter(\"\".join(sorted(code)) for code in data[1:1 + n])\nroom_of = {}\nstruck = 0\nfor key, k in counts.items():\n    room = room_of.get(key)\n    if room is None:\n        room = len(set(permutations(key)))\n        room_of[key] = room\n    if k > room:\n        struck += k - room\nprint(struck)\n"
+  },
+  "cluster": "the-sigils"
+}

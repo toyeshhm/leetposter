@@ -1,0 +1,41 @@
+{
+  "id": "the-candle-tally",
+  "title": "The Warden's Tally",
+  "lore": "Between the Reading and the Work, the Warden of the North Gate walks the table asking how much wax is left. He asks many times a night, and he asks about hours that have not happened yet.",
+  "statement": "There are n candles on the table. Candle i has height h_i and burns at r_i units per hour. All of them are lit at time 0. After t hours, candle i has height h_i - t * r_i if that number is positive; otherwise it has gone out and has height 0.\n\nThe Warden asks q questions. Each question is an integer t: after t hours, how many candles still have positive height, and what is the total height of those candles? Answer every question independently; the candles are not touched between questions.\n\nExample 1:\nInput:\n3 5\n10 3\n4 4\n9 2\n0\n1\n3\n4\n5\nOutput:\n3 23\n2 14\n2 4\n1 1\n0 0\nExplanation: After 1 hour the heights are 7, 0 and 7, so two candles are alight with 14 units of wax between them. After 3 hours the heights are 1, 0 and 3. After 4 hours only the third candle remains, at height 1. After 5 hours nothing burns.\n\nExample 2:\nInput:\n2 2\n6 3\n7 3\n2\n3\nOutput:\n1 1\n0 0\nExplanation: After 2 hours the first candle has height 0 and the second has height 1. After 3 hours both are out.",
+  "inputFormat": "The first line contains two integers n and q. Each of the next n lines contains two integers h_i and r_i. Each of the next q lines contains one integer t, a question.",
+  "outputFormat": "Print q lines. For the j-th question print two integers separated by a space: the number of candles with positive height after t hours, and the sum of their heights at that moment.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 3 * 10^4\n1 <= h_i <= 10^9\n1 <= r_i <= 10^9\n0 <= t <= 10^9",
+  "tags": [
+    "sorting",
+    "binary-search",
+    "prefix-sums"
+  ],
+  "hints": [
+    "A candle is still alight after t hours exactly when t times its rate is less than its height; compute for each candle the last t at which it is still alight.",
+    "Sort the candles by that last hour; for any question t, the alight candles are exactly a suffix of the sorted order, and binary search finds where the suffix starts.",
+    "The total height of a suffix is (sum of its heights) minus t times (sum of its rates), so precompute prefix sums of heights and of rates over the sorted order and answer each question in O(log n)."
+  ],
+  "difficulty": "medium",
+  "rating": 1200,
+  "timeLimitMs": 3000,
+  "cluster": "the-candle",
+  "samples": [
+    {
+      "input": "3 5\n10 3\n4 4\n9 2\n0\n1\n3\n4\n5\n",
+      "output": "3 23\n2 14\n2 4\n1 1\n0 0\n"
+    },
+    {
+      "input": "2 2\n6 3\n7 3\n2\n3\n",
+      "output": "1 1\n0 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\nfrom itertools import accumulate\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); q = int(data[1])\n    cands = []\n    for i in range(n):\n        h = int(data[2 + 2 * i]); r = int(data[3 + 2 * i])\n        cands.append(((h - 1) // r, h, r))\n    cands.sort()\n    last = [c[0] for c in cands]\n    ph = [0] + list(accumulate(c[1] for c in cands))\n    pr = [0] + list(accumulate(c[2] for c in cands))\n    out = []\n    base = 2 + 2 * n\n    for j in range(q):\n        t = int(data[base + j])\n        i = bisect_left(last, t)\n        cnt = n - i\n        wax = (ph[n] - ph[i]) - t * (pr[n] - pr[i])\n        out.append(f\"{cnt} {wax}\")\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.read().split()\n    n = int(data[0]); q = int(data[1])\n    cands = [(int(data[2 + 2 * i]), int(data[3 + 2 * i])) for i in range(n)]\n    out = []\n    for j in range(q):\n        t = int(data[2 + 2 * n + j])\n        cnt = 0\n        wax = 0\n        for h, r in cands:\n            left = h - t * r\n            if left > 0:\n                cnt += 1\n                wax += left\n        out.append(f\"{cnt} {wax}\")\n    print(\"\\n\".join(out))\n\nmain()\n"
+  }
+}

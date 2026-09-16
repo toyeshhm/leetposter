@@ -1,0 +1,47 @@
+{
+  "id": "the-drink-owed-kitty",
+  "title": "The House Round",
+  "lore": "Ada is clearing the night's debts out of her own pocket. She can buy the house a round, which costs her the same whoever is still owed, or she can take one scribe aside and hand them everything at once.",
+  "statement": "The table owes drinks. Scribe i is owed d_i drinks, and a scribe owed nothing is already square.\n\nAda clears the whole table out of her own pocket, in two ways, in any order and as often as she likes.\n\nA house round: every scribe who is still owed at least one drink is handed exactly one, and the round costs Ada c drinks however many scribes are still owed.\n\nA settlement: Ada takes one scribe aside and hands them everything they are still owed, which costs her exactly that many drinks.\n\nEvery scribe must end the night square.\n\nThe Warden asks q questions. In question j a house round costs c_j drinks. Answer each question with the least number of drinks Ada can spend, and with the least number of house rounds she can call while spending that least number.\n\nExample 1:\nInput:\n5 3\n1 1 3 4 0\n2\n5\n1\nOutput:\n7 1\n9 0\n4 3\nExplanation: When a round costs two, one round hands out three drinks and leaves 2 and 3 owed, for a total of 2 + 5 = 7; no other number of rounds beats that, and one round is the fewest that reaches it. When a round costs five it is never worth calling one, and Ada settles all nine drinks by hand. When a round costs one, three rounds cost three and leave a single drink owed.\n\nExample 2:\nInput:\n3 1\n2 2 2\n5\nOutput:\n6 0\nExplanation: A round costs five and clears only three drinks, so Ada settles all three scribes by hand.\n\nExample 3:\nInput:\n4 1\n5 5 5 5\n1\nOutput:\n5 5\nExplanation: Each round costs one and clears four drinks, so Ada calls five rounds and spends five drinks.",
+  "inputFormat": "The first line contains two integers n and q, the number of scribes and the number of questions. The second line contains n integers d_1, ..., d_n, the drinks each scribe is owed. Each of the next q lines contains one integer c_j, the cost of a house round in question j.",
+  "outputFormat": "Print q lines. Line j holds two integers separated by a space: the least number of drinks Ada spends in question j, and the least number of house rounds she calls while spending that number.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 3 * 10^4\n0 <= d_i <= 10^6\n1 <= c_j <= 10^9\nAn answer can reach 2 * 10^11",
+  "tags": [
+    "sorting",
+    "prefix-sums",
+    "greedy",
+    "binary-search"
+  ],
+  "hints": [
+    "A settlement made early is never better than the same settlement made last: a scribe settled before a round is called pays full price and gains nothing from the round. So every house round may be assumed to come first, and the only choice is how many rounds t to call. The bill is then c * t plus the sum of max(0, d_i - t) over all scribes.",
+    "Look at what one more round changes. Going from t to t + 1 rounds costs another c drinks and saves exactly one drink for each scribe still owed more than t. So the bill falls while more than c scribes are owed more than t, and rises after that.",
+    "The answer is therefore the smallest t with at most c scribes owed more than t. Sort the debts: that t is the (c + 1)-th largest debt when c < n, and 0 otherwise.",
+    "With the debts sorted and their suffix sums in hand, the bill for a given t is one subtraction and one multiplication, so each question costs a binary search. Rescanning the debts, or every value of t, once for every question, over 2 * 10^5 scribes, will not finish."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "5 3\n1 1 3 4 0\n2\n5\n1\n",
+      "output": "7 1\n9 0\n4 3\n"
+    },
+    {
+      "input": "3 1\n2 2 2\n5\n",
+      "output": "6 0\n"
+    },
+    {
+      "input": "4 1\n5 5 5 5\n1\n",
+      "output": "5 5\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    d = sorted(int(x) for x in data[2:2 + n])\n    suffix = [0] * (n + 1)\n    for i in range(n - 1, -1, -1):\n        suffix[i] = suffix[i + 1] + d[i]\n    out = []\n    base = 2 + n\n    for j in range(q):\n        c = int(data[base + j])\n        t = 0 if c >= n else d[n - 1 - c]\n        k = bisect_right(d, t)\n        out.append(str(c * t + suffix[k] - (n - k) * t) + \" \" + str(t))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nq = int(data[1])\nd = [int(x) for x in data[2:2 + n]]\ntop = max(d)\ncount = [0] * (top + 2)\nfor v in d:\n    count[v] += 1\ngreater = [0] * (top + 2)\nseen = 0\nfor t in range(top, -1, -1):\n    greater[t] = seen\n    seen += count[t]\n# owed[t] is the total still owed after t house rounds.\nowed = [0] * (top + 1)\nowed[0] = sum(d)\nfor t in range(1, top + 1):\n    owed[t] = owed[t - 1] - greater[t - 1]\nout = []\nfor j in range(q):\n    c = int(data[2 + n + j])\n    best = None\n    best_t = 0\n    for t in range(top + 1):\n        spent = c * t + owed[t]\n        if best is None or spent < best:\n            best = spent\n            best_t = t\n    out.append(str(best) + \" \" + str(best_t))\nprint(\"\\n\".join(out))\n"
+  },
+  "cluster": "the-drink-owed"
+}

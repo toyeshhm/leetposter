@@ -1,0 +1,47 @@
+{
+  "id": "the-unmasking-pairing",
+  "title": "Dealing the Cards Back",
+  "lore": "The Warden of the North Gate will not name a seat's tally, only the range it lies in, and counts the range twice before saying it. The cards come back from the Unmasking in a heap and somebody has to deal them.",
+  "statement": "The cards have been collected face down and must be dealt back to the seats before the Unmasking. There are n cards and n seats. Card i shows the integer a_i. The Warden refuses to name any seat's true tally and gives only a range: seat j's tally is some integer between l_j and r_j inclusive.\n\nDeal the cards so that every seat receives exactly one card. A card is believable at the seat it lands on when the number it shows lies inside that seat's range, that is l_j <= a_i <= r_j.\n\nPrint the largest number of believable cards over all ways of dealing.\n\nExample 1:\nInput:\n3\n5 1 9\n1 4\n4 6\n8 10\nOutput:\n3\nExplanation: Card 1 goes to the first seat, card 5 to the second and card 9 to the third. Every card is believable.\n\nExample 2:\nInput:\n3\n2 2 2\n1 5\n1 5\n3 4\nOutput:\n2\nExplanation: Two of the cards are believable in the first two seats. The third seat asks for a tally of 3 or 4 and no card shows one, so whichever card lands there is not believable.\n\nExample 3:\nInput:\n2\n7 8\n1 3\n1 3\nOutput:\n0\nExplanation: Both seats claim a tally of at most 3 and both cards show more than that.",
+  "inputFormat": "The first line contains one integer n. The second line contains n integers a_1, ..., a_n, the numbers on the cards. Each of the next n lines contains two integers l_j and r_j, the range the Warden gives for seat j.",
+  "outputFormat": "Print one integer: the largest number of believable cards.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9\n1 <= l_j <= r_j <= 10^9",
+  "tags": [
+    "greedy",
+    "sorting",
+    "heap",
+    "two-pointers"
+  ],
+  "hints": [
+    "Take the cards in increasing order. When you are holding the smallest card, no seat whose range starts above it will ever accept it, and no seat whose range has already ended will accept any later card either.",
+    "So sweep the card values upward, and keep the seats whose range has started but not yet ended. Those are exactly the seats that could take the card in your hand.",
+    "Give the card to the live seat whose range ends soonest. Exchange argument: if an optimal dealing gives this card to some other live seat, swapping the two cards keeps it believable everywhere, because the seat you took ends no later.",
+    "Sort the seats by l, sort the cards, and keep the live seats in a min-heap keyed on r: push the seats whose l has been passed, discard from the top while the smallest r is below the card, then pop one."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "3\n5 1 9\n1 4\n4 6\n8 10\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\n2 2 2\n1 5\n1 5\n3 4\n",
+      "output": "2\n"
+    },
+    {
+      "input": "2\n7 8\n1 3\n1 3\n",
+      "output": "0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    cards = sorted(int(x) for x in data[1:1 + n])\n    seats = [0] * n\n    pos = 1 + n\n    for j in range(n):\n        seats[j] = (int(data[pos]), int(data[pos + 1]))\n        pos += 2\n    seats.sort()\n    heap = []\n    k = 0\n    dealt = 0\n    for v in cards:\n        while k < n and seats[k][0] <= v:\n            heappush(heap, seats[k][1])\n            k += 1\n        while heap and heap[0] < v:\n            heappop(heap)\n        if heap:\n            heappop(heap)\n            dealt += 1\n    sys.stdout.write(str(dealt) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncards = [int(x) for x in data[1:1 + n]]\nseats = []\npos = 1 + n\nfor _ in range(n):\n    seats.append((int(data[pos]), int(data[pos + 1])))\n    pos += 2\n\nif n <= 60:\n    # exhaustive: Kuhn's algorithm for a maximum bipartite matching, seats against cards\n    adj = [[i for i in range(n) if l <= cards[i] <= r] for l, r in seats]\n    match = [-1] * n\n\n    def augment(u, seen):\n        for i in adj[u]:\n            if not seen[i]:\n                seen[i] = True\n                if match[i] == -1 or augment(match[i], seen):\n                    match[i] = u\n                    return True\n        return False\n\n    print(sum(1 for j in range(n) if augment(j, [False] * n)))\nelse:\n    # the mirrored greedy: seats in order of where their range ends, each taking the\n    # smallest card that still fits, with a next-free-index chain over the sorted cards\n    cards.sort()\n    seats.sort(key=lambda s: s[1])\n    nxt = list(range(n + 2))\n\n    def find(x):\n        root = x\n        while nxt[root] != root:\n            root = nxt[root]\n        while nxt[x] != root:\n            nxt[x], x = root, nxt[x]\n        return root\n\n    dealt = 0\n    for l, r in seats:\n        i = find(bisect_left(cards, l))\n        if i < n and cards[i] <= r:\n            nxt[i] = i + 1\n            dealt += 1\n    print(dealt)\n"
+  },
+  "cluster": "the-unmasking"
+}

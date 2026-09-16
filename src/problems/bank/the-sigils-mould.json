@@ -1,0 +1,46 @@
+{
+  "id": "the-sigils-mould",
+  "title": "The Common Mould",
+  "lore": "The Warden of the North Gate would cut every hall's sigil from a single mould, and he counts each letter twice before he trusts the tally.",
+  "statement": "The roll holds n hall sigils, each exactly five uppercase letters. The same sigil may appear on the roll more than once.\n\nA mould is any sigil of five uppercase letters, and it need not appear on the roll. Cutting a hall from a mould costs one strike for every position where the hall's sigil and the mould hold different letters, so a hall that matches the mould in all five positions costs nothing and a hall that matches it in no position costs five.\n\nThe cost of a mould is the total number of strikes needed to cut all n halls from it.\n\nPrint a mould of smallest cost together with that cost. If several moulds tie for the smallest cost, print the lexicographically smallest of them.\n\nExample 1:\nInput:\n3\nABCDE\nABCDF\nABCDG\nOutput:\nABCDE\n2\nExplanation: The first four positions hold the same letter in every hall, so the mould copies them and they cost nothing. At the fifth position E, F and G each appear once, so any letter there costs two strikes, and E is the smallest of the three.\n\nExample 2:\nInput:\n2\nAAAAA\nBBBBB\nOutput:\nAAAAA\n5\nExplanation: At every position A and B each appear once, so every mould costs five strikes and AAAAA is the smallest sigil that does.\n\nExample 3:\nInput:\n4\nKANEP\nTGLWX\nEETYT\nKAETP\nOutput:\nKAEEP\n12\nExplanation: K leads the first position with two halls, A the second with two and P the fifth with two. The third and fourth positions hold four different letters each, so the tie goes to the smallest letter, E in both. The cost is 2 + 2 + 3 + 3 + 2.\n",
+  "inputFormat": "The first line contains one integer n, the number of halls on the roll.\nEach of the next n lines contains one sigil: exactly five uppercase letters with no spaces.",
+  "outputFormat": "Two lines. The first line is the chosen mould, five uppercase letters. The second line is its total cost in strikes.",
+  "constraints": "1 <= n <= 2 * 10^5\nEvery sigil is exactly 5 characters long\nEvery character is an uppercase letter from A to Z",
+  "tags": [
+    "implementation",
+    "strings",
+    "greedy"
+  ],
+  "hints": [
+    "The cost of a mould is a sum over the five positions, and the letter the mould holds at one position never changes what the other four positions cost, so the five choices can be made separately.",
+    "For one position, count how often each of the 26 letters appears at that position across the whole roll; choosing the most frequent letter there costs n minus its count, and choosing anything else costs more.",
+    "When two letters tie for most frequent at a position, the smaller one gives the same cost and a lexicographically smaller mould, so always take the smaller one.",
+    "One pass over the roll filling a table of 5 by 26 counters answers the whole question, while trying every possible mould would mean testing 26^5 candidates, which is almost twelve million."
+  ],
+  "difficulty": "easy",
+  "rating": 1000,
+  "timeLimitMs": 2000,
+  "samples": [
+    {
+      "input": "3\nABCDE\nABCDF\nABCDG\n",
+      "output": "ABCDE\n2\n"
+    },
+    {
+      "input": "2\nAAAAA\nBBBBB\n",
+      "output": "AAAAA\n5\n"
+    },
+    {
+      "input": "4\nKANEP\nTGLWX\nEETYT\nKAETP\n",
+      "output": "KAEEP\n12\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    blob = b\"\".join(data[1:1 + n])\n    mould = bytearray()\n    cost = 0\n    for p in range(5):\n        col = blob[p::5]\n        best = 65\n        best_count = col.count(b\"A\")\n        for t in range(66, 91):\n            c = col.count(bytes([t]))\n            if c > best_count:\n                best_count = c\n                best = t\n        mould.append(best)\n        cost += n - best_count\n    sys.stdout.write(mould.decode() + \"\\n\" + str(cost) + \"\\n\")\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ncodes = data[1:1 + n]\nmould = \"\"\ncost = 0\nfor p in range(5):\n    counts = {}\n    for code in codes:\n        ch = code[p]\n        counts[ch] = counts.get(ch, 0) + 1\n    pick = min(counts, key=lambda ch: (-counts[ch], ch))\n    mould += pick\n    cost += n - counts[pick]\nprint(mould)\nprint(cost)\n"
+  },
+  "cluster": "the-sigils"
+}

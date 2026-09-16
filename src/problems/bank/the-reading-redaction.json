@@ -1,0 +1,47 @@
+{
+  "id": "the-reading-redaction",
+  "title": "The Redacted Statement",
+  "lore": "The Judge's word for tonight appears in the statement, and whoever reads it learns the answer before the Reading is over. The Hall blots it out with ink, and ink is bought with candles.",
+  "statement": "The statement is a string s of n lowercase letters. The Judge's word is a string p of m lowercase letters.\n\nBlotting position i of the statement costs c_i candles and replaces the letter with a blot, a mark that matches no letter at all. The statement is safe once p does not occur as a substring anywhere in it.\n\nPrint the smallest number of candles that makes the statement safe. If p does not occur in s to begin with, that number is 0.\n\nExample 1:\nInput:\n5 3\nababa\naba\n5 1 2 4 5\nOutput:\n2\nExplanation: The word aba occurs at positions 1 and 3. Blotting position 3 alone costs 2 candles and breaks both occurrences. Blotting positions 2 and 4 instead would cost 5.\n\nExample 2:\nInput:\n4 1\naaaa\nb\n1 2 3 4\nOutput:\n0\nExplanation: The letter b never occurs, so nothing needs blotting.\n\nExample 3:\nInput:\n6 3\nabcabc\nabc\n3 1 4 1 5 9\nOutput:\n2\nExplanation: The two occurrences share no position, so each needs a blot of its own: the cheapest in positions 1 to 3 costs 1, the cheapest in positions 4 to 6 costs 1.",
+  "inputFormat": "The first line contains two integers n and m: the length of the statement and the length of the Judge's word.\nThe second line contains the string s of n lowercase letters.\nThe third line contains the string p of m lowercase letters.\nThe fourth line contains n integers c_1 ... c_n, the cost of blotting each position.",
+  "outputFormat": "One integer: the smallest total cost that leaves no occurrence of p in the statement.",
+  "constraints": "1 <= m <= n <= 2 * 10^5\n1 <= c_i <= 10^9\ns and p consist of lowercase English letters only",
+  "tags": [
+    "dp",
+    "strings",
+    "queue",
+    "two-pointers"
+  ],
+  "hints": [
+    "A blot matches no letter, so blotting can never create an occurrence that was not already there. The job is exactly this: every occurrence of p in the original s is a block of m positions, and every block must hold at least one blot.",
+    "Work left to right. Let dp[i] be the cheapest set of blots whose rightmost blot sits at position i and which already breaks every occurrence that ends before i. Then dp[i] = c_i plus the smallest dp[j] over an allowed range of earlier j, with j = 0 meaning no earlier blot.",
+    "j is allowed exactly when no occurrence lies strictly between j and i, that is, when j is at or after the start of the last occurrence that ends before i. That left end never moves backwards as i grows, so the range is a sliding window and a monotonic deque keeps its minimum in constant amortised time.",
+    "Find the occurrences with the prefix function in linear time, and read the answer as the smallest dp[i] over positions i at or after the last occurrence's start; an O(n^2) scan of the window will not survive the bound."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 4000,
+  "samples": [
+    {
+      "input": "5 3\nababa\naba\n5 1 2 4 5\n",
+      "output": "2\n"
+    },
+    {
+      "input": "4 1\naaaa\nb\n1 2 3 4\n",
+      "output": "0\n"
+    },
+    {
+      "input": "6 3\nabcabc\nabc\n3 1 4 1 5 9\n",
+      "output": "2\n"
+    }
+  ],
+  "cluster": "the-reading",
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    s = data[2]\n    p = data[3]\n    cost = data[4:4 + n]\n    fail = [0] * m\n    k = 0\n    for i in range(1, m):\n        ch = p[i]\n        while k and p[k] != ch:\n            k = fail[k - 1]\n        if p[k] == ch:\n            k += 1\n        fail[i] = k\n    starts = []\n    k = 0\n    for i in range(n):\n        ch = s[i]\n        while k and p[k] != ch:\n            k = fail[k - 1]\n        if p[k] == ch:\n            k += 1\n        if k == m:\n            starts.append(i - m + 2)\n            k = fail[k - 1]\n    if not starts:\n        print(0)\n        return\n    dp = [0] * (n + 1)\n    window = deque([0])\n    ptr = 0\n    lo = 0\n    for i in range(1, n + 1):\n        while ptr < len(starts) and starts[ptr] <= i - m:\n            lo = starts[ptr]\n            ptr += 1\n        while window[0] < lo:\n            window.popleft()\n        val = int(cost[i - 1]) + dp[window[0]]\n        dp[i] = val\n        while window and dp[window[-1]] >= val:\n            window.pop()\n        window.append(i)\n    print(min(dp[starts[-1]:]))\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nimport heapq\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\ns = data[2]\np = data[3]\ncost = [int(x) for x in data[4:4 + n]]\nstarts = []\nat = s.find(p)\nwhile at != -1:\n    starts.append(at + 1)\n    at = s.find(p, at + 1)\nif not starts:\n    print(0)\nelse:\n    # dp[i]: cheapest blotting whose last blot is at i and which already kills every\n    # occurrence finished before i. The usable j form a window that only slides right,\n    # so a heap with stale entries thrown away on top gives the minimum.\n    dp = [0] * (n + 1)\n    heap = [(0, 0)]\n    ptr = 0\n    lo = 0\n    for i in range(1, n + 1):\n        while ptr < len(starts) and starts[ptr] <= i - m:\n            lo = starts[ptr]\n            ptr += 1\n        while heap[0][1] < lo:\n            heapq.heappop(heap)\n        dp[i] = cost[i - 1] + heap[0][0]\n        heapq.heappush(heap, (dp[i], i))\n    print(min(dp[starts[-1]:]))\n"
+  }
+}

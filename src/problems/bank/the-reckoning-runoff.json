@@ -1,0 +1,46 @@
+{
+  "id": "the-reckoning-runoff",
+  "title": "The Long Runoff",
+  "lore": "The Hall will not settle a Reckoning on a plurality. It throws out the least named seat, reads every ballot down to its next living name, and votes again, until one seat is left standing.",
+  "statement": "m seats stand at the Reckoning, numbered 1 to m. n scribes have each written a ballot: a list of distinct seats in order of preference, the most preferred first. A ballot need not name every seat.\n\nThe Reckoning runs m - 1 rounds. In each round:\n\nEvery ballot counts for the first seat written on it that is still standing. A ballot whose named seats have all been cast out counts for nobody.\n\nThe seat that the fewest ballots count for is cast out. If several seats are tied for the fewest, the one with the smallest number is cast out. A seat that no ballot counts for stands at zero, which is as few as it gets.\n\nAfter m - 1 rounds one seat is left standing.\n\nPrint the seats in the order they are cast out, then the seat left standing.\n\nExample 1:\nInput:\n3 5\n2 1 2\n2 1 3\n2 2 1\n2 2 3\n2 3 1\nOutput:\n3\n2\n1\nExplanation: Seats 1 and 2 count two ballots each and seat 3 counts one, so seat 3 goes first. Its only ballot, 3 1, now counts for seat 1, which stands at three against seat 2's two, so seat 2 goes next and seat 1 is left standing.\n\nExample 2:\nInput:\n3 2\n1 2\n1 2\nOutput:\n1\n3\n2\nExplanation: Seats 1 and 3 are named on no ballot at all. Both stand at zero, so the smaller number goes first, then seat 3. Seat 2 is left standing with both ballots.\n\nExample 3:\nInput:\n4 3\n2 4 3\n1 3\n2 1 4\nOutput:\n2\n1\n3\n4\nExplanation: Seat 2 is on no ballot and goes first, moving nothing. Seats 1, 3 and 4 then count one ballot each, so the tie sends seat 1 out, and its ballot 1 4 moves to seat 4. Seat 3 now counts one against seat 4's two and goes, and the ballot 3 has nowhere left to go. Seat 4 is left standing.",
+  "inputFormat": "The first line contains two integers m and n, the number of seats standing and the number of ballots. Each of the next n lines describes one ballot: an integer k_i followed by k_i distinct seat numbers, the most preferred first.",
+  "outputFormat": "Print m lines. The first m - 1 lines are the seats in the order they are cast out; the last line is the seat left standing.",
+  "constraints": "1 <= m <= 10^5\n1 <= n <= 2 * 10^5\n1 <= k_i <= m\nk_1 + k_2 + ... + k_n <= 3 * 10^5\nThe seats named on one ballot are distinct",
+  "tags": [
+    "heap",
+    "simulation",
+    "implementation"
+  ],
+  "hints": [
+    "Re-reading every ballot in every round is m passes over all the ballots. Only the ballots that counted for the seat just cast out can change hands, so keep with each seat the list of ballots currently counting for it.",
+    "A ballot's place in its own list only ever moves forward, so all of that walking over the whole night costs the total length of the ballots once.",
+    "A standing seat's count never falls, so a min-heap of (count, seat) with lazy deletion finds the weakest seat: push a seat again every time its count changes, and throw away any entry whose stored count no longer matches.",
+    "Ties go to the smallest seat number, which the pair (count, seat) already gives you, and a seat that no ballot counts for is at count 0 from the start."
+  ],
+  "difficulty": "hard",
+  "rating": 2000,
+  "timeLimitMs": 4000,
+  "samples": [
+    {
+      "input": "3 5\n2 1 2\n2 1 3\n2 2 1\n2 2 3\n2 3 1\n",
+      "output": "3\n2\n1\n"
+    },
+    {
+      "input": "3 2\n1 2\n1 2\n",
+      "output": "1\n3\n2\n"
+    },
+    {
+      "input": "4 3\n2 4 3\n1 3\n2 1 4\n",
+      "output": "2\n1\n3\n4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heapify, heappush, heappop\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    m = int(data[0])\n    n = int(data[1])\n    pos = 2\n    flat = []\n    start = [0] * (n + 1)\n    for i in range(n):\n        k = int(data[pos])\n        pos += 1\n        start[i] = len(flat)\n        flat.extend(map(int, data[pos:pos + k]))\n        pos += k\n    start[n] = len(flat)\n\n    alive = bytearray([1]) * (m + 1)\n    cnt = [0] * (m + 1)\n    held = [[] for _ in range(m + 1)]\n    ptr = [0] * n\n    for i in range(n):\n        p = start[i]\n        ptr[i] = p\n        if p < start[i + 1]:\n            c = flat[p]\n            cnt[c] += 1\n            held[c].append(i)\n\n    heap = [(cnt[c], c) for c in range(1, m + 1)]\n    heapify(heap)\n    out = []\n    for _ in range(m - 1):\n        while True:\n            v, c = heappop(heap)\n            if alive[c] and cnt[c] == v:\n                break\n        alive[c] = 0\n        out.append(c)\n        for i in held[c]:\n            p = ptr[i] + 1\n            e = start[i + 1]\n            while p < e and not alive[flat[p]]:\n                p += 1\n            ptr[i] = p\n            if p < e:\n                d = flat[p]\n                cnt[d] += 1\n                held[d].append(i)\n                heappush(heap, (cnt[d], d))\n        held[c] = []\n    for c in range(1, m + 1):\n        if alive[c]:\n            out.append(c)\n            break\n    sys.stdout.write(\"\\n\".join(map(str, out)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom heapq import heappush, heappop\n\ndata = sys.stdin.read().split()\nm = int(data[0])\nn = int(data[1])\npos = 2\nballots = []\nfor _ in range(n):\n    k = int(data[pos])\n    pos += 1\n    ballots.append([int(x) for x in data[pos:pos + k]])\n    pos += k\ntotal = sum(len(b) for b in ballots)\n\nif m <= 60 and total <= 3000:\n    # count every ballot from scratch every round\n    alive = [True] * (m + 1)\n    out = []\n    for _ in range(m - 1):\n        cnt = [0] * (m + 1)\n        for b in ballots:\n            for c in b:\n                if alive[c]:\n                    cnt[c] += 1\n                    break\n        worst = min((cnt[c], c) for c in range(1, m + 1) if alive[c])[1]\n        alive[worst] = False\n        out.append(worst)\n    out.append([c for c in range(1, m + 1) if alive[c]][0])\n    print(\"\\n\".join(map(str, out)))\nelse:\n    # same transfers, but the weakest seat is found by walking the tally buckets upwards\n    alive = [True] * (m + 1)\n    cnt = [0] * (m + 1)\n    held = [[] for _ in range(m + 1)]\n    ptr = [0] * n\n    for i, b in enumerate(ballots):\n        if b:\n            cnt[b[0]] += 1\n            held[b[0]].append(i)\n    buckets = {}\n    for c in range(1, m + 1):\n        buckets.setdefault(cnt[c], []).append(c)\n    for v in buckets:\n        buckets[v].sort()\n    out = []\n    for _ in range(m - 1):\n        v = 0\n        while True:\n            bk = buckets.get(v)\n            while bk and (not alive[bk[0]] or cnt[bk[0]] != v):\n                heappop(bk)\n            if bk:\n                break\n            v += 1\n        worst = heappop(buckets[v])\n        alive[worst] = False\n        out.append(worst)\n        for i in held[worst]:\n            b = ballots[i]\n            p = ptr[i] + 1\n            while p < len(b) and not alive[b[p]]:\n                p += 1\n            ptr[i] = p\n            if p < len(b):\n                d = b[p]\n                cnt[d] += 1\n                heappush(buckets.setdefault(cnt[d], []), d)\n                held[d].append(i)\n        held[worst] = []\n    out.append([c for c in range(1, m + 1) if alive[c]][0])\n    print(\"\\n\".join(map(str, out)))\n"
+  },
+  "cluster": "the-reckoning"
+}

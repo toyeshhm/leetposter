@@ -1,0 +1,47 @@
+{
+  "id": "the-bell-hammer",
+  "title": "The Hammer",
+  "lore": "The watch of every hall rings its own bell on its own rhythm, and a herald sets out only when he hears one. Dov carries a hammer for the night he cannot wait.",
+  "statement": "There are n halls and m corridors. Corridor j joins halls u_j and v_j, may be walked in either direction, and takes w_j minutes.\n\nThe watch of hall v rings its bell at minutes s_v, s_v + c_v, s_v + 2 c_v, and so on without end. A herald standing in hall v may set out along a corridor only at a minute when that hall's bell rings. Walking cannot be interrupted, and a herald who arrives at a hall at minute x waits there for that hall's next bell, which may be at minute x itself.\n\nDov starts in hall 1 at minute 0 and must reach hall n. He carries a hammer: at most once in the whole night he may strike a bell himself and set out at that very minute instead of waiting for the watch. Arriving at hall n ends the night, no bell required.\n\nPrint the earliest minute at which Dov can be in hall n, or -1 if he cannot get there at all.\n\nExample 1:\nInput:\n3 2\n0 5\n3 10\n0 1\n1 2 1\n2 3 2\nOutput:\n3\nExplanation: Hall 1's bell rings at minute 0, so Dov sets out and reaches hall 2 at minute 1. Hall 2's watch will not ring again until minute 3, which would put him in hall 3 at minute 5. Instead he strikes hall 2's bell himself at minute 1 and is in hall 3 at minute 3.\n\nExample 2:\nInput:\n2 1\n100 100\n0 1\n1 2 1\nOutput:\n1\nExplanation: Hall 1's bell does not ring until minute 100, so the hammer is worth spending at once. Dov sets out at minute 0 and arrives at minute 1.\n\nExample 3:\nInput:\n3 1\n0 1\n0 1\n0 1\n1 2 5\nOutput:\n-1\nExplanation: No corridor leads to hall 3.",
+  "inputFormat": "The first line contains two integers n and m, the number of halls and the number of corridors.\nEach of the next n lines contains two integers s_v and c_v, for hall v in order from hall 1 to hall n: the first minute its bell rings and the time between its rings.\nEach of the next m lines contains three integers u_j, v_j and w_j, a corridor between halls u_j and v_j that takes w_j minutes to walk.",
+  "outputFormat": "One integer: the earliest minute at which Dov can be in hall n, or -1 if hall n cannot be reached. The answer can exceed 2^31.",
+  "constraints": "2 <= n <= 5 * 10^4\n1 <= m <= 10^5\n0 <= s_v <= 10^9\n1 <= c_v <= 10^9\n1 <= u_j, v_j <= n\nu_j != v_j\n1 <= w_j <= 10^9\nTwo halls may be joined by more than one corridor",
+  "tags": [
+    "shortest-paths",
+    "graphs",
+    "heap",
+    "implementation"
+  ],
+  "hints": [
+    "Arriving earlier at a hall is never worse: the minute you set out from v is a function of the minute you arrive, and that function never decreases. So the earliest arrival at every hall is what to compute, and the usual shortest-path reasoning survives the waiting.",
+    "The hammer is one bit of state. Walk the graph of pairs (hall, hammer still in hand): 2n nodes, a normal step that waits for the bell, and a hammer step that leaves at the very minute of arrival and flips the bit.",
+    "Setting out from v at minute t means leaving at s_v when t is at most s_v, and otherwise at s_v + ceil((t - s_v) / c_v) * c_v. Keep everything in integers.",
+    "Dijkstra with a heap over those 2n states, and the answer is the first time a state at hall n comes off the heap. Scanning every state at every step is about 10^10 operations at these bounds and will not finish."
+  ],
+  "difficulty": "hard",
+  "rating": 2300,
+  "timeLimitMs": 8000,
+  "samples": [
+    {
+      "input": "3 2\n0 5\n3 10\n0 1\n1 2 1\n2 3 2\n",
+      "output": "3\n"
+    },
+    {
+      "input": "2 1\n100 100\n0 1\n1 2 1\n",
+      "output": "1\n"
+    },
+    {
+      "input": "3 1\n0 1\n0 1\n0 1\n1 2 5\n",
+      "output": "-1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import heapq\nimport sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    m = int(data[1])\n    s = [0] * (n + 1)\n    c = [1] * (n + 1)\n    pos = 2\n    for v in range(1, n + 1):\n        s[v] = int(data[pos])\n        c[v] = int(data[pos + 1])\n        pos += 2\n    head = [-1] * (n + 1)\n    nxt = [0] * (2 * m)\n    to = [0] * (2 * m)\n    wt = [0] * (2 * m)\n    e = 0\n    for _ in range(m):\n        u = int(data[pos])\n        v = int(data[pos + 1])\n        w = int(data[pos + 2])\n        pos += 3\n        to[e] = v\n        wt[e] = w\n        nxt[e] = head[u]\n        head[u] = e\n        e += 1\n        to[e] = u\n        wt[e] = w\n        nxt[e] = head[v]\n        head[v] = e\n        e += 1\n    INF = 1 << 62\n    dist = [INF] * (2 * n + 2)\n    dist[2] = 0\n    pq = [(0, 2)]\n    push = heapq.heappush\n    pop = heapq.heappop\n    while pq:\n        d, st = pop(pq)\n        if d > dist[st]:\n            continue\n        v = st >> 1\n        if v == n:\n            sys.stdout.write(str(d) + \"\\n\")\n            return\n        free = st & 1\n        sv = s[v]\n        cv = c[v]\n        dep = sv if d <= sv else sv + ((d - sv + cv - 1) // cv) * cv\n        e = head[v]\n        while e != -1:\n            u = to[e]\n            w = wt[e]\n            cand = dep + w\n            st2 = (u << 1) | free\n            if cand < dist[st2]:\n                dist[st2] = cand\n                push(pq, (cand, st2))\n            if free == 0:\n                cand = d + w\n                st2 = (u << 1) | 1\n                if cand < dist[st2]:\n                    dist[st2] = cand\n                    push(pq, (cand, st2))\n            e = nxt[e]\n    sys.stdout.write(\"-1\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nm = int(data[1])\ns = [0] * (n + 1)\nc = [1] * (n + 1)\npos = 2\nfor v in range(1, n + 1):\n    s[v] = int(data[pos]); c[v] = int(data[pos + 1]); pos += 2\nadj = [[] for _ in range(n + 1)]\nfor _ in range(m):\n    u = int(data[pos]); v = int(data[pos + 1]); w = int(data[pos + 2]); pos += 3\n    adj[u].append((v, w))\n    adj[v].append((u, w))\nINF = 1 << 62\ndist = [INF] * (2 * n + 2)\ndist[2] = 0\ninq = [False] * (2 * n + 2)\nq = deque([2])\ninq[2] = True\nwhile q:\n    st = q.popleft()\n    inq[st] = False\n    d = dist[st]\n    v = st >> 1\n    free = st & 1\n    dep = s[v] if d <= s[v] else s[v] + ((d - s[v] + c[v] - 1) // c[v]) * c[v]\n    for u, w in adj[v]:\n        for cand, st2 in (((dep + w), (u * 2 + free)), ((d + w), (u * 2 + 1))) if free == 0 else (((dep + w), (u * 2 + 1)),):\n            if cand < dist[st2]:\n                dist[st2] = cand\n                if not inq[st2]:\n                    inq[st2] = True\n                    q.append(st2)\nbest = min(dist[2 * n], dist[2 * n + 1])\nprint(best if best < INF else -1)\n"
+  },
+  "cluster": "the-bell"
+}

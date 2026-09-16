@@ -1,0 +1,46 @@
+{
+  "id": "the-changeling-bloodline",
+  "title": "The Unmarked Card",
+  "lore": "Every card cut in the Hall carries the same mark, which is how the Warden of the North Gate tells the Hall's stock from a stranger's. One card in tonight's deck was cut elsewhere.",
+  "statement": "The Company's deck holds n cards; card i shows the integer a_i. Every card cut in the Hall carries the same mark, an integer greater than 1 that divides the number on it. The Changeling's card was cut somewhere else and carries whatever it likes.\n\nCard i is a suspect if the rest of the deck still shares a mark once card i is taken out, that is, if the greatest common divisor of the other n - 1 cards is greater than 1. Exactly one card is taken out, and the greatest common divisor of a single remaining card is the number on it.\n\nPrint how many cards are suspects, and the largest greatest common divisor that taking exactly one card out of the deck can leave behind.\n\nExample 1:\nInput:\n5\n12 18 24 7 30\nOutput:\n1 6\nExplanation: Without card 4 the rest are 12, 18, 24 and 30, which share the divisor 6. Taking out any other card leaves 7 behind, and 7 shares nothing with 12, so the greatest common divisor is 1.\n\nExample 2:\nInput:\n4\n2 4 8 16\nOutput:\n4 4\nExplanation: Every card is a suspect, since the rest always share 2 at least. Taking out card 1 leaves 4, 8 and 16, whose greatest common divisor is 4, and no other card can be taken out to do better.\n\nExample 3:\nInput:\n3\n2 3 5\nOutput:\n0 1\nExplanation: Any two of these three share nothing, so there are no suspects and the best that taking one card out can leave is 1.",
+  "inputFormat": "The first line contains one integer n, the number of cards.\nThe second line contains n integers a_1, ..., a_n, the number on each card.",
+  "outputFormat": "Print one line with two integers: the number of suspect cards, and the largest greatest common divisor obtainable by taking exactly one card out of the deck.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= a_i <= 10^9",
+  "tags": [
+    "number-theory",
+    "math",
+    "prefix-sums",
+    "implementation"
+  ],
+  "hints": [
+    "The deck without card i is the cards to its left together with the cards to its right, and the greatest common divisor of a union of two groups is the greatest common divisor of their two greatest common divisors.",
+    "Build pre[i], the greatest common divisor of the first i cards, in one forward pass, and suf[i], the greatest common divisor of cards i through n, in one backward pass.",
+    "The answer for card i is gcd(pre[i - 1], suf[i + 1]), with the greatest common divisor of no cards at all treated as 0 so that gcd(0, x) = x. Recomputing each removal from scratch is 4 * 10^10 operations at the top of the bounds."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "cluster": "the-changeling",
+  "samples": [
+    {
+      "input": "5\n12 18 24 7 30\n",
+      "output": "1 6\n"
+    },
+    {
+      "input": "4\n2 4 8 16\n",
+      "output": "4 4\n"
+    },
+    {
+      "input": "3\n2 3 5\n",
+      "output": "0 1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom math import gcd\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    a = [int(x) for x in data[1:1 + n]]\n    pre = [0] * (n + 1)\n    for i in range(n):\n        pre[i + 1] = gcd(pre[i], a[i])\n    suf = [0] * (n + 1)\n    for i in range(n - 1, -1, -1):\n        suf[i] = gcd(suf[i + 1], a[i])\n    cnt = 0\n    best = 1\n    for i in range(n):\n        g = gcd(pre[i], suf[i + 1])\n        if g > 1:\n            cnt += 1\n            if g > best:\n                best = g\n    sys.stdout.write(\"%d %d\\n\" % (cnt, best))\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom math import gcd\n\ndata = sys.stdin.buffer.read().split()\nn = int(data[0])\na = [int(x) for x in data[1:1 + n]]\nout = [0] * n\nstack = [(0, n - 1, 0)]\nwhile stack:\n    l, r, g = stack.pop()\n    if l == r:\n        out[l] = g\n        continue\n    mid = (l + r) // 2\n    gl = 0\n    for i in range(l, mid + 1):\n        gl = gcd(gl, a[i])\n    gr = 0\n    for i in range(mid + 1, r + 1):\n        gr = gcd(gr, a[i])\n    stack.append((l, mid, gcd(g, gr)))\n    stack.append((mid + 1, r, gcd(g, gl)))\nprint(sum(1 for g in out if g > 1), max(out))\n"
+  }
+}

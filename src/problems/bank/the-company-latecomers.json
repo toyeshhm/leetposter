@@ -1,0 +1,47 @@
+{
+  "id": "the-company-latecomers",
+  "title": "Room for the Latecomers",
+  "lore": "The Warden of the North Gate lets the latecomers in and will not have them breathing on the scribes already seated. The table is round, so there is no far end to put them at.",
+  "statement": "The round table has n seats numbered 0 to n - 1 clockwise, and seat n - 1 is a neighbour of seat 0. The distance between seats x and y is the number of steps around the table the shorter way, that is min(|x - y|, n - |x - y|).\n\nm scribes are already seated, on distinct seats s_1, ..., s_m, and they will not move. Then k latecomers arrive. Each latecomer must be given a seat that is empty, and no two latecomers may share a seat.\n\nSeat the latecomers so that the smallest distance between two occupied seats is as large as possible, and print that distance. Once the latecomers are seated there are at least two occupied seats.\n\nExample 1:\nInput:\n10 2 1\n0 5\nOutput:\n2\nExplanation: Seats 0 and 5 are taken, five steps apart. Putting the latecomer on seat 2 leaves distances 2, 3 and 5, so the smallest is 2. Seat 3 does as well. No seat does better.\n\nExample 2:\nInput:\n6 1 2\n0\nOutput:\n2\nExplanation: Seats 2 and 4 put the three occupied seats two steps apart all the way round. Any other pair of empty seats leaves two of them one step apart.\n\nExample 3:\nInput:\n7 3 1\n0 1 4\nOutput:\n1\nExplanation: Seats 0 and 1 are already a single step apart and neither scribe will move, so the answer cannot be more than 1 whatever the latecomer does.",
+  "inputFormat": "The first line contains three integers n, m and k: the number of seats, the number of scribes already seated and the number of latecomers. The second line contains m distinct integers s_1, ..., s_m, the seats already taken, in any order.",
+  "outputFormat": "One integer: the largest value the smallest distance between two occupied seats can be made to take.",
+  "constraints": "2 <= n <= 10^9\n1 <= m <= 10^5\n1 <= k <= 10^5\nm + k <= n\n0 <= s_i <= n - 1\nAll s_i are distinct",
+  "tags": [
+    "binary-search",
+    "greedy",
+    "sorting",
+    "math"
+  ],
+  "hints": [
+    "Around a circle the smallest distance between any two occupied seats is the smallest step from one occupied seat to the next one clockwise, because every other pair is separated by a run of such steps.",
+    "If distance d can be reached then so can d - 1, so binary search on d. Nobody already seated moves, so a gap that is already shorter than d rules d out at once.",
+    "In a gap of g steps between two seats that are already taken, at most floor(g / d) - 1 latecomers fit while keeping every step at least d. Add that over the m gaps and compare the total with k.",
+    "n reaches 10^9, so never walk the seats one at a time. Sort the m taken seats, work only with the m gaps between them, and remember that one taken seat means a single gap of n."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 3000,
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    seats = sorted(int(x) for x in data[3:3 + m])\n    if m == 1:\n        gaps = [n]\n    else:\n        gaps = [seats[i + 1] - seats[i] for i in range(m - 1)]\n        gaps.append(seats[0] + n - seats[-1])\n    lo = 1\n    hi = min(min(gaps), n // (m + k))\n    while lo < hi:\n        mid = (lo + hi + 1) // 2\n        room = 0\n        for g in gaps:\n            room += g // mid\n        if room - len(gaps) >= k:\n            lo = mid\n        else:\n            hi = mid - 1\n    print(lo)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom itertools import combinations\nfrom math import comb\n\ndef main():\n    data = sys.stdin.read().split()\n    n = int(data[0]); m = int(data[1]); k = int(data[2])\n    seats = sorted(int(x) for x in data[3:3 + m])\n    taken = set(seats)\n    free = [x for x in range(n) if x not in taken] if n <= 40 else []\n    if free and comb(len(free), k) <= 20000:\n        best = 0\n        for extra in combinations(free, k):\n            pts = sorted(seats + list(extra))\n            t = len(pts)\n            worst = n\n            for i in range(t):\n                d = (pts[(i + 1) % t] - pts[i]) % n\n                d = min(d, n - d)\n                if d < worst:\n                    worst = d\n            if worst > best:\n                best = worst\n        print(best)\n        return\n    gaps = [(seats[(i + 1) % m] - seats[i]) % n for i in range(m)] if m > 1 else [n]\n\n    def ok(d):\n        for g in gaps:\n            if g < d:\n                return False\n        cnt = 0\n        for g in gaps:\n            pos = d\n            while pos + d <= g:\n                cnt += 1\n                if cnt >= k:\n                    return True\n                pos += d\n        return cnt >= k\n\n    lo, hi = 1, n // 2\n    while lo < hi:\n        mid = (lo + hi + 1) // 2\n        if ok(mid):\n            lo = mid\n        else:\n            hi = mid - 1\n    print(lo)\n\nmain()\n"
+  },
+  "samples": [
+    {
+      "input": "10 2 1\n0 5\n",
+      "output": "2\n"
+    },
+    {
+      "input": "6 1 2\n0\n",
+      "output": "2\n"
+    },
+    {
+      "input": "7 3 1\n0 1 4\n",
+      "output": "1\n"
+    }
+  ],
+  "cluster": "the-company"
+}

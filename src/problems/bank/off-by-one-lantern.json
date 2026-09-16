@@ -1,0 +1,47 @@
+{
+  "id": "off-by-one-lantern",
+  "title": "The Lantern Stand",
+  "lore": "Dov the Herald carries a lantern so that the way back with the verdict can be found. Reach is inclusive, the Warden says, which in the Hall counts as a warning.",
+  "statement": "There are n sconces along the corridor at distinct integer positions p_1, ..., p_n. A lantern of reach r placed at integer position x lights every sconce whose position p satisfies |p - x| <= r.\n\nThe Herald may stand at any integer position x with a <= x <= b. Count how many of these positions light at least k sconces.\n\nExample 1:\nInput:\n4 2 1 0 10\n2 3 7 8\nOutput:\n4\nExplanation: Standing at 2 or 3 lights sconces 2 and 3. Standing at 7 or 8 lights sconces 7 and 8. Every other position from 0 to 10 lights at most one sconce.\n\nExample 2:\nInput:\n3 1 0 -5 5\n-7 0 5\nOutput:\n2\nExplanation: With reach 0 a sconce is lit only by standing on it. Positions 0 and 5 are allowed; -7 is outside the allowed range.\n\nExample 3:\nInput:\n3 3 2 0 100\n1 2 5\nOutput:\n1\nExplanation: To light all three sconces x must satisfy 5 - 2 <= x <= 1 + 2, so only x = 3 works.",
+  "inputFormat": "The first line contains five integers n, k, r, a and b: the number of sconces, the required number of lit sconces, the reach of the lantern, and the lowest and highest positions the Herald may stand at.\nThe second line contains n distinct integers p_1, ..., p_n, the positions of the sconces, in any order.",
+  "outputFormat": "Print one integer, the number of integer positions x with a <= x <= b at which a lantern lights at least k sconces.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= k <= n\n0 <= r <= 10^9\n-10^9 <= p_i <= 10^9\nAll p_i are distinct\n-10^9 <= a <= b <= 10^9",
+  "tags": [
+    "two-pointers",
+    "sorting",
+    "sliding-window",
+    "intervals"
+  ],
+  "hints": [
+    "The allowed range can hold two billion positions, so the answer cannot come from testing each x; think instead about which sets of sconces a single position can light.",
+    "Sort the sconces. A position lights at least k of them exactly when it lights some k consecutive ones in sorted order, and a window p_i, ..., p_(i+k-1) is fully lit from x = p_(i+k-1) - r up to x = p_i + r, both ends included, which is empty if the window is wider than 2r.",
+    "As i grows both ends of that interval only move right, so the union of all the windows' intervals can be swept in one pass with a single variable remembering the largest position already counted.",
+    "Clip each interval to [a, b] before counting, and remember that an integer interval from lo to hi inclusive holds hi - lo + 1 positions, not hi - lo."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4 2 1 0 10\n2 3 7 8\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3 1 0 -5 5\n-7 0 5\n",
+      "output": "2\n"
+    },
+    {
+      "input": "3 3 2 0 100\n1 2 5\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    k = int(data[1])\n    r = int(data[2])\n    a = int(data[3])\n    b = int(data[4])\n    p = sorted(int(x) for x in data[5:5 + n])\n    total = 0\n    covered = a - 1\n    for i in range(n - k + 1):\n        lo = p[i + k - 1] - r\n        hi = p[i] + r\n        if lo > hi:\n            continue\n        if lo < a:\n            lo = a\n        if hi > b:\n            hi = b\n        if lo <= covered:\n            lo = covered + 1\n        if lo <= hi:\n            total += hi - lo + 1\n            covered = hi\n    print(total)\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_left, bisect_right\n\ndata = sys.stdin.read().split()\nn, k, r, a, b = (int(x) for x in data[:5])\np = sorted(int(x) for x in data[5:5 + n])\ncount = 0\nfor x in range(a, b + 1):\n    if bisect_right(p, x + r) - bisect_left(p, x - r) >= k:\n        count += 1\nprint(count)\n"
+  },
+  "cluster": "off-by-one"
+}

@@ -1,0 +1,45 @@
+{
+  "title": "The Longest Honest Stretch",
+  "lore": "Every minute of the night the Warden announces a bound, and every minute the true value is chalked on the far wall. Nobody expects the two columns to agree, but the Company would like to know for how long the Warden once managed it.",
+  "statement": "The night lasts n minutes. In minute i the Warden announced a bound b_i, and the true value of that minute was a_i.\nA stretch of consecutive minutes l..r is honest if every bound announced during the stretch is at least every true value seen during the stretch, that is, if min(b_l, ..., b_r) >= max(a_l, ..., a_r).\nFind the length of the longest honest stretch. If not even a single minute is honest, the answer is 0.\n\nExample 1:\nInput:\n6\n5 7 6 2 9 9\n3 4 5 1 8 10\nOutput:\n3\nExplanation: Minutes 1..3 have bounds 5, 7, 6 and values 3, 4, 5; the smallest bound is 5 and the largest value is 5, so the stretch is honest. Adding minute 4 brings in the bound 2, which is below the value 5. No stretch of length 4 is honest.\n\nExample 2:\nInput:\n3\n1 1 1\n2 2 2\nOutput:\n0\nExplanation: Every bound is below every value, so no minute is honest on its own.\n\nExample 3:\nInput:\n4\n10 10 10 10\n1 10 1 10\nOutput:\n4\nExplanation: The smallest bound is 10 and the largest value is 10, so the whole night is honest.",
+  "inputFormat": "The first line has one integer n. The second line has n integers b_1..b_n, the announced bounds. The third line has n integers a_1..a_n, the true values.",
+  "outputFormat": "One integer, the length of the longest honest stretch.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= a_i <= 10^9\n1 <= b_i <= 10^9",
+  "tags": [
+    "two-pointers",
+    "sliding-window",
+    "queue"
+  ],
+  "hints": [
+    "If a stretch is honest then every stretch inside it is honest too, so once a window stops being honest, extending its right end never fixes it.",
+    "Keep a window l..r; move r forward one minute at a time and move l forward only while the window is not honest, so both ends only ever advance and the total work is linear.",
+    "To know the minimum bound and the maximum value of the current window in constant time, keep two monotonic deques of indices, one increasing in b and one decreasing in a, and drop indices that fall behind l."
+  ],
+  "difficulty": "medium",
+  "rating": 1500,
+  "timeLimitMs": 3000,
+  "id": "the-wardens-bounds-stretch",
+  "samples": [
+    {
+      "input": "6\n5 7 6 2 9 9\n3 4 5 1 8 10\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3\n1 1 1\n2 2 2\n",
+      "output": "0\n"
+    },
+    {
+      "input": "4\n10 10 10 10\n1 10 1 10\n",
+      "output": "4\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom collections import deque\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    b = data[1:1 + n]\n    a = data[1 + n:1 + 2 * n]\n    b = list(map(int, b)); a = list(map(int, a))\n    minq = deque()  # indices, b increasing\n    maxq = deque()  # indices, a decreasing\n    best = 0\n    l = 0\n    for r in range(n):\n        br = b[r]; ar = a[r]\n        while minq and b[minq[-1]] >= br:\n            minq.pop()\n        minq.append(r)\n        while maxq and a[maxq[-1]] <= ar:\n            maxq.pop()\n        maxq.append(r)\n        while minq and b[minq[0]] < a[maxq[0]]:\n            l += 1\n            if minq[0] < l:\n                minq.popleft()\n            if maxq[0] < l:\n                maxq.popleft()\n        if r - l + 1 > best:\n            best = r - l + 1\n    print(best)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nn = int(data[0])\nb = [int(x) for x in data[1:1 + n]]\na = [int(x) for x in data[1 + n:1 + 2 * n]]\nbest = 0\nfor l in range(n):\n    mn = b[l]\n    mx = a[l]\n    for r in range(l, n):\n        if b[r] < mn:\n            mn = b[r]\n        if a[r] > mx:\n            mx = a[r]\n        if mn < mx:\n            break\n        if r - l + 1 > best:\n            best = r - l + 1\nprint(best)\n"
+  },
+  "cluster": "the-wardens-bounds"
+}

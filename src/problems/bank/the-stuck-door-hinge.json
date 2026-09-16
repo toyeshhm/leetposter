@@ -1,0 +1,47 @@
+{
+  "id": "the-stuck-door-hinge",
+  "title": "The Hinge Holds",
+  "lore": "The door stands open only while somebody is shoving it, and the hinge jams if it is worked too fast. Candles are what the Company burns to keep it from closing.",
+  "statement": "The night lasts n minutes, numbered 1 to n, and the door must stand open through every one of them.\n\nIn minute i the Company may shove the door. That shove costs c_i candles and holds the door open through the minutes i, i + 1, ..., i + k_i - 1.\n\nThe door starts shut, so the first shove has to be made in minute 1, where the Company forces it by hand. Every later shove has to be made while the door is still standing open: if the previous shove was made in minute j, a shove in minute i is possible only when i <= j + k_j - 1.\n\nThe hinge jams if it is worked too fast, so two shoves in a row must be at least g minutes apart: i - j >= g.\n\nPrint the smallest number of candles that keeps the door open through minute n, or -1 if the Company cannot keep it open that long.\n\nExample 1:\n\nInput:\n5 2\n3 1 4 1 5\n3 2 4 2 1\nOutput:\n7\nExplanation: Shove in minute 1 for 3 candles, holding minutes 1 to 3, then in minute 3 for 4 candles, holding minutes 3 to 6. Minute 3 is two minutes after minute 1, so the hinge does not jam, and the door is still open in minute 3 when the second shove is made. Nothing cheaper covers all five minutes.\n\nExample 2:\n\nInput:\n4 3\n2 2 2 2\n2 2 2 9\nOutput:\n-1\nExplanation: The shove in minute 1 holds minutes 1 and 2. The next shove may not come before minute 4, by which time the door has already shut, so minute 3 can never be covered.\n\nExample 3:\n\nInput:\n3 1\n5 1 1\n2 2 2\nOutput:\n6\nExplanation: Shove in minute 1 for 5 candles, holding minutes 1 and 2, then in minute 2 for 1 candle, holding minutes 2 and 3. A third shove in minute 3 would cost another candle and hold nothing that is still needed.",
+  "inputFormat": "The first line contains two integers n and g: the length of the night in minutes and the smallest gap the hinge tolerates between two shoves. The second line contains n integers c_1 ... c_n, the cost of shoving in each minute. The third line contains n integers k_1 ... k_n, how many minutes each shove holds the door open.",
+  "outputFormat": "Print one integer: the least number of candles that holds the door open through minute n, or -1 if it cannot be done.",
+  "constraints": "1 <= n <= 10^5\n1 <= g <= n\n1 <= c_i <= 10^9\n1 <= k_i <= n",
+  "tags": [
+    "dp",
+    "heap",
+    "intervals",
+    "implementation"
+  ],
+  "hints": [
+    "Only the last shove made so far matters to everything that follows. Let dp[i] be the least cost of holding the door from minute 1 onward with the last shove made in minute i, so dp[1] = c_1 and the answer is the smallest dp[i] over the minutes whose shove reaches minute n, that is i + k_i - 1 >= n.",
+    "dp[i] = c_i + the smallest dp[j] among the shoves j that are at least g minutes earlier and are still holding in minute i. Scanning all such j is O(n^2), and n reaches 10^5, so the set of candidates has to be maintained instead of rebuilt.",
+    "Both conditions move one way only as the clock runs: shove j first becomes a candidate in minute j + g, and after minute j + k_j - 1 it is gone for good, never to return.",
+    "So keep a min-heap of pairs (dp[j], j). When the clock reaches minute j + g, push j if dp[j] is finite. Before reading the smallest, pop the top while the shove on top no longer holds in the current minute; it can be thrown away rather than set aside, because it will never hold again."
+  ],
+  "difficulty": "hard",
+  "rating": 2100,
+  "timeLimitMs": 4000,
+  "cluster": "the-stuck-door",
+  "samples": [
+    {
+      "input": "5 2\n3 1 4 1 5\n3 2 4 2 1\n",
+      "output": "7\n"
+    },
+    {
+      "input": "4 3\n2 2 2 2\n2 2 2 9\n",
+      "output": "-1\n"
+    },
+    {
+      "input": "3 1\n5 1 1\n2 2 2\n",
+      "output": "6\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "\nimport sys\nimport heapq\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    g = int(data[1])\n    c = [int(x) for x in data[2:2 + n]]\n    k = [int(x) for x in data[2 + n:2 + 2 * n]]\n    dp = [-1] * n\n    dp[0] = c[0]\n    heap = []\n    p = 0\n    best = -1\n    if k[0] >= n:\n        best = c[0]\n    for i in range(1, n):\n        limit = i - g\n        while p <= limit:\n            if dp[p] >= 0:\n                heapq.heappush(heap, (dp[p], p))\n            p += 1\n        while heap:\n            j = heap[0][1]\n            if j + k[j] < i + 1:\n                heapq.heappop(heap)\n            else:\n                break\n        if heap:\n            dp[i] = c[i] + heap[0][0]\n            if i + k[i] >= n and (best < 0 or dp[i] < best):\n                best = dp[i]\n    print(best)\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\ng = int(data[1])\nc = [int(x) for x in data[2:2 + n]]\nk = [int(x) for x in data[2 + n:2 + 2 * n]]\nINF = 1 << 62\nsize = 1\nwhile size < n:\n    size *= 2\ntree = [INF] * (2 * size)\n\n\ndef chmin(lo, hi, v):\n    # write v over every minute in [lo, hi] as a candidate cost\n    if lo > hi:\n        return\n    lo += size\n    hi += size + 1\n    while lo < hi:\n        if lo & 1:\n            if v < tree[lo]:\n                tree[lo] = v\n            lo += 1\n        if hi & 1:\n            hi -= 1\n            if v < tree[hi]:\n                tree[hi] = v\n        lo //= 2\n        hi //= 2\n\n\ndef query(i):\n    i += size\n    res = tree[i]\n    while i > 1:\n        i //= 2\n        if tree[i] < res:\n            res = tree[i]\n    return res\n\n\nbest = INF\nfor i in range(n):\n    if i == 0:\n        cur = c[0]\n    else:\n        got = query(i)\n        cur = got + c[i] if got < INF else INF\n    if cur < INF:\n        if i + k[i] >= n and cur < best:\n            best = cur\n        chmin(i + g, min(i + k[i] - 1, n - 1), cur)\nprint(best if best < INF else -1)\n"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "the-herald-shortcut",
+  "title": "One Door Left Open",
+  "lore": "Someone has left exactly one side door unbarred, and a herald who finds it crosses that hall for free. Ada will not say which door, only that there is one.",
+  "statement": "A herald crosses halls 1 to n in order. Crossing hall i takes t_i minutes, so with every hall crossed the herald leaves hall i at minute t_1 + t_2 + ... + t_i. That minute is when the letters addressed to hall i are handed over.\n\nExactly one hall has a side door left open. If the herald picks hall c, then hall c is crossed in no time at all: the handover minute of every hall i becomes the sum of t_k over all k <= i with k not equal to c. The herald must pick exactly one c, and picks it before setting out.\n\nThere are m letters. Letter j is addressed to hall b_j and is on time if it is handed over at minute d_j or earlier.\n\nChoose c to maximise the number of letters handed over on time, and report that number.\n\nExample 1:\n\nInput:\n4 3\n2 5 1 3\n4 9\n2 7\n3 8\nOutput:\n3\nExplanation: With no door the handover minutes are 2, 7, 8, 11, so the letters for halls 2 and 3 are on time and the letter for hall 4 arrives at minute 11, two minutes late. Picking c = 1 saves 2 minutes on every hall: the minutes become 0, 5, 6, 9, and all three letters are on time.\n\nExample 2:\n\nInput:\n3 3\n4 4 4\n1 3\n2 3\n3 11\nOutput:\n2\nExplanation: Every hall costs 4 minutes, so one open door saves exactly 4 minutes from hall c onward. Picking c = 1 gives handover minutes 0, 4, 8: the letters for halls 1 and 3 are on time, the one for hall 2 is a minute late. No choice of c saves all three.",
+  "inputFormat": "The first line contains two integers n and m: the number of halls and the number of letters.\nThe second line contains n integers t_1 ... t_n, the crossing times.\nEach of the next m lines contains two integers b_j and d_j: the hall a letter is addressed to and its deadline.",
+  "outputFormat": "Print one integer: the largest number of letters that can be handed over on time.",
+  "constraints": "1 <= n <= 10^5\n1 <= m <= 10^5\n1 <= t_i <= 10^9\n1 <= b_j <= n\n1 <= d_j <= 10^15",
+  "tags": [
+    "prefix-sums",
+    "sorting",
+    "binary-search",
+    "fenwick"
+  ],
+  "hints": [
+    "A letter for hall b is helped by the open door only when c <= b, and then it is helped by exactly t_c minutes, never more and never less.",
+    "Give every letter a slack: arrival at its hall minus its deadline. Letters with slack at most zero are on time whatever you pick, and the rest need a door with c <= b and t_c at least their slack.",
+    "Sweep c from n down to 1, inserting the letters of hall c as you go, and ask how many inserted slacks are at most t_c; a Fenwick tree over the sorted slacks answers that in logarithmic time.",
+    "The answer is the count of always-on-time letters plus the best sweep value, so the whole thing is O((n + m) log m) and never tries all n doors against all m letters."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 3000,
+  "samples": [
+    {
+      "input": "4 3\n2 5 1 3\n4 9\n2 7\n3 8\n",
+      "output": "3\n"
+    },
+    {
+      "input": "3 3\n4 4 4\n1 3\n2 3\n3 11\n",
+      "output": "2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nfrom bisect import bisect_right\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0]); m = int(data[1])\n    arrive = [0] * (n + 1)\n    acc = 0\n    for i in range(1, n + 1):\n        acc += int(data[1 + i])\n        arrive[i] = acc\n    pos = n + 2\n    base = 0\n    by_hall = [[] for _ in range(n + 1)]\n    slacks = []\n    for _ in range(m):\n        b = int(data[pos]); d = int(data[pos + 1]); pos += 2\n        s = arrive[b] - d\n        if s <= 0:\n            base += 1\n        else:\n            by_hall[b].append(s)\n            slacks.append(s)\n    slacks.sort()\n    k = len(slacks)\n    tree = [0] * (k + 1)\n    best = 0\n    for c in range(n, 0, -1):\n        for s in by_hall[c]:\n            i = bisect_right(slacks, s)\n            while i <= k:\n                tree[i] += 1\n                i += i & (-i)\n        i = bisect_right(slacks, int(data[1 + c]))\n        total = 0\n        while i > 0:\n            total += tree[i]\n            i -= i & (-i)\n        if total > best:\n            best = total\n    print(base + best)\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\ndata = sys.stdin.read().split()\nn = int(data[0]); m = int(data[1])\nt = [int(x) for x in data[2:2 + n]]\narrive = [0]\nfor x in t:\n    arrive.append(arrive[-1] + x)\npos = 2 + n\nletters = []\nfor _ in range(m):\n    letters.append((int(data[pos]), int(data[pos + 1])))\n    pos += 2\nbest = 0\nfor c in range(1, n + 1):\n    count = 0\n    for b, d in letters:\n        saved = t[c - 1] if c <= b else 0\n        if arrive[b] - saved <= d:\n            count += 1\n    best = max(best, count)\nprint(best)\n"
+  },
+  "cluster": "the-herald"
+}

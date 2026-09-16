@@ -1,0 +1,41 @@
+{
+  "id": "the-shared-file-conflict",
+  "title": "Three Copies on the Table",
+  "lore": "The shared file is copied the moment the Work begins, once for each hand that will touch it. At the Reckoning the three copies are laid side by side, and the table only argues about the lines two hands rewrote at once.",
+  "statement": "The shared file has n lines. Three copies of it are on the table: the base copy b as the file stood when the Work began, and the copies x and y of the two scribes who edited it in parallel. A line is recorded as a fingerprint, an integer, and two lines are the same line exactly when their fingerprints are equal. All three copies have the same n lines in the same order, because the scribes only rewrote lines and never added or removed one.\n\nLine i falls into exactly one of five kinds.\nuntouched: x_i = b_i and y_i = b_i.\nfirst: x_i is not b_i and y_i = b_i, so the merge takes the first scribe's line.\nsecond: x_i = b_i and y_i is not b_i, so the merge takes the second scribe's line.\nagreed: x_i is not b_i, y_i is not b_i and x_i = y_i, so both scribes wrote the same new line.\nconflict: x_i is not b_i, y_i is not b_i and x_i is not y_i.\n\nAnswer q questions. Question j gives a range l_j, r_j and asks how many lines of kind first, of kind second, of kind agreed and of kind conflict lie among lines l_j to r_j inclusive.\n\nExample 1:\nInput:\n6 3\n5 5 5 7 7 9\n5 4 5 8 6 9\n5 5 6 8 3 1\n1 6\n2 3\n5 5\nOutput:\n1 2 1 1\n1 1 0 0\n0 0 0 1\nExplanation: Line 1 is untouched. Line 2 was rewritten by the first scribe only, line 3 by the second scribe only. Line 4 was rewritten by both to the same fingerprint 8, so they agreed. Line 5 was rewritten by both to different fingerprints, a conflict. Line 6 was rewritten by the second scribe only. The first question counts all six lines, the second counts lines 2 and 3, the third counts line 5 alone.\n\nExample 2:\nInput:\n3 2\n1 2 3\n1 2 3\n1 2 3\n1 3\n2 2\nOutput:\n0 0 0 0\n0 0 0 0\nExplanation: Nobody touched anything, so every line is untouched and every count is zero.",
+  "inputFormat": "The first line contains two integers n and q.\nThe second line contains n integers b_1, ..., b_n, the base copy.\nThe third line contains n integers x_1, ..., x_n, the first scribe's copy.\nThe fourth line contains n integers y_1, ..., y_n, the second scribe's copy.\nEach of the next q lines contains two integers l_j and r_j.",
+  "outputFormat": "Print q lines. Line j holds four integers separated by single spaces: the number of lines of kind first, of kind second, of kind agreed and of kind conflict among lines l_j to r_j inclusive.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= q <= 2 * 10^5\n1 <= b_i, x_i, y_i <= 10^9\n1 <= l_j <= r_j <= n",
+  "tags": [
+    "prefix-sums",
+    "implementation",
+    "hashing"
+  ],
+  "hints": [
+    "Each line falls into exactly one of the five kinds, and the kind depends only on the three fingerprints written on that line, never on any question.",
+    "A question asks for the size of four of those kinds inside a range, and the kinds are fixed before the first question is read.",
+    "Build four running-count arrays over the lines once, then answer each question with four subtractions. With 2 * 10^5 lines and 2 * 10^5 questions, read the whole input at once with sys.stdin.buffer."
+  ],
+  "difficulty": "medium",
+  "rating": 1300,
+  "timeLimitMs": 3000,
+  "cluster": "the-shared-file",
+  "samples": [
+    {
+      "input": "6 3\n5 5 5 7 7 9\n5 4 5 8 6 9\n5 5 6 8 3 1\n1 6\n2 3\n5 5\n",
+      "output": "1 2 1 1\n1 1 0 0\n0 0 0 1\n"
+    },
+    {
+      "input": "3 2\n1 2 3\n1 2 3\n1 2 3\n1 3\n2 2\n",
+      "output": "0 0 0 0\n0 0 0 0\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    q = int(data[1])\n    idx = 2\n    base = data[idx:idx + n]\n    idx += n\n    left = data[idx:idx + n]\n    idx += n\n    right = data[idx:idx + n]\n    idx += n\n    pl = [0] * (n + 1)\n    pr = [0] * (n + 1)\n    ps = [0] * (n + 1)\n    pc = [0] * (n + 1)\n    ca = cb = cs = cc = 0\n    for i in range(n):\n        bb = base[i]\n        x = left[i]\n        y = right[i]\n        if x == bb:\n            if y != bb:\n                cb += 1\n        elif y == bb:\n            ca += 1\n        elif x == y:\n            cs += 1\n        else:\n            cc += 1\n        j = i + 1\n        pl[j] = ca\n        pr[j] = cb\n        ps[j] = cs\n        pc[j] = cc\n    out = []\n    for _ in range(q):\n        l = int(data[idx]) - 1\n        r = int(data[idx + 1])\n        idx += 2\n        out.append(\"%d %d %d %d\" % (pl[r] - pl[l], pr[r] - pr[l], ps[r] - ps[l], pc[r] - pc[l]))\n    sys.stdout.write(\"\\n\".join(out))\n    sys.stdout.write(\"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "# Classifies every line the long way and recounts each question by walking its range.\nimport sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nq = int(data[1])\ni = 2\nbase = data[i:i + n]\ni += n\nleft = data[i:i + n]\ni += n\nright = data[i:i + n]\ni += n\nkind = []\nfor j in range(n):\n    b = base[j]\n    x = left[j]\n    y = right[j]\n    if x == b and y == b:\n        kind.append(0)\n    elif x != b and y == b:\n        kind.append(1)\n    elif x == b and y != b:\n        kind.append(2)\n    elif x == y:\n        kind.append(3)\n    else:\n        kind.append(4)\nres = []\nfor _ in range(q):\n    l = int(data[i])\n    r = int(data[i + 1])\n    i += 2\n    cnt = [0, 0, 0, 0, 0]\n    for j in range(l - 1, r):\n        cnt[kind[j]] += 1\n    res.append(\"%d %d %d %d\" % (cnt[1], cnt[2], cnt[3], cnt[4]))\nprint(\"\\n\".join(res))\n"
+  }
+}

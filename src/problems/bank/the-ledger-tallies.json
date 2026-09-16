@@ -1,0 +1,41 @@
+{
+  "title": "Even-Handed Stretches",
+  "lore": "Cass the Cartographer has never been wrong about a tag and is therefore never trusted, so when she says the Judge favours no hall, the Company demands the ledger prove it stretch by stretch.",
+  "statement": "The ledger of one night records n verdicts in order. Each line names a hall by its number and gives the verdict that hall received: A for Accepted, R for Rejected. The same hall may appear many times.\n\nA stretch of the ledger is a contiguous block of lines from line l to line r inclusive. A stretch is even-handed if, for every hall that appears in the stretch, the number of A lines of that hall inside the stretch equals the number of R lines of that hall inside the stretch.\n\nCount the even-handed stretches.\n\nExample 1:\nInput:\n5\n1 A\n2 R\n2 A\n1 R\n1 A\nOutput:\n2\nExplanation: Lines 2 to 3 contain hall 2 once with R and once with A. Lines 1 to 4 contain hall 1 with A and R, and hall 2 with R and A. No other stretch is even-handed; for instance lines 3 to 5 leave hall 1 with two A and one R.\n\nExample 2:\nInput:\n3\n4 A\n4 A\n4 R\nOutput:\n1\nExplanation: Only lines 2 to 3 balance hall 4.",
+  "inputFormat": "The first line contains an integer n, the number of lines in the ledger.\nEach of the next n lines contains an integer h, the hall's number, and a letter v, the verdict, separated by a space. v is either A or R.",
+  "outputFormat": "Print one integer: the number of even-handed stretches.",
+  "constraints": "1 <= n <= 2 * 10^5\n1 <= h <= 10^9\nv is A or R",
+  "tags": [
+    "hashing",
+    "prefix-sums"
+  ],
+  "hints": [
+    "For each hall define its tally after the first i lines as the number of A minus the number of R among that hall's lines; a stretch (l, r) is even-handed exactly when every hall has the same tally after line l-1 and after line r.",
+    "So the answer is the number of pairs of prefixes whose whole tally vectors are equal, but comparing full vectors for every pair is far too slow with n at 2 * 10^5.",
+    "Give every hall a random 62-bit weight and let the fingerprint of a prefix be the sum over halls of weight times tally; it changes by plus or minus one weight per line, and two prefixes have equal vectors when their fingerprints agree, up to a negligible chance of collision.",
+    "Count how many prefixes (including the empty one) share each fingerprint, and add c * (c - 1) / 2 for every group of size c."
+  ],
+  "difficulty": "medium",
+  "rating": 1700,
+  "timeLimitMs": 3000,
+  "id": "the-ledger-tallies",
+  "samples": [
+    {
+      "input": "5\n1 A\n2 R\n2 A\n1 R\n1 A\n",
+      "output": "4\n"
+    },
+    {
+      "input": "3\n4 A\n4 A\n4 R\n",
+      "output": "1\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\nimport random\n\ndef main() -> None:\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    weight = {}\n    seen = {0: 1}\n    h = 0\n    idx = 1\n    bits = random.getrandbits\n    for _ in range(n):\n        hall = data[idx]\n        verdict = data[idx + 1]\n        idx += 2\n        w = weight.get(hall)\n        if w is None:\n            w = bits(62)\n            weight[hall] = w\n        if verdict == b\"A\":\n            h += w\n        else:\n            h -= w\n        seen[h] = seen.get(h, 0) + 1\n    print(sum(c * (c - 1) // 2 for c in seen.values()))\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nhalls = [data[1 + 2 * i] for i in range(n)]\nverdicts = [data[2 + 2 * i] for i in range(n)]\nanswer = 0\nfor l in range(n):\n    tally = {}\n    unbalanced = 0\n    for r in range(l, n):\n        hall = halls[r]\n        before = tally.get(hall, 0)\n        after = before + (1 if verdicts[r] == \"A\" else -1)\n        tally[hall] = after\n        if before == 0:\n            unbalanced += 1\n        if after == 0:\n            unbalanced -= 1\n        if unbalanced == 0:\n            answer += 1\nprint(answer)\n"
+  },
+  "cluster": "the-ledger"
+}

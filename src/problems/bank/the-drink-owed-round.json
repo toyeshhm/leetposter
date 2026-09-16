@@ -1,0 +1,46 @@
+{
+  "id": "the-drink-owed-round",
+  "title": "The Round That Never Ends",
+  "lore": "Every scribe in the Hall owes their next drink to exactly one other, never to themselves, so a drink set down anywhere at the table is passed on forever. Cass the Cartographer would like to know how much of the table each drink will ever touch.",
+  "statement": "The Company sits at a round table of n scribes, numbered 1 to n. Every scribe owes their next drink to exactly one other scribe: scribe i owes it to p_i, and no one owes a drink to themselves.\n\nA drink placed in front of seat s is drunk by s. Scribe s then buys the next drink for scribe p_s, who drinks it and buys the next for scribe p_{p_s}, and so on. The chain never ends, since everyone owes someone.\n\nFor every seat s from 1 to n, report how many distinct scribes ever hold a drink in the chain that starts at s. Scribe s counts, and a scribe who holds a drink many times counts once.\n\nExample 1:\nInput:\n4\n2 3 1 3\nOutput:\n3\n3\n3\n4\nExplanation: Scribes 1, 2 and 3 owe each other round and round, so a drink starting at any of them touches exactly those three. A drink starting at seat 4 goes to seat 3 and then round the same ring, touching all four.\n\nExample 2:\nInput:\n2\n2 1\nOutput:\n2\n2\nExplanation: The two scribes buy for each other forever.\n\nExample 3:\nInput:\n5\n2 3 4 5 4\nOutput:\n5\n4\n3\n2\n2\nExplanation: Seats 4 and 5 owe each other, and seats 1, 2 and 3 form a queue leading into that pair. A drink starting at seat 1 touches every seat; one starting at seat 4 never leaves the pair.",
+  "inputFormat": "The first line contains an integer n, the number of scribes. The second line contains n integers p_1, ..., p_n, where p_i is the scribe that scribe i owes their next drink to.",
+  "outputFormat": "Print n lines. Line s is the number of distinct scribes who ever hold a drink in the chain that starts at seat s.",
+  "constraints": "2 <= n <= 2 * 10^5\n1 <= p_i <= n\np_i != i",
+  "tags": [
+    "graphs",
+    "dfs",
+    "implementation"
+  ],
+  "hints": [
+    "Follow the chain from one seat and sooner or later you reach a seat you have already passed; after that the chain only repeats what it has already touched, so the answer is the number of seats met before the first repeat.",
+    "Every seat leads into exactly one ring of scribes who owe each other round. If s is on a ring, the answer for s is the length of that ring. Otherwise the answer for s is one more than the answer for p_s.",
+    "Walk from an unvisited seat, marking each seat with the position it took on this walk. If the walk meets a seat marked on this same walk, the two positions give the length of the ring; if it meets a seat settled on an earlier walk, take that seat's answer and unwind.",
+    "Each seat is walked over once in total, so the whole table costs O(n). Use an explicit list as the stack; n is far past the depth a recursive version would survive."
+  ],
+  "difficulty": "medium",
+  "rating": 1600,
+  "timeLimitMs": 3000,
+  "cluster": "the-drink-owed",
+  "samples": [
+    {
+      "input": "4\n2 3 1 3\n",
+      "output": "3\n3\n3\n4\n"
+    },
+    {
+      "input": "2\n2 1\n",
+      "output": "2\n2\n"
+    },
+    {
+      "input": "5\n2 3 4 5 4\n",
+      "output": "5\n4\n3\n2\n2\n"
+    }
+  ],
+  "solution": {
+    "language": "python",
+    "code": "import sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    n = int(data[0])\n    nxt = [int(x) - 1 for x in data[1:1 + n]]\n    ans = [0] * n\n    state = bytearray(n)\n    order = [0] * n\n    for s in range(n):\n        if state[s]:\n            continue\n        path = []\n        v = s\n        while state[v] == 0:\n            state[v] = 1\n            order[v] = len(path)\n            path.append(v)\n            v = nxt[v]\n        if state[v] == 1:\n            start = order[v]\n            cycle = len(path) - start\n            for u in path[start:]:\n                ans[u] = cycle\n                state[u] = 2\n            del path[start:]\n            base = cycle\n        else:\n            base = ans[v]\n        for u in reversed(path):\n            base += 1\n            ans[u] = base\n            state[u] = 2\n    sys.stdout.write(\"\\n\".join(map(str, ans)) + \"\\n\")\n\n\nmain()\n"
+  },
+  "brute": {
+    "language": "python",
+    "code": "import sys\n\ndata = sys.stdin.read().split()\nn = int(data[0])\nnxt = [int(x) - 1 for x in data[1:1 + n]]\nout = []\nfor s in range(n):\n    seen = set()\n    cur = s\n    while cur not in seen:\n        seen.add(cur)\n        cur = nxt[cur]\n    out.append(str(len(seen)))\nprint(\"\\n\".join(out))\n"
+  }
+}
