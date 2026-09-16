@@ -124,3 +124,98 @@
 .mark-unearned .mark-name {
   color: var(--muted);
 }
+
+/* The loadout editor: one rule-separated row per slot, native radios wearing the drawings. */
+.loadout {
+  display: flex;
+  flex-direction: column;
+}
+.loadout-slot {
+  min-inline-size: 0;
+  border: 0;
+  border-top: var(--rule) solid var(--line);
+  padding: var(--space-4) 0;
+}
+.loadout-slot:last-child {
+  border-bottom: var(--rule) solid var(--line);
+}
+.loadout-slot:disabled {
+  opacity: 0.6;
+}
+.loadout-legend {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  padding-bottom: var(--space-2);
+}
+.loadout-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.loadout-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: 6.5rem;
+  min-height: 2.75rem;
+  padding: var(--space-2);
+  border: var(--rule) solid transparent;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+.loadout-choice:hover {
+  border-color: var(--line);
+  color: var(--ink);
+}
+/* worn: a full rule and the bone ink, never colour on its own */
+.loadout-worn {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.loadout-worn .loadout-name {
+  font-weight: 700;
+}
+/* the ring follows the radio, which is announced but not drawn */
+.loadout-choice:has(input:focus-visible) {
+  outline: var(--rule) solid var(--focus);
+  outline-offset: 3px;
+}
+.loadout-bare {
+  width: 48px;
+  height: 48px;
+  border: var(--rule) dashed var(--line);
+}
+.loadout-name {
+  text-wrap: balance;
+}
+
+/* The badge shelf. */
+.shelf {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--space-6) var(--space-4);
+}
+.shelf-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+.shelf-name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.shelf-text {
+  font-size: var(--text-sm);
+  text-wrap: pretty;
+}

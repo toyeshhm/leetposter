@@ -172,7 +172,9 @@ describe("roomState", () => {
     code: "ABCDE",
     hostId: "p0",
     phase: "reveal",
-    players: [{ id: "p0", name: "P0", token: TOKEN, userId: null, username: null, seats: ["runner", "oracle"], isImposter: true, ejected: false, freezeUsed: true, joinedAt: 1 }],
+    players: [
+      { id: "p0", name: "P0", token: TOKEN, userId: null, username: null, look: null, seats: ["runner", "oracle"], isImposter: true, ejected: false, freezeUsed: true, joinedAt: 1 },
+    ],
     problem: PROBLEM,
     settings: DEFAULT_SETTINGS,
     clock: { phaseStartedAt: 1, buildElapsedMs: 2, buildRunningSince: null },

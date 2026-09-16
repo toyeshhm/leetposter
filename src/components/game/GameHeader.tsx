@@ -27,6 +27,11 @@ export function GameHeader({ view }: { view: PlayerView }): ReactElement {
         ))}
         {view.me.ejected ? <span className="muted">cast out</span> : null}
       </p>
+      {view.phase === "lobby" ? null : (
+        <Link href={`/room/${view.code}/watch`} className="room-leave">
+          Share the watch link
+        </Link>
+      )}
       <Link href="/" className="room-leave">
         Leave the hall
       </Link>

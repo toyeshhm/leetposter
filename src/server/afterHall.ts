@@ -1,5 +1,7 @@
 import type { RoomState } from "@/game/types";
+import { economyAfterHall } from "@/server/economy/hall";
 import { log } from "@/server/log";
+import { problemAfterHall } from "@/server/problemRating";
 
 /**
  * Everything that happens once a hall is recorded, after game_results and Elo: problem ratings,
@@ -8,7 +10,7 @@ import { log } from "@/server/log";
  */
 export type HallHook = (state: RoomState) => Promise<void>;
 
-export const HOOKS: HallHook[] = [];
+export const HOOKS: HallHook[] = [economyAfterHall, problemAfterHall];
 
 export async function afterHall(state: RoomState): Promise<void> {
   for (const hook of HOOKS) {

@@ -4,8 +4,9 @@ import { GameError } from "@/game/errors";
 import { apply } from "@/game/reducer";
 import { personalize } from "@/game/view";
 import { DEFAULT_SETTINGS, MAX_PLAYERS } from "@/game/types";
-import type { Action, GameErrorCode, Player, PlayerView, RoomState } from "@/game/types";
+import type { Action, EquippedLook, GameErrorCode, Player, PlayerView, RoomState } from "@/game/types";
 import type { AccountUser } from "@/server/auth";
+import { equippedLook } from "@/server/economy/look";
 import { log } from "@/server/log";
 import { recordResults } from "@/server/results";
 import { createRoom, withRoom } from "@/server/store";
@@ -18,13 +19,14 @@ export function newCode(): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(5)), (b) => CODE_ALPHABET.charAt(b % CODE_ALPHABET.length)).join("");
 }
 
-function newPlayer(name: string, account: AccountUser | null, now: number): Player {
+function newPlayer(name: string, account: AccountUser | null, look: EquippedLook | null, now: number): Player {
   return {
     id: crypto.randomUUID(),
     name,
     token: Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString("hex"),
     userId: account?.id ?? null,
     username: account?.username ?? null,
+    look,
     seats: [],
     isImposter: false,
     ejected: false,
@@ -43,7 +45,7 @@ export function displayName(name: string | undefined, account: AccountUser | nul
 /** `codeGen` is injectable so the collision retry is testable against the real database. */
 export async function createRoomHandler(name: string, account: AccountUser | null, codeGen: () => string = newCode): Promise<Credentials> {
   const now = Date.now();
-  const host = newPlayer(name, account, now);
+  const host = newPlayer(name, account, await equippedLook(account), now);
   for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
     const code = codeGen();
     const state: RoomState = {
@@ -66,7 +68,7 @@ export async function createRoomHandler(name: string, account: AccountUser | nul
 }
 
 export async function joinHandler(code: string, name: string, account: AccountUser | null): Promise<Credentials> {
-  const player = newPlayer(name, account, Date.now());
+  const player = newPlayer(name, account, await equippedLook(account), Date.now());
   await withRoom(code, (s) => {
     if (s.phase !== "lobby") throw new GameError("wrong-phase", "The reading has begun; no one joins now.");
     if (s.players.length >= MAX_PLAYERS) throw new GameError("room-full", "The hall is full.");

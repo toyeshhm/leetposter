@@ -1,0 +1,227 @@
+/* Cosmetics: the title line, the caret, and the /design/cosmetics gallery. Tokens come from globals.css. */
+
+.title-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  line-height: 1.3;
+  color: var(--muted);
+}
+.title-line::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  rotate: 45deg;
+}
+
+/* The editor cursor. The editor sets --caret from CARET_COLORS and data-caret to the item id. */
+.caret {
+  width: 2px;
+  background: var(--caret, var(--ink));
+}
+.caret[data-caret="caret-guttering"] {
+  animation: caret-gutter 1.9s steps(1, end) infinite;
+}
+.caret[data-caret="caret-wisp"] {
+  position: relative;
+}
+/* the thread of smoke: a strip above the cursor that fades as it rises */
+.caret[data-caret="caret-wisp"]::before {
+  content: "";
+  position: absolute;
+  inset: -1.1em 0 60% 0;
+  background: linear-gradient(to top, var(--caret), transparent);
+  animation: caret-wisp 1.4s linear infinite;
+}
+@keyframes caret-gutter {
+  0%,
+  62%,
+  100% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  78% {
+    opacity: 0.9;
+  }
+  86% {
+    opacity: 0.25;
+  }
+}
+@keyframes caret-wisp {
+  from {
+    opacity: 0.55;
+    transform: translateY(0.3em);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.5em);
+  }
+}
+/* the editor caret is decoration, and the record never moves */
+@media (prefers-reduced-motion: reduce) {
+  .caret[data-caret="caret-guttering"],
+  .caret[data-caret="caret-wisp"]::before {
+    animation: none;
+  }
+}
+
+/* --- the gallery at /design/cosmetics --- */
+.c-page {
+  width: min(100% - 2 * var(--space-6), 72rem);
+  margin: 0 auto;
+  padding: var(--space-12) 0 var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.c-head p {
+  max-width: 56ch;
+  color: var(--muted);
+}
+.c-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.c-section > h2 {
+  font-size: var(--text-xl);
+}
+.c-section > h2 > span {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-left: var(--space-3);
+}
+.c-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-8) var(--space-4);
+}
+.c-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+.c-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-height: 96px;
+}
+.c-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+.c-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+/* a frame wraps a square: the frame sets the box and the portrait is centred inside its opening, 70 of 96 units */
+.c-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.c-wrap > .plate:last-child {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+.c-titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.c-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.c-title-row > b {
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+.c-carets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--space-4);
+}
+.c-caret-demo {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: var(--rule) solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  color: var(--muted);
+}
+.c-caret-demo > .caret {
+  height: 1.3em;
+}
+.c-themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-6);
+}
+.c-theme {
+  border: var(--rule) solid var(--ink);
+  background-color: var(--bg);
+  background-image: var(--tx-hatch);
+  color: var(--ink);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.c-theme h3 {
+  font-size: var(--text-lg);
+}
+.c-theme p {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.c-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.c-chips > i {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--line);
+  background: var(--chip);
+}
+.c-theme-ui {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.c-theme-ui > b {
+  padding: var(--space-1) var(--space-3);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+}
+.c-theme-ui > em {
+  font-style: normal;
+  color: var(--danger-ink);
+}
+.c-theme-ui > s {
+  text-decoration: none;
+  color: var(--success-ink);
+}

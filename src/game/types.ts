@@ -64,6 +64,17 @@ export const DEFAULT_SETTINGS: Settings = {
   freezeClosesBeforeEndMs: 90_000,
 };
 
+/**
+ * The cosmetics a player wears at the table: their loadout, minus the slots only they see
+ * (the theme and the caret). Captured when they take a seat, so a view stays pure.
+ */
+export interface EquippedLook {
+  avatar: string | null;
+  frame: string | null;
+  title: string | null;
+  badge: string | null;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -73,6 +84,8 @@ export interface Player {
   userId: string | null;
   /** Profile username captured at join time (so views stay pure); null for guests. */
   username: string | null;
+  /** The account's equipped cosmetics at join time; null for a guest, absent in halls saved before the economy. */
+  look?: EquippedLook | null;
   /** Usually one seat. The runner seat is transferred on ejection, so a player may hold two. */
   seats: Seat[];
   isImposter: boolean;
@@ -181,6 +194,8 @@ export interface PublicPlayer {
   isHost: boolean;
   /** Public username when the player has an account; null for guests. */
   username: string | null;
+  /** What this player wears at the table; null for a guest and for anyone wearing nothing. */
+  look: EquippedLook | null;
   /** Only present at the reveal, or for yourself, or (if you are the imposter) for everyone. */
   isImposter: boolean | null;
 }
@@ -237,6 +252,30 @@ export interface PlayerView {
   outcome: Outcome | null;
   /** Only at reveal: the full truth for the "you said X, it said Y" screen. */
   reveal: { problem: Problem; imposterIds: string[]; players: { id: string; seats: Seat[]; isImposter: boolean }[] } | null;
+}
+
+/**
+ * What anyone with the code may see, no token needed. Every seat panel is open (a spectator is every seat
+ * at once), the ballots stay hidden until a round resolves, and who the Changeling is waits for the reveal.
+ * No tokens, no shared editor. Produced by `spectate`.
+ */
+export interface SpectatorView {
+  code: string;
+  phase: Phase;
+  players: PublicPlayer[];
+  settings: Settings;
+  problem: PlayerView["problem"];
+  /** Every seat's panel, or all null before a problem is set. */
+  panel: PanelView;
+  cards: CardEntry[];
+  submissions: Submission[];
+  submissionsLeft: number;
+  votes: VoteRoundView[];
+  activeVote: VoteRoundView | null;
+  clock: PlayerView["clock"];
+  outcome: Outcome | null;
+  /** Only at reveal, the same truth the players get. */
+  reveal: PlayerView["reveal"];
 }
 
 export type GameErrorCode =

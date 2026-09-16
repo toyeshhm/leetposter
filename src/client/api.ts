@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Action, PlayerView } from "@/game/types";
 import type { Achievement, GameResultRow } from "@/server/achievements";
 import type { FriendsPage } from "@/server/friends";
+import type { ProblemTests } from "@/server/problems";
 
 export interface Credentials {
   code: string;
@@ -89,6 +90,11 @@ export function saveDoc(creds: Credentials, doc: string, keepalive: boolean): Pr
   return call<{ ok: true }>(`/api/rooms/${encodeURIComponent(creds.code)}/doc`, { method: "POST", body: JSON.stringify({ doc }), keepalive }, creds.token);
 }
 
+/** A bank problem's samples and hidden tests. The server hands these to the Herald of this hall only. */
+export function fetchProblemTests(creds: Credentials, id: string): Promise<ProblemTests> {
+  return call<ProblemTests>(`/api/problems/${encodeURIComponent(id)}/tests?code=${encodeURIComponent(creds.code)}`, { method: "GET" }, creds.token);
+}
+
 /** The signed-in player's recorded games, newest first. `token` is the Supabase access token. */
 export function fetchHistory(token: string): Promise<{ games: GameResultRow[] }> {
   return call<{ games: GameResultRow[] }>("/api/account/history", { method: "GET" }, token);
@@ -110,6 +116,90 @@ export function acceptFriend(token: string, username: string): Promise<FriendsPa
 }
 export function removeFriend(token: string, username: string): Promise<FriendsPage> {
   return call<FriendsPage>(`/api/friends/${encodeURIComponent(username)}`, { method: "DELETE" }, token);
+}
+
+/* Economy. Like friends, every call answers with the whole page again, so a screen just replaces its state. */
+
+/** The six equippable slots. `emote` is not one: `loadouts` (migration 0006) has no column for it. */
+export const LOADOUT_SLOTS = ["avatar", "frame", "title", "theme", "caret", "badge"] as const;
+
+/** One equipped catalog id per slot, or null for the default. */
+export interface Loadout {
+  avatar: string | null;
+  frame: string | null;
+  title: string | null;
+  theme: string | null;
+  caret: string | null;
+  badge: string | null;
+}
+
+/** `candles` and `loadout` are null for a guest, who sees the shelf and the prices but owns nothing. */
+export interface StorePage {
+  candles: number | null;
+  owned: string[];
+  loadout: Loadout | null;
+}
+
+export interface PassPage {
+  /** The season running now, or null between seasons. */
+  seasonId: string | null;
+  xp: number;
+  paid: boolean;
+  /** Tiers already claimed. */
+  claimed: number[];
+  candles: number;
+}
+
+/** One quest as the server counts it; the name, goal and rewards come from QUEST_POOL by id. */
+export interface QuestProgress {
+  id: string;
+  progress: number;
+  claimed: boolean;
+}
+
+export interface QuestsPage {
+  daily: QuestProgress[];
+  weekly: QuestProgress[];
+  candles: number;
+}
+
+/** The shelf. No token means a guest: prices, no wallet. */
+export function fetchStore(token: string | null): Promise<StorePage> {
+  return call<StorePage>("/api/store", { method: "GET" }, token ?? undefined);
+}
+
+export function buyItem(token: string, itemId: string): Promise<StorePage> {
+  return call<StorePage>("/api/store/buy", { method: "POST", body: JSON.stringify({ itemId }) }, token);
+}
+
+export function fetchLoadout(token: string): Promise<Loadout> {
+  return call<Loadout>("/api/account/loadout", { method: "GET" }, token);
+}
+
+/** `itemId` null clears the slot back to the default. */
+export function equipItem(token: string, slot: (typeof LOADOUT_SLOTS)[number], itemId: string | null): Promise<Loadout> {
+  return call<Loadout>("/api/account/loadout", { method: "POST", body: JSON.stringify({ slot, itemId }) }, token);
+}
+
+export function fetchPass(token: string): Promise<PassPage> {
+  return call<PassPage>("/api/pass", { method: "GET" }, token);
+}
+
+export function claimTier(token: string, tier: number): Promise<PassPage> {
+  return call<PassPage>("/api/pass/claim", { method: "POST", body: JSON.stringify({ tier }) }, token);
+}
+
+/** The Stripe Checkout url to send the buyer to. Without keys the route answers "The store has no till yet." */
+export function passCheckout(token: string): Promise<{ url: string }> {
+  return call<{ url: string }>("/api/pass/checkout", { method: "POST" }, token);
+}
+
+export function fetchQuests(token: string): Promise<QuestsPage> {
+  return call<QuestsPage>("/api/quests", { method: "GET" }, token);
+}
+
+export function claimQuest(token: string, questId: string): Promise<QuestsPage> {
+  return call<QuestsPage>("/api/quests/claim", { method: "POST", body: JSON.stringify({ questId }) }, token);
 }
 
 /* Credentials live in localStorage, one entry per hall, so a second hall never evicts the first. */

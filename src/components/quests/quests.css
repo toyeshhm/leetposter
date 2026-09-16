@@ -1,0 +1,63 @@
+/* The quest board, shown on /pass. The bar shape comes from pass.css. */
+.quests {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.quest-head {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+}
+.quest-list {
+  list-style: none;
+}
+.quest {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-top: var(--rule) solid var(--line);
+}
+.quest:last-child {
+  border-bottom: var(--rule) solid var(--line);
+}
+.quest-claimed .quest-words {
+  opacity: 0.6;
+}
+.quest-name {
+  font-size: var(--text-md);
+}
+.quest-pay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.quest-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.quest-count {
+  font-size: var(--text-xs);
+}
+.quest-act {
+  display: flex;
+  align-items: center;
+}
+.quest-word {
+  font-size: var(--text-sm);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
+.quest-word:not(.muted) {
+  color: var(--success-ink);
+}
+@media (min-width: 48rem) {
+  .quest {
+    grid-template-columns: minmax(0, 1fr) 8rem 12rem 7rem;
+    align-items: center;
+    gap: var(--space-4);
+  }
+}

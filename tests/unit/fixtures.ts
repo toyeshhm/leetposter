@@ -34,6 +34,7 @@ export function player(i: number): Player {
     token: `t${String(i)}`,
     userId: null,
     username: null,
+    look: null,
     seats: [],
     isImposter: false,
     ejected: false,

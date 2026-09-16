@@ -20,6 +20,7 @@ function player(id: string, seats: Player["seats"], extra: Partial<Player> = {})
     token: `token-${id}`,
     userId: null,
     username: null,
+    look: null,
     seats,
     isImposter: false,
     ejected: false,

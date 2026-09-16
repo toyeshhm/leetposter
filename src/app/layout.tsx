@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactElement } from "react";
 import { Alegreya_Sans, IM_Fell_English } from "next/font/google";
+import { ThemeIsland } from "@/client/theme";
 import "./globals.css";
 
 const fell = IM_Fell_English({
@@ -40,7 +41,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">): ReactElement {
   return (
     <html lang="en" className={`${fell.variable} ${alegreya.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ThemeIsland />
+      </body>
     </html>
   );
 }

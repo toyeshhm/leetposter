@@ -78,6 +78,10 @@ export const roomState: z.ZodType<RoomState> = z.object({
       token: z.string(),
       userId: z.string().nullable(),
       username: z.string().nullable(),
+      look: z
+        .object({ avatar: z.string().nullable(), frame: z.string().nullable(), title: z.string().nullable(), badge: z.string().nullable() })
+        .nullable()
+        .exactOptional(),
       seats: z.array(seat),
       isImposter: z.boolean(),
       ejected: z.boolean(),
