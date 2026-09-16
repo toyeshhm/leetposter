@@ -104,6 +104,24 @@
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--space-4);
 }
+.lobby-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 500;
+  cursor: pointer;
+}
+.lobby-switch input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.lobby-switch input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .lobby-actions {
   display: flex;
   flex-wrap: wrap;

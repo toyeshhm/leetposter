@@ -15,7 +15,7 @@ export interface Database {
       rooms: {
         Row: { code: string; state: unknown; version: number; updated_at: string; doc: string | null; listed: boolean };
         Insert: { code: string; state: RoomState; version: number };
-        Update: { state?: RoomState; version?: number; updated_at?: string; doc?: string };
+        Update: { state?: RoomState; version?: number; updated_at?: string; doc?: string; listed?: boolean };
         Relationships: [];
       };
       profiles: {

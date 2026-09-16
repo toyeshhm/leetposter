@@ -1,0 +1,42 @@
+/* The watch page. Layout only; the clock, roster, record, panels and reveal styles come from the game's sheets. */
+.watch-grid {
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr);
+}
+.watch-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.watch-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+/* four seats in a row on a desk; two by two, then one by one, as the column narrows */
+.watch-panels {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: start;
+}
+.watch-votes .tribunal-clocks {
+  margin: var(--space-3) 0;
+}
+.watch-gone {
+  align-items: flex-start;
+}
+@media (min-width: 56rem) {
+  .watch-grid {
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    align-items: start;
+    gap: var(--space-8) var(--space-6);
+  }
+  .watch-side {
+    position: sticky;
+    top: var(--space-4);
+  }
+}

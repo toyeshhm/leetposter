@@ -65,3 +65,53 @@ export async function saveDoc(code: string, doc: string): Promise<void> {
   if (error !== null) throw new Error(`saveDoc ${code}: ${error.message}`);
   if (data.length !== 1) throw new GameError("not-found", `No hall called ${code}.`);
 }
+
+/** Put the hall on (or take it off) the public board. Bumps updated_at so a freshly listed lobby shows at once. */
+export async function setListed(code: string, listed: boolean): Promise<void> {
+  const { data, error } = await supabase.from("rooms").update({ listed, updated_at: new Date().toISOString() }).eq("code", code).select("code");
+  if (error !== null) throw new Error(`setListed ${code}: ${error.message}`);
+  if (data.length !== 1) throw new GameError("not-found", `No hall called ${code}.`);
+}
+
+export async function isListed(code: string): Promise<boolean> {
+  const { data, error } = await supabase.from("rooms").select("listed").eq("code", code).maybeSingle();
+  if (error !== null) throw new Error(`isListed ${code}: ${error.message}`);
+  if (data === null) throw new GameError("not-found", `No hall called ${code}.`);
+  return data.listed;
+}
+
+/** One line of the halls board. `watchable` is false in the lobby, where the door is still open and joining beats watching. */
+export interface HallRow {
+  code: string;
+  host: string;
+  phase: RoomState["phase"];
+  players: number;
+  rating: number | null;
+  watchable: boolean;
+}
+
+const BOARD_WINDOW_MS = 15 * 60_000;
+const BOARD_LIMIT = 50;
+
+/** Listed halls that moved since `since` (fifteen minutes ago by default; injectable so the failure path is testable), newest first. */
+export async function listHalls(since: string = new Date(Date.now() - BOARD_WINDOW_MS).toISOString()): Promise<HallRow[]> {
+  const { data, error } = await supabase
+    .from("rooms")
+    .select("state")
+    .eq("listed", true)
+    .gte("updated_at", since)
+    .order("updated_at", { ascending: false })
+    .limit(BOARD_LIMIT);
+  if (error !== null) throw new Error(`listHalls: ${error.message}`);
+  return data.map((row) => {
+    const state = parse(roomState, row.state);
+    return {
+      code: state.code,
+      host: state.players.find((p) => p.id === state.hostId)?.name ?? "someone",
+      phase: state.phase,
+      players: state.players.length,
+      rating: state.problem?.rating ?? null,
+      watchable: state.phase !== "lobby",
+    };
+  });
+}

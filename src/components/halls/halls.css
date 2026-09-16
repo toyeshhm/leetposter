@@ -1,0 +1,15 @@
+/* /halls: the table comes from leaderboard.css; only the code column and the link column are its own. */
+.halls-code {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.halls-open {
+  text-align: right;
+  white-space: nowrap;
+}
+@media (pointer: coarse) {
+  .halls-open a {
+    display: inline-block;
+    padding-block: var(--space-2);
+  }
+}

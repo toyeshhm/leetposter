@@ -1,6 +1,6 @@
 "use client";
-import { useState, type ReactElement } from "react";
-import { errorMessage } from "@/client/api";
+import { useEffect, useState, type ReactElement } from "react";
+import { call, errorMessage, loadCredentials } from "@/client/api";
 import { Button, Frame, Notice } from "@/components/ui";
 import { MIN_PLAYERS, type Action, type PlayerView } from "@/game/types";
 import { ProblemForm } from "./ProblemForm";
@@ -40,6 +40,7 @@ function HostControls({ view, send, busy }: { view: PlayerView; send: (action: A
     <>
       <ProblemForm send={send} busy={busy} problem={view.problem} />
       <SettingsForm send={send} busy={busy} settings={view.settings} />
+      <BoardSwitch code={view.code} />
       <Frame title="Begin">
         <div className="lobby-stack">
           <p className="muted prose">{readiness} Seats and the Changeling are dealt the moment you begin. Nobody joins after that.</p>
@@ -52,6 +53,64 @@ function HostControls({ view, send, busy }: { view: PlayerView; send: (action: A
         </div>
       </Frame>
     </>
+  );
+}
+
+/** The host's switch for the public board. The row column, not the game state, holds it, so it is read once here. */
+function BoardSwitch({ code }: { code: string }): ReactElement {
+  const [listed, setListed] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    call<{ listed: boolean }>(`/api/rooms/${encodeURIComponent(code)}/listed`, { method: "GET" })
+      .then((r) => {
+        if (live) setListed(r.listed);
+      })
+      .catch((e: unknown) => {
+        if (live) setError(errorMessage(e));
+      });
+    return () => {
+      live = false;
+    };
+  }, [code]);
+
+  const toggle = async (next: boolean): Promise<void> => {
+    const creds = loadCredentials(code);
+    if (creds === null) {
+      setError("This browser has lost your seat. Reload the hall.");
+      return;
+    }
+    const before = listed;
+    setSaving(true);
+    setError(null);
+    // The box follows the hand at once; the server's answer stands, and a refusal puts it back.
+    setListed(next);
+    try {
+      const r = await call<{ listed: boolean }>(`/api/rooms/${encodeURIComponent(code)}/listed`, { method: "POST", body: JSON.stringify({ token: creds.token, listed: next }) });
+      setListed(r.listed);
+    } catch (e: unknown) {
+      setListed(before);
+      setError(errorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Frame title="The board">
+      <div className="lobby-stack">
+        <label className="lobby-switch">
+          <input type="checkbox" checked={listed === true} disabled={listed === null || saving} onChange={(e) => void toggle(e.target.checked)} />
+          <span>List this hall on the board</span>
+        </label>
+        <p className="muted prose">
+          A listed hall shows on the halls board while it moves. Anyone can watch every seat at once from the watch link; no one can act from it.
+        </p>
+        {error === null ? null : <Notice kind="error">{error}</Notice>}
+      </div>
+    </Frame>
   );
 }
 
