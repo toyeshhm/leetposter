@@ -2,7 +2,7 @@ import { z } from "zod";
 import { GameError } from "@/game/errors";
 import { bearerToken, loadAccount, verifyToken } from "@/server/auth";
 import { readBody, respond } from "@/server/handlers";
-import { createProfile, username } from "@/server/profiles";
+import { createProfile, renameProfile, username } from "@/server/profiles";
 
 const createBody = z.object({ username });
 
@@ -18,6 +18,16 @@ export function POST(req: Request): Promise<Response> {
     const { id } = await verifyToken(tokenOrThrow(req));
     const body = await readBody(req, createBody);
     await createProfile(id, body.username);
+    return { id, username: body.username };
+  });
+}
+
+/** PATCH {username} (bearer) -> {id, username}. Renames an existing profile; 409 when the name is taken. */
+export function PATCH(req: Request): Promise<Response> {
+  return respond(async () => {
+    const { id } = await verifyToken(tokenOrThrow(req));
+    const body = await readBody(req, createBody);
+    await renameProfile(id, body.username);
     return { id, username: body.username };
   });
 }

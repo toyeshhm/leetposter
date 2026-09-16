@@ -20,3 +20,18 @@ export async function createProfile(id: string, name: string): Promise<void> {
   if (error.code === UNIQUE_VIOLATION) throw new GameError("taken", error.message.includes("username") ? "That name is taken." : "This account already has a name.");
   throw new Error(`profiles insert ${id}: ${error.message}`);
 }
+
+/**
+ * Change the name on an existing profile. Every screen that shows a username joins `profiles` on
+ * the account id rather than storing the name, so a rename follows the player through the
+ * leaderboard, their ledger and their friends without touching a recorded hall.
+ */
+export async function renameProfile(id: string, name: string): Promise<void> {
+  const { data, error } = await supabase.from("profiles").update({ username: name }).eq("id", id).select("id").maybeSingle();
+  if (error !== null) {
+    if (error.code === UNIQUE_VIOLATION) throw new GameError("taken", "That name is taken.");
+    throw new Error(`profiles rename ${id}: ${error.message}`);
+  }
+  // No row updated: this account never reached the "choose your name" step, so there is nothing to rename.
+  if (data === null) throw new GameError("not-found", "No name chosen yet.");
+}

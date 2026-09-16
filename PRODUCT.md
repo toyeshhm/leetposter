@@ -49,7 +49,8 @@ Voice: plain sentences, sentence case, in-world nouns (Cartographer, Oracle, War
 
 - WCAG 2.2 AA minimum: body text ≥ 4.5:1, large text and UI borders ≥ 3:1. Every token pair in DESIGN.md is verified.
 - Keyboard first: every action is a native `button`, `input`, `textarea` or `a`. Visible focus ring on everything.
-- Reduced motion honoured: the only non-user motion (hourglass on a loading button) collapses to a static glyph.
+- Reduced motion honoured: motion is opt-in under `prefers-reduced-motion: no-preference`, so a player who asks for stillness gets the page with nothing animating and nothing missing.
+- Light and dark both ship, free, at `/settings`, and follow the system by default. All twelve theme-and-mode combinations are contrast-verified in CI, not by eye.
 - Color never carries meaning alone: Accepted and Rejected have distinct glyphs and words, the timer's urgency is also in its text and `aria-live`.
 - Every SVG has `role="img"` and a title; decorative ornaments are `aria-hidden`.
 - Seat names are English words a non-native speaker can read; the four seats also carry distinct sigils for people who do not read the labels.

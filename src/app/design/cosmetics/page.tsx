@@ -59,8 +59,8 @@ function Framed({ item }: { item: Item }): ReactElement {
 
 export default function CosmeticsGallery(): ReactElement {
   if (process.env.NODE_ENV === "production") notFound();
-  const themeRules = Object.keys(THEME_VARS)
-    .map((id) => `.c-theme[data-theme="${id}"] { ${themeCss(id)} }`)
+  const themeRules = (["dark", "light"] as const)
+    .flatMap((mode) => Object.keys(THEME_VARS[mode]).map((id) => `.c-theme[data-theme="${id}"][data-mode="${mode}"] { ${themeCss(id, mode)} }`))
     .join("\n");
   return (
     <main className="c-page">

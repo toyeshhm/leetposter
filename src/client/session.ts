@@ -9,6 +9,8 @@ export interface SessionState {
   status: "loading" | "out" | "needs-profile" | "in";
   userId: string | null;
   username: string | null;
+  /** The address the account signs in with, straight off the session; null for a guest. */
+  email: string | null;
   /** Supabase access token to send as `Authorization: Bearer` to account routes. */
   accessToken: string | null;
   /** Why the username could not be loaded for a live session; null otherwise. */
@@ -18,7 +20,7 @@ export interface SessionState {
   createProfile: (username: string) => Promise<void>;
 }
 
-const OUT: Omit<SessionState, "signOut" | "createProfile"> = { status: "out", userId: null, username: null, accessToken: null, error: null };
+const OUT: Omit<SessionState, "signOut" | "createProfile"> = { status: "out", userId: null, username: null, email: null, accessToken: null, error: null };
 
 async function signOut(): Promise<void> {
   const { error } = await supabaseBrowser.auth.signOut();
@@ -43,14 +45,14 @@ export function useSession(): SessionState {
       if (session.access_token === current) return;
       current = session.access_token;
       if (known !== null && known.id === session.user.id) {
-        setState({ status: "in", userId: known.id, username: known.username, accessToken: session.access_token, error: null });
+        setState({ status: "in", userId: known.id, username: known.username, email: session.user.email ?? null, accessToken: session.access_token, error: null });
         return;
       }
       try {
         const account = await fetchAccount(session.access_token);
         if (current !== session.access_token) return;
         known = { id: account.id, username: account.username };
-        setState({ status: "in", userId: account.id, username: account.username, accessToken: session.access_token, error: null });
+        setState({ status: "in", userId: account.id, username: account.username, email: session.user.email ?? null, accessToken: session.access_token, error: null });
       } catch (failure: unknown) {
         if (current !== session.access_token) return;
         // No profile row yet (a sign-up that never reached the name step) answers 404: signed in, nameless. Anything else is shown.
@@ -59,6 +61,7 @@ export function useSession(): SessionState {
           status: nameless ? "needs-profile" : "in",
           userId: session.user.id,
           username: null,
+          email: session.user.email ?? null,
           accessToken: session.access_token,
           error: nameless ? null : errorMessage(failure),
         });
@@ -76,7 +79,7 @@ export function useSession(): SessionState {
   const createProfile = async (username: string): Promise<void> => {
     if (state.accessToken === null) throw new Error("Sign in first.");
     const account = await createAccount(username, state.accessToken);
-    setState({ status: "in", userId: account.id, username: account.username, accessToken: state.accessToken, error: null });
+    setState({ status: "in", userId: account.id, username: account.username, email: state.email, accessToken: state.accessToken, error: null });
     // Every other useSession (the header's nav) fetched the profile before it existed; a fresh token makes them look again.
     const { error } = await supabaseBrowser.auth.refreshSession();
     if (error !== null) throw error;

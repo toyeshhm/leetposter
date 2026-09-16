@@ -73,7 +73,9 @@ export const THEME_TOKENS: Readonly<Record<string, Readonly<Record<string, strin
     "--ink": "oklch(0.92 0.012 60)",
     "--muted": "oklch(0.7 0.014 60)",
     "--accent": "oklch(0.68 0.16 25)",
-    "--accent-deep": "oklch(0.56 0.15 25)",
+    // 0.56 put bg-coloured button text at 3.93:1 on the hover fill; 0.60 clears AA at 4.65 and is
+    // still a visible step down from the base. Caught by tests/unit/cosmetics-themes.test.ts.
+    "--accent-deep": "oklch(0.6 0.15 25)",
   },
   "theme-frost": {
     "--bg": "oklch(0.18 0.012 240)",

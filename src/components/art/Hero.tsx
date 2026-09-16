@@ -87,7 +87,7 @@ export function HeroPlate(props: ArtProps): ReactElement {
       </defs>
 
       {/* light, as hatching: wall at 78 degrees, table at -2, crosshatch nearest the flame */}
-      <g strokeWidth={1.1} strokeLinecap="butt">
+      <g className="hero-light" strokeWidth={1.1} strokeLinecap="butt">
         <path mask={`url(#${id}l2)`} d={hatch(0, 0, 640, 196, 7.5, 78) + hatch(0, 196, 640, 52, 7.5, -2)} />
         <path mask={`url(#${id}l1)`} d={hatch(0, 0, 640, 196, 4.8, 78) + hatch(0, 196, 640, 52, 4.8, -2) + hatch(0, 248, 640, 18, 5, 90)} />
         <path mask={`url(#${id}l0)`} d={hatch(0, 0, 640, 196, 3.6, 168) + hatch(0, 196, 640, 52, 3.6, 88)} />
@@ -116,8 +116,10 @@ export function HeroPlate(props: ArtProps): ReactElement {
       <path d="M300 196 a20 5 0 0 0 40 0" strokeWidth={2.5} />
       <path d="M310 150 V196 M330 150 V196 M310 150 H330 M312 150 v12 c0 3 -3 3 -3 0 M327 150 v8 c0 2 2 2 2 0" strokeWidth={2.4} />
       <path d="M320 142 V150" strokeWidth={2} />
-      <path className="spot" d="M320 106 C325 114 329 122 327 130 C326 135 323 137 320 137 C317 137 314 135 313 130 C311 122 315 114 320 106 Z" />
-      <path d="M320 92 C329 105 336 118 333 130 C331 138 326 142 320 142 C314 142 309 138 307 130 C304 118 311 105 320 92 Z" strokeWidth={2.6} />
+      <g className="hero-flame">
+        <path className="spot" d="M320 106 C325 114 329 122 327 130 C326 135 323 137 320 137 C317 137 314 135 313 130 C311 122 315 114 320 106 Z" />
+        <path d="M320 92 C329 105 336 118 333 130 C331 138 326 142 320 142 C314 142 309 138 307 130 C304 118 311 105 320 92 Z" strokeWidth={2.6} />
+      </g>
 
       {/* the near figure, back to us, lit down its right flank */}
       <path clipPath={`url(#${id}near)`} d={hatch(150, 216, 90, 144, 5.5, 80)} strokeWidth={1.1} strokeLinecap="butt" />

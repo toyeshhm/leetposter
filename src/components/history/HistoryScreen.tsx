@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { call, equipItem, errorMessage, fetchAchievements, fetchHistory, fetchStore, LOADOUT_SLOTS, type Loadout, type StorePage } from "@/client/api";
 import { useSession } from "@/client/session";
-import { applyTheme, economyChanged } from "@/client/theme";
+import { applyTheme, economyChanged, useMode } from "@/client/theme";
 import { ChangelingMask } from "@/components/art";
 import { outcomeWords } from "@/components/game/copy";
 import { ItemFace } from "@/components/store/Cosmetic";
@@ -168,6 +168,7 @@ interface LoadoutEditorProps {
 
 /** One row per slot, every item you own in it, and the drawing you would wear. */
 function LoadoutEditor({ token, store, onEquipped }: LoadoutEditorProps): ReactElement {
+  const { mode } = useMode();
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const owned = new Set(store.owned);
@@ -180,7 +181,7 @@ function LoadoutEditor({ token, store, onEquipped }: LoadoutEditorProps): ReactE
       .then((next) => {
         onEquipped(next);
         // The page is already wearing it: the theme island only reads the loadout once, on load.
-        if (slot === "theme") applyTheme(next.theme);
+        if (slot === "theme") applyTheme(next.theme, mode);
         economyChanged();
       })
       .catch((error: unknown) => {

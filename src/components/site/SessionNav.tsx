@@ -22,6 +22,9 @@ export function SessionNav(): ReactElement | null {
   if (session.status === "out" || session.username === null) {
     return (
       <nav className="site-nav" aria-label="Account">
+        <Link href="/settings" className="site-link">
+          Settings
+        </Link>
         <Link href="/account">Sign in</Link>
         {session.error === null ? null : <span role="alert">{session.error}</span>}
       </nav>
@@ -45,6 +48,9 @@ export function SessionNav(): ReactElement | null {
           <Candles n={candles} />
         </Link>
       )}
+      <Link href="/settings" className="site-link">
+        Settings
+      </Link>
       <button type="button" className="site-link" onClick={() => void signOut()}>
         Sign out
       </button>

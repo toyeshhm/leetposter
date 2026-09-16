@@ -10,6 +10,36 @@ First reflex rejected: purple-glow dark gaming. Second reflex rejected: Diablo b
 
 Register: the game screen is product register (fixed rem type, familiar controls, restrained color). The landing is brand register (one hero plate, one candle, larger display type). Same tokens, different scale.
 
+## Modes
+
+Two modes, one system. Dark is the default and the one the art was cut for: a white-line woodcut on
+stone. Light is the same block printed the usual way round, dark line on paper, with each theme's
+lightness ramp inverted and its hue kept. Deliberately not cream or parchment (see the
+anti-references): light backgrounds sit at chroma 0.004 to 0.01 toward the theme's own hue, never
+defaulted warm.
+
+The choice is free and per browser (`leetposter.mode` in localStorage: `light`, `dark`, `system`),
+set at `/settings`, and it layers over the cosmetic themes rather than replacing them: an equipped
+Moss stays Moss in both. `system` follows `prefers-color-scheme` live. A blocking script in
+`layout.tsx`, generated from `themeCss("theme-ember", "light")` so the tokens have one source, puts
+the mode on `<html>` before the first paint; `ThemeIsland` then swaps in the equipped theme.
+`--on-danger` carries the text on the oxblood fill, since `--ink` is the page ink and inverts.
+
+All twelve sets (six themes, two modes) are verified in `tests/unit/cosmetics-themes.test.ts`, which
+computes contrast from the tokens themselves rather than trusting a number in a comment.
+
+## Motion
+
+`src/app/motion.css`. Everything is opt-in under `prefers-reduced-motion: no-preference`, never
+opt-out: a reveal that starts hidden and waits for a transition ships blank in a background tab or a
+headless render, so the page is correct with the file doing nothing and motion is added on top.
+
+Nothing on the record moves (principle 1). What moves is the light: the hero candle flickers on
+irregular keyframes (a flame on a clean sine reads as a logo), the hatching that carries its reach
+draws itself in once on load, a seat sigil inks in as it is dealt, and a verdict seal stamps down and
+settles. The clock under a minute is a 900ms colour bleed rather than a pulse, and lives outside the
+media query: a skipped transition still lands on the amber.
+
 ## Color Palette & Roles
 
 Seed from `palette.mjs`: seed-122, oklch(0.600 0.158 150), a lichen green. The brief fixes the spot color to a warm candle or wax hue, so the seed is not the spot; it is the success color (Accepted, Crew) and nothing else. All values OKLCH.
@@ -51,7 +81,7 @@ Numbers on the record (timer, submission counts, votes) use `font-variant-numeri
 - Buttons (`src/components/ui/Button.tsx`): square corners, 2px border. Primary: amber fill, bg-colored text. Secondary: transparent, ink border. Danger: oxblood fill, ink text. Ghost: no border, muted text. Hover shifts the fill one step (accent to accent-deep, transparent to raised); active nudges down 1px; disabled is 45% opacity with no pointer; loading swaps the leading glyph for the hourglass and sets `aria-busy`.
 - Field: native `input` or `textarea`, 2px ink border on `--surface`, label above in the UI face at 500 weight, error below in `--danger-ink` linked via `aria-describedby`, `aria-invalid` set.
 - Frame: a bordered panel with the four `FrameCorner` ornaments overlapping the border. Optional caption in the display face sitting on the top rule. One level only: a Frame inside a Frame renders as a plain block.
-- Timer: `mm:ss` from `targetAt` and `clockOffset`, tabular, turns `--accent` under sixty seconds, `aria-live="polite"`.
+- Timer: `mm:ss` from `targetAt` and `clockOffset`, tabular, bleeds to `--accent` over 900ms under sixty seconds, `aria-live="polite"`.
 - Badge: seat sigil at 20px plus the in-world seat name in small caps; the imposter and ejected states are words, not colors.
 - Notice: full 2px border (never a side stripe), info in ink on surface, error in `--danger-ink` with an oxblood border, `role="status"` / `role="alert"`.
 - Divider: two 2px rules meeting at the `RuleOrnament` lozenge.

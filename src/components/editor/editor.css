@@ -81,3 +81,13 @@ textarea.run-stdin {
 .run-err {
   color: var(--danger-ink);
 }
+
+/*
+ * CodeMirror's theme is declared `dark: true`, which is what puts `color-scheme: dark` on the
+ * editor and makes its scrollbars and native widgets dark. Every colour in the theme is already a
+ * token and follows the mode on its own, so the flag is the only thing left to correct. Doing it
+ * here beats threading the mode through a third Compartment and rebuilding the view to change it.
+ */
+:root[data-mode="light"] .cm-editor {
+  color-scheme: light;
+}

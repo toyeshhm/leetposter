@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { afterAll, describe, expect, it } from "vitest";
 import { GET as historyGet } from "@/app/api/account/history/route";
-import { GET as accountGet, POST as accountPost } from "@/app/api/account/route";
+import { GET as accountGet, PATCH as accountPatch, POST as accountPost } from "@/app/api/account/route";
 import { POST as actPost } from "@/app/api/rooms/[code]/act/route";
 import { POST as joinPost } from "@/app/api/rooms/[code]/join/route";
 import { GET as viewGet } from "@/app/api/rooms/[code]/route";
@@ -11,7 +11,7 @@ import { GameError } from "@/game/errors";
 import type { PlayerView, Problem, Seat } from "@/game/types";
 import { optionalUser, requireUser } from "@/server/auth";
 import { actHandler } from "@/server/handlers";
-import { createProfile, findProfile } from "@/server/profiles";
+import { createProfile, findProfile, renameProfile } from "@/server/profiles";
 import { loadRoom } from "@/server/store";
 import { supabase } from "@/server/supabase";
 
@@ -73,6 +73,9 @@ async function fail(res: Response, status: number, code: string): Promise<void> 
 function claim(token: string | null, username: string): Promise<Response> {
   return accountPost(req("POST", "http://x/api/account", token, { username }));
 }
+function rename(token: string | null, username: unknown): Promise<Response> {
+  return accountPatch(req("PATCH", "http://x/api/account", token, { username }));
+}
 function me(token: string | null): Promise<Response> {
   return accountGet(req("GET", "http://x/api/account", token));
 }
@@ -103,6 +106,40 @@ describe("POST /api/account", () => {
   });
 });
 
+describe("PATCH /api/account", () => {
+  it("renames a profile, refuses a name someone else holds, and follows the player everywhere", async () => {
+    const dot = await newUser("ren1");
+    const first = `ren1_${run}`;
+    await json(await claim(dot.token, first));
+
+    const second = `ren1b_${run}`;
+    expect(await json(await rename(dot.token, second))).toEqual({ id: dot.id, username: second });
+    // Nothing stores the name: every screen joins profiles on the account id, so /api/account agrees at once.
+    expect(await json<{ username: string }>(await me(dot.token))).toMatchObject({ username: second });
+
+    const eve = await newUser("ren2");
+    await json(await claim(eve.token, `ren2_${run}`));
+    await fail(await rename(eve.token, second), 409, "taken");
+    // Renaming to the name you already hold is not a conflict with anyone else.
+    expect(await json(await rename(dot.token, second))).toEqual({ id: dot.id, username: second });
+  });
+
+  it("refuses a bad name, a caller with no name yet, and anyone not signed in", async () => {
+    const fay = await newUser("ren3");
+    await json(await claim(fay.token, `ren3_${run}`));
+    await fail(await rename(fay.token, "Not Valid"), 400, "invalid");
+    await fail(await rename(fay.token, "ab"), 400, "invalid");
+    await fail(await rename(fay.token, 7), 400, "invalid");
+
+    // Signed in but never reached the name step: there is no profile row to rename.
+    const gus = await newUser("ren4");
+    await fail(await rename(gus.token, `ren4_${run}`), 404, "not-found");
+
+    await fail(await rename(null, "nobody"), 401, "unauthorized");
+    await fail(await rename("not-a-jwt", "nobody"), 401, "unauthorized");
+  });
+});
+
 describe("GET /api/account and the request helpers", () => {
   it("answers 404 for a signed-in user with no name, the profile once chosen, and 401 otherwise", async () => {
     // A confirmed auth user whose profile row was never created (sign-up with email confirmation on).
@@ -128,6 +165,7 @@ describe("GET /api/account and the request helpers", () => {
     // Postgres refuses a non-uuid id on both the select and the insert: real errors, no mocks.
     await expect(findProfile("not-a-uuid")).rejects.toThrow(/profiles not-a-uuid: invalid input syntax/);
     await expect(createProfile("not-a-uuid", "ghost")).rejects.toThrow(/profiles insert not-a-uuid: invalid input syntax/);
+    await expect(renameProfile("not-a-uuid", "ghost")).rejects.toThrow(/profiles rename not-a-uuid: invalid input syntax/);
   });
 });
 

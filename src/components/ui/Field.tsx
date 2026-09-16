@@ -4,9 +4,9 @@ import "./ui.css";
 
 interface Chrome {
   label: string;
-  hint?: string;
-  /** Rendered below the control, announced, and sets aria-invalid. */
-  error?: string;
+  hint?: string | undefined;
+  /** Rendered below the control, announced, and sets aria-invalid. `undefined` while the field is fine. */
+  error?: string | undefined;
 }
 
 type Managed = "id" | "aria-describedby" | "aria-invalid";

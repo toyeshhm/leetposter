@@ -43,7 +43,7 @@
 .btn-danger {
   background: var(--danger);
   border-color: var(--danger);
-  color: var(--ink);
+  color: var(--on-danger);
 }
 .btn-danger:is(:hover, [data-state="hover"]) {
   background: color-mix(in oklch, var(--danger), black 18%);

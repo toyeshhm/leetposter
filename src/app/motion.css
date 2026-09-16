@@ -1,0 +1,127 @@
+/*
+ * Motion. Everything here is opt-in under `prefers-reduced-motion: no-preference`, never opt-out.
+ * A reveal that starts hidden and waits for a transition ships blank wherever the transition never
+ * fires: a background tab, a headless render, a thumbnail. So the page is correct with this file
+ * doing nothing, and the animation is added on top.
+ *
+ * PRODUCT.md principle 1: nothing on the record animates. Cards, verdicts, votes and the ledger are
+ * typeset, not performed. What moves here is the light: the candle, the hatching that carries it,
+ * the sigil as it is dealt, and the seal as it lands.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The candle. Irregular on purpose: a flame that loops on a clean sine reads as a logo, not a
+     flame. Opacity and a sub-pixel rise only, so the linework never resamples. */
+  .hero-flame {
+    transform-origin: 320px 142px;
+    animation: flame 5.3s ease-in-out infinite;
+  }
+
+  @keyframes flame {
+    0% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    17% {
+      opacity: 0.93;
+      transform: scale(0.985, 1.02) translateY(-0.4px);
+    }
+    23% {
+      opacity: 1;
+      transform: scale(1.01, 0.99) translateY(0);
+    }
+    41% {
+      opacity: 0.88;
+      transform: scale(0.97, 1.04) translateY(-0.7px);
+    }
+    52% {
+      opacity: 1;
+      transform: scale(1.005) translateY(0);
+    }
+    68% {
+      opacity: 0.95;
+      transform: scale(0.99, 1.015) translateY(-0.3px);
+    }
+    79% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    91% {
+      opacity: 0.9;
+      transform: scale(0.98, 1.03) translateY(-0.5px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* The candle's reach, drawn the way it was cut: the hatching strokes in, farthest light last.
+     One pass on load, then it stays. */
+  .hero-light > path {
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 1400;
+    animation: cut 1100ms var(--ease-out) forwards;
+  }
+  .hero-light > path:nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .hero-light > path:nth-child(3) {
+    animation-delay: 180ms;
+  }
+
+  @keyframes cut {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* A seat is dealt: the sigil inks in rather than appearing. Once, when the panel first mounts. */
+  .panel-head > [role="img"],
+  .panel-head > svg {
+    animation: ink 420ms var(--ease-out) both;
+  }
+
+  @keyframes ink {
+    from {
+      opacity: 0;
+      transform: translateY(3px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The verdict lands like a stamp: down onto the page, then settles. The seal is art, not the
+     record; the count and the words beside it do not move. */
+  .verdict-accepted > :is(svg, [role="img"]),
+  .verdict-rejected > :is(svg, [role="img"]) {
+    animation: stamp 320ms cubic-bezier(0.3, 0.8, 0.4, 1) both;
+  }
+
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: scale(1.35) rotate(-4deg);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(0.97) rotate(0.5deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/*
+ * The clock under a minute. This is a colour change, not an animation: a pulsing timer in a game
+ * about reading people is a distraction, and the urgency is already in the text and the aria-live
+ * announcement. The bleed is slow enough to notice out of the corner of an eye and nothing more.
+ * Outside the media query on purpose: a transition that is skipped still lands on the amber.
+ */
+.timer {
+  transition: color 900ms var(--ease-out);
+}

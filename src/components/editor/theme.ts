@@ -24,6 +24,7 @@ const chrome = EditorView.theme(
     "&.cm-editor .cm-content[contenteditable=false]": { cursor: "default" },
     ".cm-ySelectionInfo": { fontFamily: "var(--font-ui)", fontSize: "var(--text-xs)", padding: "0 var(--space-1)", opacity: "1", color: "var(--bg)" },
   },
+  // Light mode corrects this in editor.css: every colour above is a token and follows the mode already.
   { dark: true },
 );
 

@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import type { ReactElement } from "react";
 import { Alegreya_Sans, IM_Fell_English } from "next/font/google";
 import { ThemeIsland } from "@/client/theme";
+import { themeCss } from "@/components/cosmetics/themes";
 import "./globals.css";
+import "./motion.css";
 
 const fell = IM_Fell_English({
   variable: "--font-fell",
@@ -31,16 +33,37 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-/* --bg from globals.css, resolved to sRGB. viewport-fit=cover lets the stone run under the notch; globals.css pads the safe area back. */
+/* --bg per mode, resolved to sRGB. viewport-fit=cover lets the stone run under the notch; globals.css pads the safe area back. */
 export const viewport: Viewport = {
-  themeColor: "#14181a",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#14181a" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f7f7" },
+  ],
+  colorScheme: "light dark",
   viewportFit: "cover",
 };
 
+/*
+ * Light mode has to land before the first paint or the page flashes the stone and then turns to
+ * paper. This runs blocking in <head>, ahead of React: it reads the saved choice and, when the
+ * answer is light, writes Ember's light set straight onto <html>. The equipped theme needs a fetch,
+ * so ThemeIsland refines this afterwards; until then a light player sits in light Ember rather than
+ * in the dark. Generated from themeCss, so the tokens have exactly one source.
+ */
+const PREPAINT_MODE = `(function(){try{var d=document.documentElement,m=localStorage.getItem("leetposter.mode");
+if(m!=="light"&&m!=="dark"&&m!=="system"){m="system"}
+var light=m==="light"||(m==="system"&&window.matchMedia("(prefers-color-scheme: light)").matches);
+d.dataset.mode=light?"light":"dark";
+if(light){d.setAttribute("style",${JSON.stringify(themeCss("theme-ember", "light"))}+"color-scheme:light")}
+}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">): ReactElement {
   return (
-    <html lang="en" className={`${fell.variable} ${alegreya.variable}`}>
+    <html lang="en" className={`${fell.variable} ${alegreya.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Generated above from our own tokens; no user input reaches it. */}
+        <script dangerouslySetInnerHTML={{ __html: PREPAINT_MODE }} />
+      </head>
       <body>
         {children}
         <ThemeIsland />

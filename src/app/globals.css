@@ -18,6 +18,8 @@
 
   /* verdicts */
   --danger: oklch(0.44 0.15 25);
+  /* text on the oxblood fill: bone here, paper in light mode, never the page ink of the other mode */
+  --on-danger: var(--ink);
   --danger-ink: oklch(0.72 0.17 25);
   --success: oklch(0.62 0.15 150);
   --success-ink: oklch(0.72 0.15 150);
