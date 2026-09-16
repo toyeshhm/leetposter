@@ -1,7 +1,9 @@
 import { createElement, type CSSProperties, type ReactElement } from "react";
 import { cosmeticArt, GUEST_AVATAR, GUEST_FRAME, TitleLine as CosmeticTitleLine } from "@/components/cosmetics";
 import { CARET_COLORS } from "@/components/cosmetics/carets";
-import { CATALOG, THEME_TOKENS, type Item } from "@/economy/catalog";
+import { CATALOG, type Item } from "@/economy/catalog";
+import { useMode } from "@/client/theme";
+import { THEME_VARS } from "@/components/cosmetics/themes";
 import type { EquippedLook } from "@/game/types";
 import "./store.css";
 
@@ -12,9 +14,15 @@ export function findItem(id: string | null): Item | undefined {
   return id === null ? undefined : CATALOG.find((item) => item.id === id);
 }
 
-/** A theme is a set of colours, so it shows them: page, surface and flame, from the tokens it would set. */
+/**
+ * A theme is a set of colours, so it shows them: page, surface and flame, from the tokens it would
+ * actually set in the mode the shopper is in. Reading the catalog's dark-only set showed a light-mode
+ * shopper the dark palette of a theme they were about to buy, and showed Ember as whatever theme
+ * they happened to be wearing, since Ember's entry there is empty and every chip fell through to var().
+ */
 export function Swatches({ id }: { id: string }): ReactElement {
-  const tokens = THEME_TOKENS[id] ?? {};
+  const { mode } = useMode();
+  const tokens = THEME_VARS[mode][id] ?? {};
   const chips: readonly string[] = [tokens["--bg"] ?? "var(--bg)", tokens["--surface"] ?? "var(--surface)", tokens["--accent"] ?? "var(--accent)"];
   return (
     <span className="store-swatches" aria-hidden>
