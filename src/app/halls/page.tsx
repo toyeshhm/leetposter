@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
 import { HallsBoard } from "@/components/halls/HallsBoard";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 
 export const metadata: Metadata = { title: "Halls", description: "Listed halls that moved in the last fifteen minutes. Watch any of them." };
@@ -14,6 +15,7 @@ export default function HallsPage(): ReactElement {
         <h1>Halls</h1>
         <HallsBoard />
       </main>
+      <SiteFooter />
     </>
   );
 }

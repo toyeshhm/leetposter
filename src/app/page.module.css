@@ -1,7 +1,7 @@
 /* The landing. Brand register: same tokens as the game screen, larger scale, one candle. */
 
 .page {
-  width: min(100% - 2 * var(--space-6), 72rem);
+  width: var(--shell);
   margin: 0 auto;
   padding: var(--space-8) 0 var(--space-16);
   display: flex;
@@ -36,55 +36,163 @@
   line-height: 1.5;
   color: var(--muted);
 }
-
-.beats {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-  gap: var(--space-8) var(--space-8);
+.heroNote {
+  font-size: var(--text-sm);
+  color: var(--muted);
 }
-/* five beats: two columns and the last one across, never an orphan */
-@media (min-width: 44rem) {
-  .beats {
+
+.entryNote {
+  margin-top: var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* every band below the entry: a heading at the game's own size, then the artefact */
+.band {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.bandName {
+  font-size: var(--text-xl);
+}
+
+/* the deal: five panels. Two columns, the Herald's one-liner closing the block. */
+.dealPanels {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 56rem) {
+  .dealPanels {
     grid-template-columns: 1fr 1fr;
   }
-  .beat:last-child {
+  .dealPanels > :last-child {
     grid-column: 1 / -1;
   }
 }
-.beat {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: var(--space-4);
-  align-items: start;
+.panelHead {
+  margin-bottom: var(--space-4);
 }
-.beat > div {
+.caption {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.hintsMore > summary {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .hintsMore > summary {
+    padding-block: var(--space-3);
+  }
+}
+
+/* the night: a ledger, not an infographic. The glyph column is 28px and carries no meaning. */
+.night th:first-child,
+.night td:first-child {
+  width: 28px;
+  padding-inline-end: 0;
+}
+.nightGlyph {
+  color: var(--muted);
+}
+/* under 40rem the table is prose: the step and its time on one line, what happens beneath */
+@media (max-width: 40rem) {
+  .night thead {
+    display: none;
+  }
+  .night tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: var(--rule) solid var(--line);
+  }
+  .night tbody tr:last-child {
+    border-bottom: var(--rule) solid var(--line);
+  }
+  .night td {
+    display: block;
+    padding: 0;
+    border-top: 0;
+  }
+  .night tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .night td:first-child {
+    display: none;
+  }
+  .nightWhat {
+    grid-column: 1 / -1;
+    color: var(--muted);
+  }
+}
+
+/* the bell */
+.bellHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+.result {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 68ch;
+}
+
+/* the Judge: the two seals, side by side, the only success green on the page */
+.verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.verdict {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
 }
-.beatName {
-  font-size: var(--text-lg);
+.verdictWord {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
 }
-.beatIndex {
-  color: var(--accent);
-  margin-right: var(--space-1);
+.accepted {
+  --art-spot: var(--success);
 }
 
 .truth {
-  max-width: 68ch;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding-top: var(--space-6);
-  border-top: var(--rule) solid var(--ink);
 }
 .truth h2 {
   font-size: var(--text-xl);
 }
 
-@media (max-width: 40rem) {
-  .beat {
-    grid-template-columns: 48px 1fr;
-  }
+/* the way back: the last amber on the page, and the only door that is not at the top */
+.sit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+.sitProse {
+  max-width: 58ch;
+  color: var(--muted);
+}
+
+/* The step name heads its row, so it is a th; it should still read as a cell, not a column head. */
+.nightStep {
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
 }

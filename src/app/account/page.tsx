@@ -4,6 +4,7 @@ import { useState, type ReactElement, type SyntheticEvent } from "react";
 import { errorMessage } from "@/client/api";
 import { useSession } from "@/client/session";
 import { supabaseBrowser } from "@/client/supabaseBrowser";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { Button, Field, Frame, Notice } from "@/components/ui";
 import "@/components/site/site.css";
@@ -194,6 +195,7 @@ export default function AccountPage(): ReactElement {
           <SignedIn username={session.username} signOut={session.signOut} />
         )}
       </main>
+      <SiteFooter />
     </>
   );
 }

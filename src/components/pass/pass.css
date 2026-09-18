@@ -135,3 +135,11 @@
 .pass-word:not(.muted) {
   color: var(--success-ink);
 }
+
+/* The link to what the money buys, under the buy button. Quiet, but never hidden. */
+.pass-terms {
+  display: block;
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}

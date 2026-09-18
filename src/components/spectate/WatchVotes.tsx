@@ -1,7 +1,8 @@
 "use client";
 import type { ReactElement } from "react";
 import { Timer } from "@/components/ui";
-import { mmss, useServerNow } from "@/components/ui/clock";
+import { mmss } from "@/components/ui/clock";
+import { useServerNow } from "@/components/ui/useServerNow";
 import { cx } from "@/components/ui/cx";
 import type { SpectatorView, VoteRoundView } from "@/game/types";
 

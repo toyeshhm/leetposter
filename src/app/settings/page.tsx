@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
 import { SettingsScreen } from "@/components/settings/SettingsScreen";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import "@/components/leaderboard/leaderboard.css";
 import "@/components/settings/settings.css";
@@ -16,6 +17,7 @@ export default function SettingsPage(): ReactElement {
         <h1>Settings</h1>
         <SettingsScreen />
       </main>
+      <SiteFooter />
     </>
   );
 }

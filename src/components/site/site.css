@@ -1,17 +1,22 @@
 /* Site shell: the wordmark and the account corner. Layout only; tokens from globals.css. */
 .site-head {
-  width: min(100% - 2 * var(--space-6), 72rem);
+  width: var(--shell);
   margin: 0 auto;
   padding: var(--space-4) 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3) var(--space-4);
+  /* Six board links and an account corner do not fit a 400px phone in one line. They wrap rather
+     than push the account corner off the right edge, where it was unreachable: the header is the
+     only way to the store, the pass and settings, and the overflow was clipped, not scrollable. */
+  flex-wrap: wrap;
 }
 .site-links {
   display: flex;
   align-items: baseline;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
 }
 .site-board {
   font-size: var(--text-sm);
@@ -24,7 +29,8 @@
 .site-nav {
   display: flex;
   align-items: baseline;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
   font-size: var(--text-sm);
 }
 .site-user {
@@ -75,5 +81,77 @@
   .site-link {
     padding-block: var(--space-3);
     margin-block: calc(-1 * var(--space-3));
+  }
+  /* The footer stacks its links in a column, where the negative margin above would pull each one
+     back over its neighbour and leave overlapping 41px targets. Give them real height instead. */
+  .site-foot a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
+
+/* The footer: four columns and a baseline, on the shell measure. Square, unframed, no fill. */
+.site-foot {
+  width: var(--shell);
+  margin: var(--space-16) auto 0;
+  padding-bottom: var(--space-12);
+}
+.foot-cols {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-8) var(--space-6);
+}
+.foot-head {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-3);
+}
+.foot-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.foot-base {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: var(--rule) solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.foot-wide {
+  flex-basis: 100%;
+}
+.foot-print {
+  text-align: center;
+}
+.foot-mask {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+}
+
+@media (max-width: 48rem) {
+  .foot-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* every baseline sentence on its own line once they stop fitting side by side */
+  .foot-base {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+@media (max-width: 32rem) {
+  .foot-cols {
+    grid-template-columns: 1fr;
   }
 }

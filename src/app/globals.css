@@ -44,6 +44,9 @@
   --leading-tight: 1.15;
   --leading-body: 1.55;
 
+  /* the shell measure: every full-width page and the site chrome sit on it */
+  --shell: min(100% - 2 * var(--space-6), 72rem);
+
   /* space, 4px base */
   --space-1: 0.25rem;
   --space-2: 0.5rem;

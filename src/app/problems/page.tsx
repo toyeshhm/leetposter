@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { problemIndex } from "@/server/problems";
 import "@/components/leaderboard/leaderboard.css";
@@ -57,6 +58,7 @@ export default function ProblemsPage(): ReactElement {
           </tbody>
         </table>
       </main>
+      <SiteFooter />
     </>
   );
 }

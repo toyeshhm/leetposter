@@ -1,0 +1,20 @@
+/* The reading pages: /about, /accessibility, /conduct and the legal set. The page frame is
+   .board-page (leaderboard.css, 44rem of reading measure) and the line length is .prose
+   (globals.css, 68ch). This file only sets the rhythm inside a section, because the reset zeroes
+   every margin. Nothing else belongs here. */
+.doc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+/* --text-2xl is a page title; a heading inside a document sits one step under it */
+.doc-section h2 {
+  font-size: var(--text-xl);
+}
+.doc-list {
+  max-width: 68ch;
+  padding-left: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

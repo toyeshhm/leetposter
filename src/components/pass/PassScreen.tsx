@@ -111,6 +111,10 @@ export function PassScreen(): ReactElement {
               <Button variant="primary" loading={buying} onClick={checkout}>
                 Get the paid pass
               </Button>
+              {/* Before the money, not after it: what the pass gives and how a refund works. */}
+              <Link href="/refunds" className="pass-terms">
+                What you are buying, and how refunds work
+              </Link>
             </p>
           )}
           <Track season={season} page={page} claimed={claimed} live={running !== null} busy={busy} onClaim={claim} />

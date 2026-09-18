@@ -1,0 +1,121 @@
+/* /rules. Layout only; tokens from globals.css, the seat table from leaderboard.css. */
+.rules {
+  width: min(100% - 2 * var(--space-6), 44rem);
+  margin: 0 auto;
+  padding: var(--space-8) 0 var(--space-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.rules section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.rules h2 {
+  font-size: var(--text-xl);
+}
+.rules-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.rules-lede {
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+/* row headers are names, not column labels: undo the small-caps column-header treatment */
+.rules tbody th {
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: normal;
+  font-variant-caps: normal;
+  color: var(--ink);
+  border-top: var(--rule) solid var(--line);
+}
+.rules tbody tr:last-child th {
+  border-bottom: var(--rule) solid var(--line);
+}
+
+/* the seat table: the sigil and the seat name share the first cell and wrap together when narrow */
+.rules-seat {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+
+/* the night, in order: the numerals carry the sequence, so these stay real list markers */
+.rules-steps,
+.rules-points {
+  padding-left: var(--space-6);
+}
+.rules-steps > li::marker,
+.rules-points > li::marker {
+  color: var(--muted);
+}
+.rules-steps > li + li {
+  margin-top: var(--space-6);
+}
+.rules-points > li + li {
+  margin-top: var(--space-3);
+}
+.rules-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.rules-name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.rules-when {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.rules-verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.rules-verdict {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.rules-accepted {
+  --art-spot: var(--success);
+}
+
+/* the marks: a definition list, one column on a phone and two where the names fit beside them */
+.rules-marks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-1) var(--space-6);
+}
+.rules-marks dt {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.rules-marks dd {
+  color: var(--muted);
+  margin-bottom: var(--space-4);
+}
+@media (min-width: 34rem) {
+  .rules-marks {
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-3) var(--space-6);
+  }
+  .rules-marks dd {
+    margin-bottom: 0;
+  }
+}

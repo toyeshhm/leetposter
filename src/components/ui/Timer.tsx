@@ -1,6 +1,7 @@
 "use client";
 import type { ReactElement } from "react";
-import { mmss, useServerNow } from "./clock";
+import { mmss } from "./clock";
+import { useServerNow } from "./useServerNow";
 import { cx } from "./cx";
 import "./ui.css";
 

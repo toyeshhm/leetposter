@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactElement } from "react";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { statementRuns } from "@/components/game/statement";
 import { bankById } from "@/problems";
@@ -73,6 +74,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ id: st
           </ol>
         </details>
       </main>
+      <SiteFooter />
     </>
   );
 }

@@ -2,7 +2,8 @@
 import { useState, type ReactElement } from "react";
 import { BallotIcon } from "@/components/art";
 import { Button, Frame, Notice, Timer } from "@/components/ui";
-import { mmss, useServerNow } from "@/components/ui/clock";
+import { mmss } from "@/components/ui/clock";
+import { useServerNow } from "@/components/ui/useServerNow";
 import { cx } from "@/components/ui/cx";
 import type { VoteRoundView } from "@/game/types";
 import type { BoardProps } from "./BuildingPhase";

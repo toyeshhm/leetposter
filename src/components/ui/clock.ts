@@ -1,20 +1,5 @@
-import { useSyncExternalStore } from "react";
-
-function subscribe(onTick: () => void): () => void {
-  const id = setInterval(onTick, 250);
-  return () => {
-    clearInterval(id);
-  };
-}
-
-/** The server clock, ticking once a second (epoch ms, whole seconds). Null before hydration. */
-export function useServerNow(clockOffset: number): number | null {
-  return useSyncExternalStore(
-    subscribe,
-    () => Math.floor((Date.now() + clockOffset) / 1000) * 1000,
-    () => null,
-  );
-}
+/* Pure time formatting, safe to import from a server component. The ticking hook that used to live
+   here is in ./useServerNow, because importing it from the server graph fails the build. */
 
 const pad = (n: number): string => String(n).padStart(2, "0");
 
