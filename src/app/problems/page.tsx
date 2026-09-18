@@ -18,14 +18,18 @@ export const metadata: Metadata = {
  */
 export default function ProblemsPage(): ReactElement {
   const problems = problemIndex({});
+  // Read off the bank rather than restated: the 800-3500 ladder is the rating scale, not this bank's range.
+  const ratings = problems.map((p) => p.rating);
+  const low = Math.min(...ratings);
+  const high = Math.max(...ratings);
   return (
     <>
       <SiteHeader />
       <main className="board-page">
         <h1>The bank</h1>
         <p className="muted prose">
-          {problems.length} problems written for the Hall, rated 800 to 3500. A host rolls one by band in the lobby instead of pasting; the Judge in the Hall runs the
-          crew&apos;s file against its tests and records the verdict itself.
+          {problems.length} problems written for the Hall, rated {low} to {high}. A host rolls one by band in the lobby instead of pasting, and the Judge in the Hall
+          runs the crew&apos;s file against its tests and records the verdict itself.
         </p>
         <table className="board">
           <thead>

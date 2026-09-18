@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type SyntheticEvent, type ReactElement } fr
 import { errorMessage } from "@/client/api";
 import { Button, Field, Frame, Notice, TextareaField } from "@/components/ui";
 import type { Action, PlayerView, Problem } from "@/game/types";
+import { BankRoller } from "./BankRoller";
 import { PasteBox } from "./PasteBox";
 import { errorProp } from "./util";
 import "./lobby.css";
@@ -14,6 +15,11 @@ interface Draft {
   tags: string;
   hints: string;
   constraints: string;
+  /* Not fields on the form. They ride along so a rolled bank problem stays a bank problem when the
+     host tidies its text, and so a rating the lookup found is not thrown away on the way to the
+     reducer. Dropping bankId here is what kept the Judge in the Hall unreachable. */
+  bankId: string | null;
+  rating: number | null;
 }
 
 const lines = (s: string): string[] =>
@@ -40,7 +46,19 @@ function parse(draft: Draft): { problem: Problem | null; errors: Partial<Record<
   if (hints.length === 0) errors.hints = "The Oracle needs at least one hint.";
   if (constraints === "") errors.constraints = "The Warden needs the constraints.";
   if (Object.keys(errors).length > 0) return { problem: null, errors };
-  return { problem: { title, url, statement, tags, hints, constraints }, errors };
+  return {
+    problem: {
+      title,
+      url,
+      statement,
+      tags,
+      hints,
+      constraints,
+      ...(draft.bankId === null ? {} : { bankId: draft.bankId }),
+      ...(draft.rating === null ? {} : { rating: draft.rating }),
+    },
+    errors,
+  };
 }
 
 interface Note {
@@ -48,7 +66,7 @@ interface Note {
   text: string;
 }
 
-const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n") });
+const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n"), bankId: p.bankId ?? null, rating: p.rating ?? null });
 
 /** The host pastes the problem. The statement (examples included) is public; the rest become seat panels. */
 export function ProblemForm({
@@ -67,6 +85,8 @@ export function ProblemForm({
     tags: "",
     hints: "",
     constraints: "",
+    bankId: null,
+    rating: null,
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [note, setNote] = useState<Note | null>(null);
@@ -105,6 +125,8 @@ export function ProblemForm({
   return (
     <Frame title="The problem">
       <form className="lobby-form" onSubmit={onSubmit} noValidate>
+        <BankRoller onRolled={fill} disabled={busy} />
+        <p className="muted prose">Or bring your own: paste a whole problem page, or a title, number or link.</p>
         <PasteBox onSorted={fill} disabled={busy} />
         <p className="muted prose">Or fill the parts yourself. Only the Herald sees the title and link; only the seats see their panels.</p>
         <div className="lobby-pair">

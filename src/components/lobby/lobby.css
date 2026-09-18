@@ -133,3 +133,36 @@
 .entry-notice {
   grid-column: 1 / -1;
 }
+
+/* Rolling one out of the bank. Sits above the paste box: it is the shortest path to a hall. */
+.lobby-bank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--rule) solid var(--line);
+}
+.lobby-bank-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+.lobby-bank-row .field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+.lobby-bank-row select {
+  min-width: 18rem;
+  max-width: 100%;
+}
+.lobby-bank-got {
+  font-size: var(--text-sm);
+}
+@media (max-width: 40rem) {
+  .lobby-bank-row,
+  .lobby-bank-row select,
+  .lobby-bank-row .btn {
+    width: 100%;
+  }
+}

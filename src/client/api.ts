@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Action, PlayerView } from "@/game/types";
 import type { Achievement, GameResultRow } from "@/server/achievements";
 import type { FriendsPage } from "@/server/friends";
-import type { ProblemTests } from "@/server/problems";
+import type { ProblemDetail, ProblemSummary, ProblemTests } from "@/server/problems";
 
 export interface Credentials {
   code: string;
@@ -88,6 +88,16 @@ export function loadDoc(creds: Credentials): Promise<{ doc: string | null }> {
 /** Save the full editor state. `keepalive` lets the request outlive a closing tab (64 KiB cap in browsers). */
 export function saveDoc(creds: Credentials, doc: string, keepalive: boolean): Promise<{ ok: true }> {
   return call<{ ok: true }>(`/api/rooms/${encodeURIComponent(creds.code)}/doc`, { method: "POST", body: JSON.stringify({ doc }), keepalive }, creds.token);
+}
+
+/** The bank index: every problem's id, title, rating, tags, difficulty and cluster. No token needed. */
+export function fetchProblemIndex(): Promise<{ problems: ProblemSummary[] }> {
+  return call<{ problems: ProblemSummary[] }>("/api/problems", { method: "GET" });
+}
+
+/** One bank problem as the crew reads it: statement, formats, constraints, tags, hints. No answers. */
+export function fetchProblemDetail(id: string): Promise<ProblemDetail> {
+  return call<ProblemDetail>(`/api/problems/${encodeURIComponent(id)}`, { method: "GET" });
 }
 
 /** A bank problem's samples and hidden tests. The server hands these to the Herald of this hall only. */
