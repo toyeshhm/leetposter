@@ -21,14 +21,14 @@ test("a host rolls a problem out of the bank and the Herald gets the Judge, not 
   await expect(band).toBeVisible();
   await band.selectOption("b3");
 
-  await page.getByRole("button", { name: "Roll a problem" }).click();
-  const got = page.getByText(/^Rolled /);
+  await page.getByRole("button", { name: "Or roll at random" }).click();
+  const got = page.locator(".lobby-bank-got");
   await expect(got).toBeVisible({ timeout: 15_000 });
-  const rolledTitle = ((await got.textContent()) ?? "").replace(/^Rolled /, "").split(", rated")[0] ?? "";
+  const rolledTitle = ((await got.textContent()) ?? "").split(", rated")[0] ?? "";
   expect(rolledTitle.length).toBeGreaterThan(2);
 
   // The roll fills the form, so the host can still read and edit it before setting it.
-  await expect(page.getByLabel("Title")).toHaveValue(rolledTitle);
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(rolledTitle);
   await expect(page.getByLabel("Link")).toHaveValue(/\/problems\/[a-z0-9-]+$/);
 
   await page.getByRole("button", { name: /^Set the problem$/ }).click();
@@ -48,10 +48,41 @@ test("a host rolls a problem out of the bank and the Herald gets the Judge, not 
   await expect(page.getByRole("button", { name: /^Accepted$/ })).toHaveCount(0);
 });
 
+test("a host can pick one exact problem rather than take what the dice give", async ({ page }) => {
+  await openHall(page, "Cass");
+
+  // Narrow by tag, then choose by name: the point is that nothing here is left to chance.
+  await page.getByLabel("Search the bank").fill("prefix-sums");
+  const pick = page.getByLabel("From the bank");
+  await expect(pick).toBeEnabled();
+  const options = await pick.locator("option").evaluateAll((els) => els.slice(1).map((e) => ({ value: e.getAttribute("value") ?? "", label: e.textContent })));
+  expect(options.length).toBeGreaterThan(0);
+  const wanted = options[0];
+  if (wanted === undefined) throw new Error("the filter matched nothing");
+  const title = (wanted.label.split(" \u00b7 ")[0] ?? wanted.label).trim();
+
+  await pick.selectOption(wanted.value);
+  await page.getByRole("button", { name: "Use this one" }).click();
+
+  // Exactly the one chosen, not a roll from the same band.
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(title, { timeout: 15_000 });
+  await expect(page.getByLabel("Link")).toHaveValue(new RegExp(`/problems/${wanted.value}$`));
+
+  await page.getByLabel("Reading, minutes").fill("0");
+  await page.getByRole("button", { name: "Keep settings" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Settings kept." })).toBeVisible();
+  await page.getByRole("button", { name: /^Set the problem$/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "The problem is set." })).toBeVisible();
+  await page.getByRole("button", { name: "Begin the reading" }).click();
+
+  await expect(page.getByRole("heading", { name: "The Work" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Submit to the Judge" })).toBeVisible();
+});
+
 test("a pasted problem still gets the hand-recorded verdict, not the Judge", async ({ page }) => {
   await openHall(page, "Bea");
 
-  await page.getByLabel("Title").fill("A problem from elsewhere");
+  await page.getByLabel("Title", { exact: true }).fill("A problem from elsewhere");
   await page.getByLabel("Link").fill("https://example.test/x");
   await page.getByLabel("Statement").fill("Solve it.\n\nExample 1:\nInput: 1\nOutput: 1");
   await page.getByLabel("Tags").fill("array");

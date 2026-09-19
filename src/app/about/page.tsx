@@ -36,7 +36,9 @@ export default function AboutPage(): ReactElement {
           </p>
           <p className="prose">
             Cards are the record. At the reveal every card is laid next to the truth it was meant to carry, and the crew find out what the table was working
-            from. The one thing never faked is the verdict.
+            from. On a problem from the bank the verdict is the one thing that cannot be faked, because the Judge in the Hall runs the file and records what it
+            finds; on a problem the host brought from elsewhere the Herald types the verdict in, and a Changeling holding that seat can lie about it like
+            anything else.
           </p>
           <p className="prose">
             It is free and it runs in the browser. Nothing to install, and no account needed to take a seat. <Link href="/rules">How to play</Link> has the
@@ -63,8 +65,7 @@ export default function AboutPage(): ReactElement {
         <section className="doc-section">
           <h2>The drawing</h2>
           <p className="prose">
-            Every image on this site is an original SVG, cut for this game. No stock art, no photographs, no raster textures, no generated images. Each plate
-            is a React component rather than a file: the ink is the surrounding text colour, so a drawing takes the colour of whatever it sits in and works in
+            Each drawing is a React component rather than a file: the ink is the surrounding text colour, so a drawing takes the colour of whatever it sits in and works in
             both modes and every theme; the one warm spot is a single custom property, which is how an Accepted seal turns green without a second drawing;
             tone is hatching from a function that returns path data, never a grey fill or a blur; and at forty eight pixels and up the outline is displaced by
             a turbulence filter so the line reads as cut rather than plotted. The two page textures, a diagonal hatch and a grain, are generated in CSS and SVG

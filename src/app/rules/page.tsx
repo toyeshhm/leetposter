@@ -30,7 +30,7 @@ const NIGHT: { name: string; when: string | null; text: string }[] = [
   {
     name: PHASE_NAMES.lobby,
     when: null,
-    text: "The host puts the problem in, by pasting a whole page or by typing a title, a number or a link and letting the app fetch it. Starting the hall deals the seats and picks the Changeling, both in secret.",
+    text: "The host puts the problem in. Pick one from the bank, by name or by rating band, and the Judge in the Hall marks the submissions itself. Or bring your own: paste a whole page, or type a title, a number or a link and let the app fetch it, in which case the Herald records the verdict by hand. Starting the hall deals the seats and picks the Changeling, both in secret.",
   },
   {
     name: PHASE_NAMES.reading,

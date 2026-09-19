@@ -166,3 +166,19 @@
     width: 100%;
   }
 }
+
+/* The chooser: band and search on one row, the problem and its two buttons on the next. */
+.lobby-bank-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.lobby-bank-wide {
+  flex: 1 1 100%;
+}
+.lobby-bank-field select,
+.lobby-bank-field input {
+  width: 100%;
+}
