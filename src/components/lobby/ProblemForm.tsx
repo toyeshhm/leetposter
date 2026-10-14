@@ -1,8 +1,9 @@
 "use client";
 import { useState, type ChangeEvent, type SyntheticEvent, type ReactElement } from "react";
-import { errorMessage } from "@/client/api";
+import { call, errorMessage } from "@/client/api";
 import { Button, Field, Frame, Notice, TextareaField } from "@/components/ui";
 import type { Action, PlayerView, Problem } from "@/game/types";
+import type { ParseResponse } from "@/server/parse/types";
 import { BankRoller } from "./BankRoller";
 import { PasteBox } from "./PasteBox";
 import { errorProp } from "./util";
@@ -43,7 +44,7 @@ function parse(draft: Draft): { problem: Problem | null; errors: Partial<Record<
   if (!URL.canParse(url)) errors.url = "The Herald needs a link that opens.";
   if (statement === "") errors.statement = "Everyone reads the statement. Paste it.";
   if (tags.length === 0) errors.tags = "The Cartographer needs at least one tag.";
-  if (hints.length === 0) errors.hints = "The Oracle needs at least one hint.";
+  // Hints may be empty: LeetCode lists none for about half its problems, and a fetched problem must still be settable.
   if (constraints === "") errors.constraints = "The Warden needs the constraints.";
   if (Object.keys(errors).length > 0) return { problem: null, errors };
   return {
@@ -90,6 +91,7 @@ export function ProblemForm({
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [note, setNote] = useState<Note | null>(null);
+  const [fetching, setFetching] = useState(false);
 
   const edit =
     (key: keyof Draft) =>
@@ -105,15 +107,27 @@ export function ProblemForm({
   };
 
   const submit = async (): Promise<void> => {
-    const parsed = parse(draft);
-    setErrors(parsed.errors);
     setNote(null);
-    if (parsed.problem === null) return;
+    let current = draft;
     try {
+      // Only a link, a title or a number in the fields: fetch the rest from LeetCode before judging the form.
+      const link = draft.url.trim();
+      const query = link === "" ? draft.title.trim() : link;
+      if (draft.statement.trim() === "" && query !== "") {
+        setFetching(true);
+        current = toDraft((await call<ParseResponse>("/api/parse", { method: "POST", body: JSON.stringify({ text: query }) })).problem);
+        setDraft(current);
+      }
+      const parsed = parse(current);
+      setErrors(parsed.errors);
+      if (parsed.problem === null) return;
       await send({ type: "setProblem", problem: parsed.problem });
       setNote({ kind: "info", text: "The problem is set. Panels are dealt when the reading begins." });
     } catch (e: unknown) {
+      setErrors(parse(current).errors);
       setNote({ kind: "error", text: errorMessage(e) });
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -167,7 +181,7 @@ export function ProblemForm({
         <TextareaField
           label="Hints"
           name="hints"
-          hint="One per line, in order. The Oracle's panel."
+          hint="One per line, in order. The Oracle's panel. May be empty."
           rows={4}
           value={draft.hints}
           onChange={edit("hints")}
@@ -185,7 +199,7 @@ export function ProblemForm({
           {...errorProp(errors.constraints)}
         />
         <div className="lobby-actions">
-          <Button type="submit" variant="secondary" loading={busy}>
+          <Button type="submit" variant="secondary" loading={busy || fetching}>
             {problem === null ? "Set the problem" : "Replace the problem"}
           </Button>
         </div>

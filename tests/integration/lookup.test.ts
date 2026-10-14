@@ -48,6 +48,28 @@ describe("lookupLeetCode", () => {
     expect(problem.title).toBe("Longest Chunked Palindrome Decomposition");
   });
 
+  it("takes a leetcode.cn link and a contest link to the same slug", NETWORK, async () => {
+    const links = ["https://leetcode.cn/problems/trapping-rain-water/", "https://leetcode.com/contest/weekly-contest-400/problems/minimum-number-of-chairs-in-a-waiting-room/"];
+    const found = await Promise.all(links.map((link) => lookupLeetCode(link)));
+    expect(found.map((f) => f.number)).toEqual(["42", "3168"]);
+  });
+
+  it("reads a number however it is written, and never takes a title that starts with digits for one", NETWORK, async () => {
+    const written = ["#42", "Problem 42", "No. 42", "42.", "42. Trapping Rain Water"];
+    const found = await Promise.all(written.map((text) => lookupLeetCode(text)));
+    expect(found.map((f) => f.number)).toEqual(["42", "42", "42", "42", "42"]);
+    expect((await lookupLeetCode("3Sum")).number).toBe("15");
+    await failsWith(lookupLeetCode("#999999"), "not-found", /no problem called #999999\./);
+  });
+
+  it("hands back a problem LeetCode lists no hints for, and says the Oracle's panel is empty", NETWORK, async () => {
+    const { problem, confidence, warnings } = await lookupLeetCode("42");
+    expect(problem.title).toBe("Trapping Rain Water");
+    expect(problem.hints).toEqual([]);
+    expect(confidence).toBe("high");
+    expect(warnings).toEqual(["No hints found, so the Oracle's panel is empty. LeetCode lists none for some problems; on a pasted page, open every Hint before copying."]);
+  });
+
   it("takes the first hit that carries every word when no title matches exactly", NETWORK, async () => {
     const { problem } = await lookupLeetCode("longest chunked palindrome");
     expect(problem.title).toBe("Longest Chunked Palindrome Decomposition");

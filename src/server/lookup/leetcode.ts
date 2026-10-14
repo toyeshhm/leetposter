@@ -19,7 +19,10 @@ const TIMEOUT_MS = 15_000;
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 const SEARCH = `query s($f:QuestionListFilterInput){questionList(categorySlug:"", limit:5, skip:0, filters:$f){data{questionFrontendId title titleSlug}}}`;
 const DETAIL = `query q($slug:String!){question(titleSlug:$slug){questionFrontendId title titleSlug difficulty stats content hints topicTags{name}}}`;
-const PROBLEM_URL = /leetcode\.com\/problems\/([a-z0-9-]+)/i;
+/** A problem's own page on leetcode.com or leetcode.cn (the slugs match), or its page inside a contest. */
+const PROBLEM_URL = /leetcode\.(?:com|cn)\/(?:contest\/[^/]+\/)?problems\/([a-z0-9-]+)/i;
+/** A number however it is written: "42", "#42", "Problem 42", "No. 42", "42." or a copied title line "42. Trapping Rain Water". Not "3Sum". */
+const NUMBERED = /^(?:#|no\.?\s*|problem\s*#?\s*)?(\d+)(?:[.)](?:\s.*)?)?$/i;
 
 const hit = z.object({ questionFrontendId: z.string(), title: z.string(), titleSlug: z.string() });
 const searchReply = z.object({ data: z.object({ questionList: z.object({ data: z.array(hit) }) }) });
@@ -53,10 +56,10 @@ async function gql<T>(endpoint: string, referer: string, query: string, variable
 async function findSlug(query: string, endpoint: string): Promise<string> {
   const fromUrl = PROBLEM_URL.exec(query)?.[1];
   if (fromUrl !== undefined) return fromUrl;
-  const hits = (await gql(endpoint, "https://leetcode.com/problemset/", SEARCH, { f: { searchKeywords: query } }, searchReply)).data.questionList.data;
+  const number = NUMBERED.exec(query)?.[1];
+  const hits = (await gql(endpoint, "https://leetcode.com/problemset/", SEARCH, { f: { searchKeywords: number ?? query } }, searchReply)).data.questionList.data;
   const wanted = query.toLowerCase();
-  const digits = /^\d+$/.test(query);
-  const exact = (h: { questionFrontendId: string; title: string }): boolean => (digits ? h.questionFrontendId === query : h.title.toLowerCase() === wanted);
+  const exact = (h: { questionFrontendId: string; title: string }): boolean => (number === undefined ? h.title.toLowerCase() === wanted : h.questionFrontendId === number);
   // The search is fuzzy and never empty ("zzz" finds "The Skyline Problem"), so a loose hit must still carry every word typed.
   const words = wanted.split(/\s+/);
   const pick = hits.find(exact) ?? hits.find((h) => words.every((w) => h.title.toLowerCase().includes(w)));

@@ -45,7 +45,9 @@ export function assess(problem: Problem): Pick<ParsedProblem, "confidence" | "wa
   if (problem.statement === "") warnings.push("No statement found. Copy from the problem's Description tab.");
   if (problem.constraints === "") warnings.push("No constraints found. The Warden's panel is empty.");
   if (problem.tags.length === 0) warnings.push("Topics were collapsed on the page, so no tags. Open Topics before copying.");
-  if (problem.hints.length === 0) warnings.push("No hints found. Open every Hint before copying (some problems have none).");
+  if (problem.hints.length === 0) {
+    warnings.push("No hints found, so the Oracle's panel is empty. LeetCode lists none for some problems; on a pasted page, open every Hint before copying.");
+  }
   const missing = problem.title === "" || problem.statement === "" || problem.constraints === "";
   return { confidence: missing ? "low" : "high", warnings };
 }

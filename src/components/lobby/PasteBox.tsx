@@ -45,7 +45,7 @@ export function PasteBox({ onSorted, disabled }: { onSorted: (problem: Problem) 
       <TextareaField
         label="Problem"
         name="paste"
-        hint="Paste the whole LeetCode page, or just its title or number."
+        hint="Paste the whole LeetCode page, or just its title, number or link."
         rows={6}
         value={text}
         onChange={(e) => {
