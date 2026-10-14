@@ -31,13 +31,13 @@ export default function AboutPage(): ReactElement {
           <p className="prose">
             Leetposter is a social deduction game for programmers. Four to eight people take one hard algorithm problem, forty minutes and a shared file.
             Every seat holds one channel of information on top of the statement everyone can see: the Cartographer holds the tags, the Oracle holds the hints
-            in order, the Warden holds the constraints, the Herald carries the file to the Judge and comes back with a verdict. One player is the Changeling.
+            in order, the Warden holds the constraints, the Herald carries the file to the Judge and comes back with a verdict. One player is the Leetposter.
             They hold a seat like anyone else, see only that seat, and may lie on every card they play and in every sentence they say.
           </p>
           <p className="prose">
             Cards are the record. At the reveal every card is laid next to the truth it was meant to carry, and the crew find out what the table was working
             from. On a problem from the bank the verdict is the one thing that cannot be faked, because the Judge in the Hall runs the file and records what it
-            finds; on a problem the host brought from elsewhere the Herald types the verdict in, and a Changeling holding that seat can lie about it like
+            finds; on a problem the host brought from elsewhere the Herald types the verdict in, and a Leetposter holding that seat can lie about it like
             anything else.
           </p>
           <p className="prose">

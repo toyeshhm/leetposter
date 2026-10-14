@@ -149,7 +149,7 @@
   height: 1.4rem;
 }
 
-/* the Changeling's portrait, name and title on one line at the reveal */
+/* the Leetposter's portrait, name and title on one line at the reveal */
 .reveal-unmasked {
   display: flex;
   flex-wrap: wrap;

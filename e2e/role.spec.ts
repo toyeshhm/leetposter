@@ -4,8 +4,10 @@ import { NAMES, PROBLEM, act, api, closePages, enterAs, newPages } from "./helpe
 
 /** Everything on screen now, as a glance over the shoulder would read it: a shut <details> contributes nothing to innerText. */
 const onScreen = (page: Page): Promise<string> => page.locator("body").innerText();
+/** The role's own words. "Leetposter" alone is also the site's name, so the bare word proves nothing. */
+const ROLE_WORDS = /the Leetposter|You are (crew|the)|Lie well/i;
 
-test("the role stays shut until asked for, looks the same for crew and Changeling, and is written in red", async ({ browser, request }) => {
+test("the role stays shut until asked for, looks the same for crew and Leetposter, and is written in red", async ({ browser, request }) => {
   const host = await api<Credentials>(request, "/api/rooms", { name: NAMES[0] });
   const others = await Promise.all(NAMES.slice(1).map((name) => api<Credentials>(request, `/api/rooms/${host.code}/join`, { name })));
   const creds = [host, ...others];
@@ -28,12 +30,13 @@ test("the role stays shut until asked for, looks the same for crew and Changelin
       await expect(role.locator("summary")).toHaveText("Your role Open to look; shut it before anyone leans over.");
       await expect(role.locator(".role-body")).toBeHidden();
     }
-    // Shut, the Changeling's screen says "Changeling" nowhere: not in the header, not on the roster, not beside the seat.
-    expect(await onScreen(maskPage)).not.toMatch(/changeling/i);
-    await expect(maskPage.getByTitle("You are the Changeling")).toHaveCount(0);
+    // Shut, the Leetposter's screen names the role nowhere: not in the header, not on the roster, not beside the seat.
+    expect(await onScreen(maskPage)).not.toMatch(ROLE_WORDS);
+    await expect(maskPage.getByRole("complementary", { name: "Clock and table" }).getByText("Leetposter", { exact: true })).toHaveCount(0);
+    await expect(maskPage.getByTitle("You are the Leetposter")).toHaveCount(0);
 
     await maskPage.getByRole("group", { name: "Your role" }).locator("summary").click();
-    await expect(maskPage.locator(".role-body")).toContainText("You are the Changeling.");
+    await expect(maskPage.locator(".role-body")).toContainText("You are the Leetposter.");
     await expect(maskPage.locator(".role-body")).toContainText("Lie well.");
     await crewPage.getByRole("group", { name: "Your role" }).locator("summary").click();
     await expect(crewPage.locator(".role-body")).toContainText("You are crew.");
@@ -54,7 +57,7 @@ test("the role stays shut until asked for, looks the same for crew and Changelin
     // Shutting it again hides it again.
     await maskPage.getByRole("group", { name: "Your role" }).locator("summary").click();
     await expect(maskPage.locator(".role-body")).toBeHidden();
-    expect(await onScreen(maskPage)).not.toMatch(/changeling/i);
+    expect(await onScreen(maskPage)).not.toMatch(ROLE_WORDS);
   } finally {
     await closePages(pages);
   }
@@ -69,8 +72,8 @@ test("the role is shut during the Reading too", async ({ page, request }) => {
   const role = page.getByRole("group", { name: "Your role" });
   await expect(role.locator("summary")).toBeVisible();
   await expect(role.locator(".role-body")).toBeHidden();
-  // A hall of one is its own Changeling, and still nothing says so until it is opened.
-  expect(await onScreen(page)).not.toMatch(/changeling/i);
+  // A hall of one is its own Leetposter, and still nothing says so until it is opened.
+  expect(await onScreen(page)).not.toMatch(ROLE_WORDS);
   await role.locator("summary").click();
-  await expect(role.locator(".role-body")).toContainText("You are the Changeling.");
+  await expect(role.locator(".role-body")).toContainText("You are the Leetposter.");
 });

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
   <title>Leetposter</title>
-  <!-- The Changeling's half-mask, cut for 16 px: a solid bone mask on a stone tile, dark eye holes, one amber crack. Tokens from globals.css, resolved to sRGB. -->
+  <!-- The Leetposter's half-mask, cut for 16 px: a solid bone mask on a stone tile, dark eye holes, one amber crack. Tokens from globals.css, resolved to sRGB. -->
   <rect width="96" height="96" rx="18" fill="#14181a"/>
   <g transform="translate(48 46) scale(1.16) translate(-48 -46)">
     <path fill="#e8e4dc" fill-rule="evenodd" d="M12 42 C18 26 34 20 48 26 C62 20 78 26 84 42 C88 52 80 64 66 64 C58 64 52 58 48 56 C44 58 38 64 30 64 C16 64 8 52 12 42 Z M22 44 Q33 32 44 44 Q33 54 22 44 Z M52 44 Q63 32 74 44 Q63 54 52 44 Z"/>

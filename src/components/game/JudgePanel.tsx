@@ -29,7 +29,7 @@ type Phase =
  * off another site and copy it here: the file the hall last saved runs in the Herald's own browser
  * against the samples and then the hidden tests, and what it finds is the verdict. An Accepted ends
  * the round on the spot. A rejection only prefills the report card — the Herald still signs it, so a
- * Changeling in the Herald's seat can still write down the wrong case.
+ * Leetposter in the Herald's seat can still write down the wrong case.
  */
 export function JudgeAction({ bankId, code, act, busy, onJudged }: JudgeActionProps): ReactElement {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });

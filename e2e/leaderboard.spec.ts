@@ -37,9 +37,9 @@ async function seat(request: APIRequestContext, path: string, name: string, toke
   return (await res.json()) as Credentials;
 }
 
-test("two accounts finish a hall and stand on the overall board; only the Changeling stands on the Changeling board", async ({ page, request }) => {
+test("two accounts finish a hall and stand on the overall board; only the Leetposter stands on the Leetposter board", async ({ page, request }) => {
   const [a, b] = await Promise.all([newUser("a"), newUser("b")]);
-  // Two at the table, both with accounts, so the Changeling is one of them whatever the deal.
+  // Two at the table, both with accounts, so the Leetposter is one of them whatever the deal.
   const host = await seat(request, "/api/rooms", "Ada", a.token);
   const other = await seat(request, `/api/rooms/${host.code}/join`, "Brin", b.token);
   await act(request, host, { type: "setProblem", problem: PROBLEM });
@@ -47,7 +47,7 @@ test("two accounts finish a hall and stand on the overall board; only the Change
   await act(request, host, { type: "start" });
   const views = await Promise.all([host, other].map((c) => act(request, c, { type: "tick" })));
   const maskView = views.find((v) => v.me.isImposter);
-  if (maskView === undefined) throw new Error("no Changeling dealt");
+  if (maskView === undefined) throw new Error("no Leetposter dealt");
   const mask = maskView.me.id === host.playerId ? a : b;
   const crew = mask === a ? b : a;
   const runner = [host, other].find((c) => views.find((v) => v.me.id === c.playerId)?.me.seats.includes("runner"));
@@ -59,8 +59,8 @@ test("two accounts finish a hall and stand on the overall board; only the Change
   const overall = page.getByRole("table", { name: "Overall board" });
   await expect(overall).toContainText(`@${a.username}`);
   await expect(overall).toContainText(`@${b.username}`);
-  await page.getByRole("button", { name: "Changeling", exact: true }).click();
-  const changeling = page.getByRole("table", { name: "Changeling board" });
+  await page.getByRole("button", { name: "Leetposter", exact: true }).click();
+  const changeling = page.getByRole("table", { name: "Leetposter board" });
   await expect(changeling).toContainText(`@${mask.username}`);
   await expect(changeling).not.toContainText(`@${crew.username}`);
 });

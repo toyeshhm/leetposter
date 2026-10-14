@@ -256,7 +256,7 @@ export interface PlayerView {
 
 /**
  * What anyone with the code may see, no token needed. Every seat panel is open (a spectator is every seat
- * at once), the ballots stay hidden until a round resolves, and who the Changeling is waits for the reveal.
+ * at once), the ballots stay hidden until a round resolves, and who the Leetposter is waits for the reveal.
  * No tokens, no shared editor. Produced by `spectate`.
  */
 export interface SpectatorView {

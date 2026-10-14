@@ -65,7 +65,7 @@ function PanelBody({ seat, panel }: { seat: Seat; panel: PanelView }): ReactElem
 }
 
 /**
- * Your role, shut until asked for. Crew and Changeling get the same shut row and the same red word,
+ * Your role, shut until asked for. Crew and Leetposter get the same shut row and the same red word,
  * so a glance over the shoulder reads nothing: not the text, not the colour, not whether the row is there.
  */
 export function RoleReveal({ isImposter, seats }: { isImposter: boolean; seats: Seat[] }): ReactElement {
@@ -78,7 +78,7 @@ export function RoleReveal({ isImposter, seats }: { isImposter: boolean; seats: 
       <div className="role-body">
         {isImposter ? <ChangelingMask size={40} decorative /> : null}
         <p>
-          You are <strong className="role-name">{isImposter ? "the Changeling" : "crew"}</strong>. {isImposter ? `You hold ${held} like anyone else. Lie well.` : `You hold ${held}. Tell it true.`}
+          You are <strong className="role-name">{isImposter ? "the Leetposter" : "crew"}</strong>. {isImposter ? `You hold ${held} like anyone else. Lie well.` : `You hold ${held}. Tell it true.`}
         </p>
       </div>
     </details>

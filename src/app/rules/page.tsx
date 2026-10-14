@@ -14,7 +14,7 @@ import "./rules.css";
 
 export const metadata: Metadata = {
   title: "How to play",
-  description: "The whole game: the four seats, the Changeling, the record, the clock, the two votes, the judge and how a hall is won.",
+  description: "The whole game: the four seats, the Leetposter, the record, the clock, the two votes, the judge and how a hall is won.",
 };
 
 /** What each seat is handed, and what it is allowed to put on the record. Straight off the reducer. */
@@ -30,7 +30,7 @@ const NIGHT: { name: string; when: string | null; text: string }[] = [
   {
     name: PHASE_NAMES.lobby,
     when: null,
-    text: "The host puts the problem in. Pick one from the bank, by name or by rating band, and the Judge in the Hall marks the submissions itself. Or bring your own: paste a whole page, or type a title, a number or a link and let the app fetch it, in which case the Herald records the verdict by hand. Starting the hall deals the seats and picks the Changeling, both in secret.",
+    text: "The host puts the problem in. Pick one from the bank, by name or by rating band, and the Judge in the Hall marks the submissions itself. Or bring your own: paste a whole page, or type a title, a number or a link and let the app fetch it, in which case the Herald records the verdict by hand. Starting the hall deals the seats and picks the Leetposter, both in secret.",
   },
   {
     name: PHASE_NAMES.reading,
@@ -55,7 +55,7 @@ const NIGHT: { name: string; when: string | null; text: string }[] = [
   {
     name: PHASE_NAMES.reveal,
     when: null,
-    text: "The Changeling is named. The final file is there, read only, and every seat's true panel sits beside every card played from it, with the ballots underneath.",
+    text: "The Leetposter is named. The final file is there, read only, and every seat's true panel sits beside every card played from it, with the ballots underneath.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default function RulesPage(): ReactElement {
           </p>
           <p>
             Everyone reads the same statement, examples included. On top of it, each seat holds one channel of information that nobody else can see.
-            Exactly one player is the Changeling.
+            Exactly one player is the Leetposter.
           </p>
           <p>
             Fewer than four people can open a hall, which is useful for trying the app out. The four seats go round the table instead: three players
@@ -100,7 +100,7 @@ export default function RulesPage(): ReactElement {
           <h2>The seats</h2>
           <p>
             Seats are dealt in secret when the host starts, and from then on they are public: everyone can see who holds what. What stays private is
-            what is written on each panel, and which of you is the Changeling.
+            what is written on each panel, and which of you is the Leetposter.
           </p>
           <table className="board">
             <thead>
@@ -155,14 +155,14 @@ export default function RulesPage(): ReactElement {
         <section>
           <h2 className="rules-head">
             <ChangelingMask size={40} decorative />
-            The Changeling
+            The Leetposter
           </h2>
           <p>
-            One player, picked at random when the host starts. The Changeling holds an ordinary seat and sees only that seat&apos;s panel, the same as
+            One player, picked at random when the host starts. The Leetposter holds an ordinary seat and sees only that seat&apos;s panel, the same as
             anyone else. They are not given the answer. They are given permission to lie.
           </p>
           <p>
-            They may lie on any card and in any sentence. A Changeling in the Oracle&apos;s seat can reveal a hint that reads nothing like the true
+            They may lie on any card and in any sentence. A Leetposter in the Oracle&apos;s seat can reveal a hint that reads nothing like the true
             one, because the card carries what was typed and is only held against the truth at the unmasking.
           </p>
         </section>
@@ -175,7 +175,7 @@ export default function RulesPage(): ReactElement {
           <p>The crew fill every card truthfully. That is the only rule about what anyone types.</p>
           <p>
             Voice is free, for everyone. Speculate, hedge, argue hard for the wrong answer, be wrong out loud. That is what gives an honest player
-            cover, and it is why the Changeling has to work for it.
+            cover, and it is why the Leetposter has to work for it.
           </p>
         </section>
 
@@ -210,7 +210,7 @@ export default function RulesPage(): ReactElement {
             ballot.
           </p>
           <p>
-            Cast out the Changeling and the crew win there and then. Cast out a crewmate and they go read only for the rest of the night: no more
+            Cast out the Leetposter and the crew win there and then. Cast out a crewmate and they go read only for the rest of the night: no more
             cards, no more ballots. They keep their seat, except the Herald&apos;s, which passes to a random player still seated, because somebody has
             to be able to submit. Then the work resumes where it stopped.
           </p>
@@ -226,7 +226,7 @@ export default function RulesPage(): ReactElement {
             {duration(DEFAULT_SETTINGS.finalDiscussionMs)} of argument, {duration(DEFAULT_SETTINGS.finalVoteMs)} to vote, and there is no Skip.
           </p>
           <p>
-            Cast out the Changeling and the crew win. Anything else, a crewmate cast out or nobody cast out at all, and the Changeling wins.
+            Cast out the Leetposter and the crew win. Anything else, a crewmate cast out or nobody cast out at all, and the Leetposter wins.
           </p>
         </section>
 
@@ -240,7 +240,7 @@ export default function RulesPage(): ReactElement {
             <li>
               In a Tribunal, a ballot never cast counts as a skip, so a silent table protects itself by default. A tie goes to Skip and everyone stays.
             </li>
-            <li>In the Reckoning there is no Skip, and silence is simply not a vote. A tie casts nobody out, which is a win for the Changeling.</li>
+            <li>In the Reckoning there is no Skip, and silence is simply not a vote. A tie casts nobody out, which is a win for the Leetposter.</li>
             <li>A ballot can be recast while the round is open. The last one is the one that counts.</li>
             <li>The round resolves the moment every player still seated has voted, rather than waiting the clock out.</li>
           </ul>
@@ -271,7 +271,7 @@ export default function RulesPage(): ReactElement {
           <p>
             Where the problem carries its own tests, the Judge in the hall runs the shared file against them in the Herald&apos;s browser and an
             Accepted is recorded by the Judge rather than typed by anyone. A rejection only prefills the report card: the Herald still signs it, so a
-            Changeling holding the Herald&apos;s seat can write down a case that never failed. Where the judge sits outside the hall, the Herald takes
+            Leetposter holding the Herald&apos;s seat can write down a case that never failed. Where the judge sits outside the hall, the Herald takes
             the verdict it gave and records it as given, and that rule rests on the table the way the truth rule does.
           </p>
         </section>
@@ -281,9 +281,9 @@ export default function RulesPage(): ReactElement {
             <CrewEmblem size={40} decorative />
             Winning
           </h2>
-          <p>The crew win when the judge accepts a submission, or when the Changeling is cast out, in a Tribunal or in the Reckoning.</p>
+          <p>The crew win when the judge accepts a submission, or when the Leetposter is cast out, in a Tribunal or in the Reckoning.</p>
           <p>
-            The Changeling wins when the candle burns out or every attempt is spent, and they are still at the table once the Reckoning is over. There
+            The Leetposter wins when the candle burns out or every attempt is spent, and they are still at the table once the Reckoning is over. There
             is no draw.
           </p>
         </section>

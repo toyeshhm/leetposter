@@ -60,7 +60,7 @@ const NIGHT: {
     Art: FreezeBell,
     step: "The tribunal",
     time: `${duration(DEFAULT_SETTINGS.freezeDiscussionMs)}, then ${duration(DEFAULT_SETTINGS.freezeVoteMs)}`,
-    what: "Anyone may ring the bell, once, after the first three minutes and until ninety seconds are left. Hands off the keyboard. Ninety seconds of argument, fifteen to vote. Eject the Changeling and the crew win. Eject a crewmate and they go quiet for the rest of the night.",
+    what: "Anyone may ring the bell, once, after the first three minutes and until ninety seconds are left. Hands off the keyboard. Ninety seconds of argument, fifteen to vote. Eject the Leetposter and the crew win. Eject a crewmate and they go quiet for the rest of the night.",
   },
   {
     Art: AcceptedMark,
@@ -72,13 +72,13 @@ const NIGHT: {
     Art: BallotIcon,
     step: "The reckoning",
     time: `${duration(DEFAULT_SETTINGS.finalDiscussionMs)}, then ${duration(DEFAULT_SETTINGS.finalVoteMs)}`,
-    what: "When the candle is out there is one last vote, with no skip. A tie counts for the Changeling.",
+    what: "When the candle is out there is one last vote, with no skip. A tie counts for the Leetposter.",
   },
   {
     Art: ChangelingMask,
     step: "The unmasking",
     time: "last",
-    what: "Every card laid next to the truth, every vote in order, the final file, and the Changeling named.",
+    what: "Every card laid next to the truth, every vote in order, the final file, and the Leetposter named.",
   },
 ];
 
@@ -179,7 +179,7 @@ export default function Home(): ReactElement {
           </div>
           <div className="changeling-note">
             <ChangelingMask size={48} decorative />
-            <p>One of the five is the Changeling. They see their own panel and nothing else, and they may lie about all of it.</p>
+            <p>One of the five is the Leetposter. They see their own panel and nothing else, and they may lie about all of it.</p>
           </div>
         </section>
 
@@ -270,13 +270,13 @@ export default function Home(): ReactElement {
           <p className="prose">The round ends and every card is laid next to the truth it was meant to carry.</p>
           <Frame title="Cass">
             <div className={styles.panelHead}>
-              <ChangelingMask size={24} title="The Changeling" />
+              <ChangelingMask size={24} title="The Leetposter" />
             </div>
             <SeatTruth seat="tagger" problem={ROUND_PROBLEM} cards={TAGGER_CARDS} />
           </Frame>
           <Frame className="reveal-banner reveal-banner-bare">
             <div>
-              <p className="reveal-title">The Changeling wins.</p>
+              <p className="reveal-title">The Leetposter wins.</p>
               <p className="reveal-reason muted">The candle burned out with nothing accepted, and the Reckoning tied.</p>
             </div>
           </Frame>
@@ -299,7 +299,7 @@ export default function Home(): ReactElement {
           </div>
           <p className="prose">
             The Herald sends the crew&apos;s file and the Judge answers Accepted or Rejected with a category. It does not explain. Four attempts, and the fourth
-            rejection starts the last vote. The verdict is the one thing the Changeling cannot fake.
+            rejection starts the last vote. The verdict is the one thing the Leetposter cannot fake.
           </p>
           <p className="prose">
             {bank.length} problems written for this hall, rated {Math.min(...ratings)} to {Math.max(...ratings)}. None of them are borrowed. Each one carries its
@@ -339,7 +339,7 @@ export default function Home(): ReactElement {
             speculate, hedge, be wrong. That is the honest players&apos; cover.
           </p>
           <p>
-            The Changeling holds a seat like anyone else, sees only that seat&apos;s panel, and may lie on any card and in any sentence. The one thing never
+            The Leetposter holds a seat like anyone else, sees only that seat&apos;s panel, and may lie on any card and in any sentence. The one thing never
             faked is the verdict.
           </p>
         </section>

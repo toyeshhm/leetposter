@@ -16,7 +16,7 @@ The candle is the clock. When it gutters, the Reckoning begins.
   The Warden's favourite lie is "n is at most a thousand".
 - The Herald carries the file to the Judge and returns with a verdict. Four attempts, then the
   Judge closes the door. Heralds have been known to forget the link.
-- The Changeling sits among them holding a seat like anyone else, and lies on cards and on voice.
+- The Leetposter sits among them holding a seat like anyone else, and lies on cards and on voice.
   The one thing never faked is the verdict.
 
 ## The Judge
@@ -43,7 +43,7 @@ Runtime Error, Memory Limit, Compile Error. Does not explain. The fourth rejecti
 Ada the host who always opens the hall, Brin the Oracle who reads hints in a monotone, Cass the
 Cartographer who has never once been wrong about a tag and is therefore never trusted, Dov the
 Herald who forgot the link, the Warden of the North Gate who counts everything twice, and the
-Changeling, who is whoever you least suspect.
+Leetposter, who is whoever you least suspect.
 
 ## Problem framing
 Every problem is a task the Company must finish before the candle dies: counting candles,

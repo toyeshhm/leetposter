@@ -1,5 +1,5 @@
 /**
- * Elo over halls. A hall is one match: the Changeling versus the crew as a body.
+ * Elo over halls. A hall is one match: the Leetposter versus the crew as a body.
  * Pure: results.ts loads the current rows, calls rateHall, and stores what comes back.
  */
 
@@ -46,8 +46,8 @@ function overallOf(p: HallPlayer): number {
 
 /**
  * New ratings for every account player at the table, one entry per ladder touched.
- * The crew rate against the Changeling's overall rating; the Changeling rates against the crew's mean.
- * Overall moves for everyone, crew only for the crew, changeling only for the Changeling.
+ * The crew rate against the Leetposter's overall rating; the Leetposter rates against the crew's mean.
+ * Overall moves for everyone, crew only for the crew, changeling only for the Leetposter.
  */
 export function rateHall(players: HallPlayer[], winner: "crew" | "imposter"): RatingChange[] {
   const changeling = players.find((p) => p.isImposter);

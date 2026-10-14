@@ -182,12 +182,12 @@ export const CATALOG: readonly Item[] = [
   // badges: one per achievement (src/server/achievements.ts) and two per season, never sold
   def("badge", "first-candle", "First Candle", "Sat through one hall to the unmasking.", "common"),
   def("badge", "company-of-five", "Company of Five", "Five halls, start to finish.", "common"),
-  def("badge", "unmasked", "Unmasked", "Sat with the crew when the Changeling was cast out.", "uncommon"),
-  def("badge", "silver-tongue", "Silver Tongue", "Won as the Changeling.", "uncommon"),
+  def("badge", "unmasked", "Unmasked", "Sat with the crew when the Leetposter was cast out.", "uncommon"),
+  def("badge", "silver-tongue", "Silver Tongue", "Won as the Leetposter.", "uncommon"),
   def("badge", "clean-hands", "Clean Hands", "Won with the crew three times, every card played as written.", "rare"),
   def("badge", "cast-out", "Cast Out", "Cast out while crew. The table owes you a drink.", "uncommon"),
   def("badge", "long-night", "Long Night", "Ten halls. The candle is a stub.", "rare"),
-  def("badge", "two-faces", "Two Faces", "Won as the Changeling with two or more cards altered.", "rare"),
+  def("badge", "two-faces", "Two Faces", "Won as the Leetposter with two or more cards altered.", "rare"),
   def("badge", "season-long-night", "The Long Night", "Was at the table in the first season.", "uncommon", { season: LONG_NIGHT, tier: 1 }),
   def("badge", "season-frost-watch", "The Frost Watch", "Was at the table in the second season.", "uncommon", { season: FROST_WATCH, tier: 1 }),
   // emotes, played at the reveal

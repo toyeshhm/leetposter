@@ -65,7 +65,7 @@ export function HistoryScreen(): ReactElement {
         <p className="history-elo" aria-label="Your ratings">
           <span>Overall {String(loaded.ratings.overall.rating)}</span>
           <span>Crew {String(loaded.ratings.crew.rating)}</span>
-          <span>Changeling {String(loaded.ratings.changeling.rating)}</span>
+          <span>Leetposter {String(loaded.ratings.changeling.rating)}</span>
           <span className="muted">
             {String(loaded.ratings.overall.games)} {loaded.ratings.overall.games === 1 ? "hall" : "halls"} rated
           </span>
@@ -119,7 +119,7 @@ function Games({ games }: { games: GameResultRow[] }): ReactElement {
   return (
     <ol className="games" aria-label="Your halls">
       {games.map((g) => {
-        // Won as crew or lost as the Changeling means the crew took it; the reason reads the same either way.
+        // Won as crew or lost as the Leetposter means the crew took it; the reason reads the same either way.
         const winner: Outcome["winner"] = g.won === g.was_imposter ? "imposter" : "crew";
         const reason = isReason(g.reason) ? outcomeWords({ winner, reason: g.reason }).reason : g.reason;
         return (
@@ -131,7 +131,7 @@ function Games({ games }: { games: GameResultRow[] }): ReactElement {
             </p>
             <p className="game-seats">
               {g.was_imposter ? <ChangelingMask size={24} decorative /> : null}
-              <span className={cx("game-role", g.was_imposter ? "game-lie" : "game-true")}>{g.was_imposter ? "the Changeling" : "crew"}</span>
+              <span className={cx("game-role", g.was_imposter ? "game-lie" : "game-true")}>{g.was_imposter ? "the Leetposter" : "crew"}</span>
               {g.seats.filter(isSeat).map((seat) => (
                 <Badge key={seat} seat={seat} />
               ))}

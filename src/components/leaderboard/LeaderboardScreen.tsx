@@ -11,9 +11,9 @@ import "./leaderboard.css";
 const BOARDS: { id: Board; name: string }[] = [
   { id: "overall", name: "Overall" },
   { id: "crew", name: "Crew" },
-  { id: "changeling", name: "Changeling" },
+  { id: "changeling", name: "Leetposter" },
   { id: "solves", name: "Solves" },
-  { id: "changeling-wins", name: "Changeling wins" },
+  { id: "changeling-wins", name: "Leetposter wins" },
 ];
 
 type Loaded = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; page: LeaderboardPage };

@@ -43,7 +43,7 @@ function HostControls({ view, send, busy }: { view: PlayerView; send: (action: A
       <BoardSwitch code={view.code} />
       <Frame title="Begin">
         <div className="lobby-stack">
-          <p className="muted prose">{readiness} Seats and the Changeling are dealt the moment you begin. Nobody joins after that.</p>
+          <p className="muted prose">{readiness} Seats and the Leetposter are dealt the moment you begin. Nobody joins after that.</p>
           <div className="lobby-actions">
             <Button variant="primary" disabled={!canStart || busy} loading={starting} onClick={() => void start()}>
               Begin the reading

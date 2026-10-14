@@ -211,7 +211,7 @@ describe("a problem's own rating", () => {
   });
 
   it("rates against the crew's own ratings, and a hall the problem holds counts as an attempt but not a solve", async () => {
-    // Six seats: a guest host, four signed in, a guest tail. Only one of them is the Changeling, so
+    // Six seats: a guest host, four signed in, a guest tail. Only one of them is the Leetposter, so
     // whichever seat it falls on the crew still holds both a guest and an account — the two sides of
     // the lookup are covered every run, not four runs in five.
     const [host] = await hallOn(hardest.id, hardest.rating, 6, 4);

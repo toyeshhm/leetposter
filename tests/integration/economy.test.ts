@@ -389,7 +389,7 @@ describe("the after-hall hook", () => {
     expect(row).toMatchObject({ won: true, reason: "accepted", cards_played: 1, cards_altered: 0 });
     expect(xpForHall(row)).toBe(100);
     expect(await ensureWallet(tagger.id)).toMatchObject({ xp: 100 });
-    // The Changeling lost but sat the hall and saw it accepted.
+    // The Leetposter lost but sat the hall and saw it accepted.
     expect(await ensureWallet(mask.id)).toMatchObject({ xp: 60 });
     expect(await inventoryOf(tagger.id)).toContain("badge-first-candle");
     expect(await inventoryOf(mask.id)).toContain("badge-first-candle");

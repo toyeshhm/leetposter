@@ -231,7 +231,7 @@ h3.section-title {
   border-top: var(--rule) solid var(--line);
 }
 
-/* the Changeling's line, as the landing page prints it */
+/* the Leetposter's line, as the landing page prints it */
 .changeling-note {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -246,7 +246,7 @@ h3.section-title {
   font-size: var(--text-md);
 }
 
-/* your role: one shut row, the same for crew and Changeling */
+/* your role: one shut row, the same for crew and Leetposter */
 .role {
   border-top: var(--rule) solid var(--ink);
   border-bottom: var(--rule) solid var(--ink);

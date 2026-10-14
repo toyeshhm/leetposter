@@ -16,9 +16,9 @@ export type QuestRule =
   /** The hall's problem was rated at least this and the crew solved it. */
   | { kind: "rating-at-least"; rating: number }
   | { kind: "seat"; seat: Seat }
-  /** The Changeling was cast out while you were crew. */
+  /** The Leetposter was cast out while you were crew. */
   | { kind: "cast-out-changeling" }
-  /** You were the Changeling, won, and were never cast out. */
+  /** You were the Leetposter, won, and were never cast out. */
   | { kind: "survive" };
 
 export interface Quest {
@@ -39,22 +39,22 @@ export const QUEST_POOL: readonly Quest[] = [
   { id: "d-three-halls", cadence: "daily", name: "Three Candles", description: "Sit three halls to the reveal.", goal: 3, xp: 200, candles: 30, rule: { kind: "halls" } },
   { id: "d-win-any", cadence: "daily", name: "Any Means", description: "Win a hall on either side.", goal: 1, xp: 120, candles: 20, rule: { kind: "win", as: "any" } },
   { id: "d-win-crew", cadence: "daily", name: "Honest Work", description: "Win a hall as crew.", goal: 1, xp: 140, candles: 20, rule: { kind: "win", as: "crew" } },
-  { id: "d-win-changeling", cadence: "daily", name: "Silver Tongue", description: "Win a hall as the Changeling.", goal: 1, xp: 180, candles: 30, rule: { kind: "win", as: "changeling" } },
+  { id: "d-win-changeling", cadence: "daily", name: "Silver Tongue", description: "Win a hall as the Leetposter.", goal: 1, xp: 180, candles: 30, rule: { kind: "win", as: "changeling" } },
   { id: "d-cards-true", cadence: "daily", name: "As Written", description: "Play two cards true in one hall.", goal: 1, xp: 120, candles: 20, rule: { kind: "cards-true", n: 2 } },
   { id: "d-tribunal", cadence: "daily", name: "Call the Table", description: "Sit a hall where a tribunal was called.", goal: 1, xp: 100, candles: 15, rule: { kind: "tribunal-called" } },
   { id: "d-accepted", cadence: "daily", name: "Green Ink", description: "Be crew when a hall ends in Accepted.", goal: 1, xp: 160, candles: 25, rule: { kind: "accepted" } },
   { id: "d-rated", cadence: "daily", name: "Above the Salt", description: "Solve a problem rated 1400 or higher.", goal: 1, xp: 160, candles: 25, rule: { kind: "rating-at-least", rating: 1400 } },
   { id: "d-runner", cadence: "daily", name: "Hold the Keys", description: "Hold the runner seat for a hall.", goal: 1, xp: 120, candles: 20, rule: { kind: "seat", seat: "runner" } },
   { id: "d-oracle", cadence: "daily", name: "Speak the Answer", description: "Hold the oracle seat for a hall.", goal: 1, xp: 120, candles: 20, rule: { kind: "seat", seat: "oracle" } },
-  { id: "d-cast-out", cadence: "daily", name: "Unmasking", description: "Be crew when the Changeling is cast out.", goal: 1, xp: 160, candles: 25, rule: { kind: "cast-out-changeling" } },
+  { id: "d-cast-out", cadence: "daily", name: "Unmasking", description: "Be crew when the Leetposter is cast out.", goal: 1, xp: 160, candles: 25, rule: { kind: "cast-out-changeling" } },
   // weekly
   { id: "w-ten-halls", cadence: "weekly", name: "The Long Table", description: "Sit ten halls to the reveal.", goal: 10, xp: 600, candles: 90, rule: { kind: "halls" } },
   { id: "w-win-crew", cadence: "weekly", name: "Company Kept", description: "Win three halls as crew.", goal: 3, xp: 500, candles: 80, rule: { kind: "win", as: "crew" } },
-  { id: "w-win-changeling", cadence: "weekly", name: "Two Faces", description: "Win two halls as the Changeling.", goal: 2, xp: 600, candles: 90, rule: { kind: "win", as: "changeling" } },
+  { id: "w-win-changeling", cadence: "weekly", name: "Two Faces", description: "Win two halls as the Leetposter.", goal: 2, xp: 600, candles: 90, rule: { kind: "win", as: "changeling" } },
   { id: "w-cards-true", cadence: "weekly", name: "Clean Hands", description: "Play three cards true in each of three halls.", goal: 3, xp: 500, candles: 80, rule: { kind: "cards-true", n: 3 } },
   { id: "w-accepted", cadence: "weekly", name: "Three Green Marks", description: "Be crew for three halls that end in Accepted.", goal: 3, xp: 600, candles: 90, rule: { kind: "accepted" } },
   { id: "w-rated", cadence: "weekly", name: "High Table", description: "Solve a problem rated 1700 or higher.", goal: 1, xp: 700, candles: 100, rule: { kind: "rating-at-least", rating: 1700 } },
-  { id: "w-survive", cadence: "weekly", name: "Never Unmasked", description: "Win as the Changeling without being cast out.", goal: 1, xp: 800, candles: 120, rule: { kind: "survive" } },
+  { id: "w-survive", cadence: "weekly", name: "Never Unmasked", description: "Win as the Leetposter without being cast out.", goal: 1, xp: 800, candles: 120, rule: { kind: "survive" } },
   { id: "w-bounds", cadence: "weekly", name: "Know the Limits", description: "Hold the bounds seat in five halls.", goal: 5, xp: 400, candles: 60, rule: { kind: "seat", seat: "bounds" } },
 ];
 

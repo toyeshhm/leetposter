@@ -54,7 +54,7 @@ describe("recordResults and the account history routes", () => {
   it("writes one row per account player at the reveal, idempotently, and serves them with achievements", async () => {
     const crewUser = await newUser("crew");
     const changelingUser = await newUser("mask");
-    // A dealt hall where the Changeling is neither the Cartographer nor the Oracle, so the crew's honest cards are theirs alone.
+    // A dealt hall where the Leetposter is neither the Cartographer nor the Oracle, so the crew's honest cards are theirs alone.
     let s = building();
     for (let seed = 2; imposter(s).seats.includes("tagger") || imposter(s).seats.includes("oracle"); seed++) s = building(5, seed);
     const tagger = holder(s, "tagger");

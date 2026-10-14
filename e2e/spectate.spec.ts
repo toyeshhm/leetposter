@@ -3,7 +3,7 @@ import type { Credentials } from "@/client/api";
 import { SEAT_TITLES } from "@/components/art/Sigils";
 import { NAMES, PROBLEM, act, api, closePages, newPages, openHall } from "./helpers";
 
-test("a listed hall shows on the board; a spectator sees every seat and learns the Changeling only at the reveal", async ({ browser, request }) => {
+test("a listed hall shows on the board; a spectator sees every seat and learns the Leetposter only at the reveal", async ({ browser, request }) => {
   const pages = await newPages(browser, 2);
   const [host, watcher] = pages;
   if (host === undefined || watcher === undefined) throw new Error("two pages");
@@ -53,9 +53,10 @@ test("a listed hall shows on the board; a spectator sees every seat and learns t
     const roster = watcher.getByRole("region", { name: "At the table" });
     await expect(roster.getByRole("listitem")).toHaveCount(4);
     await expect(roster).toContainText("host");
-    // Nothing on the page names the Changeling before the reveal.
-    await expect(watcher.getByText(/Changeling/)).toHaveCount(0);
-    await expect(watcher.getByRole("region", { name: "The Changeling" })).toHaveCount(0);
+    // Nothing on the page names the Leetposter before the reveal ("Leetposter" alone is also the site's name, so look for the role's own words).
+    await expect(watcher.getByText(/the Leetposter/i)).toHaveCount(0);
+    await expect(roster.getByText("Leetposter", { exact: true })).toHaveCount(0);
+    await expect(watcher.getByRole("region", { name: "The Leetposter" })).toHaveCount(0);
     await expect(watcher.getByText("No cards yet. The record begins with the first one.")).toBeVisible();
 
     const views = await Promise.all(creds.map((c) => act(request, c, { type: "tick" })));
@@ -65,12 +66,12 @@ test("a listed hall shows on the board; a spectator sees every seat and learns t
 
     await expect(watcher.getByRole("heading", { level: 1, name: "Unmasking" })).toBeVisible();
     await expect(watcher.getByRole("heading", { name: "The Crew win" })).toBeVisible();
-    const unmasked = watcher.getByRole("region", { name: "The Changeling" });
+    const unmasked = watcher.getByRole("region", { name: "The Leetposter" });
     const changeling = await unmasked.getByRole("heading", { level: 2 }).innerText();
     expect(NAMES).toContain(changeling);
-    await expect(unmasked).toContainText("was the Changeling, seated as");
-    await expect(roster.getByRole("listitem").filter({ hasText: changeling })).toContainText("Changeling");
-    await expect(watcher.getByRole("region", { name: "Every seat, every card" }).getByRole("group", { name: changeling })).toContainText("the Changeling");
+    await expect(unmasked).toContainText("was the Leetposter, seated as");
+    await expect(roster.getByRole("listitem").filter({ hasText: changeling })).toContainText("Leetposter");
+    await expect(watcher.getByRole("region", { name: "Every seat, every card" }).getByRole("group", { name: changeling })).toContainText("the Leetposter");
   } finally {
     await closePages(pages);
   }

@@ -53,7 +53,7 @@ describe("lobby", () => {
     expect(s.players.every((p) => p.seats.length === 1)).toBe(true);
   });
 
-  it("a solo host holds every seat, is the Changeling, and can play the whole round to the reveal", () => {
+  it("a solo host holds every seat, is the Leetposter, and can play the whole round to the reveal", () => {
     const s = building(1);
     expect(s.players).toHaveLength(1);
     expect([...holder(s, "runner").seats].sort()).toEqual(["bounds", "oracle", "runner", "tagger"]);

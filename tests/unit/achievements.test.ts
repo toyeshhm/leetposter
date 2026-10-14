@@ -51,14 +51,14 @@ describe("achievements", () => {
     expect(get([...nine, row()], "long-night")).toEqual({ earned: true, have: 10, need: 10 });
   });
 
-  it("Unmasked needs a crew win by ejecting the Changeling, while crew", () => {
+  it("Unmasked needs a crew win by ejecting the Leetposter, while crew", () => {
     expect(get([row({ reason: "imposter-ejected" })], "unmasked").earned).toBe(true);
     expect(get([row({ reason: "accepted" })], "unmasked").earned).toBe(false);
     expect(get([row({ reason: "imposter-ejected", won: false })], "unmasked").earned).toBe(false);
     expect(get([row({ reason: "imposter-ejected", was_imposter: true, won: false })], "unmasked").earned).toBe(false);
   });
 
-  it("Silver Tongue is any win as the Changeling", () => {
+  it("Silver Tongue is any win as the Leetposter", () => {
     expect(get([row({ was_imposter: true, won: true, reason: "time" })], "silver-tongue").earned).toBe(true);
     expect(get([row({ was_imposter: true, won: false })], "silver-tongue").earned).toBe(false);
     expect(get([row({ was_imposter: false, won: true })], "silver-tongue").earned).toBe(false);
@@ -80,7 +80,7 @@ describe("achievements", () => {
     expect(get([row({ ejected: false })], "cast-out").earned).toBe(false);
   });
 
-  it("Two Faces is a Changeling win with two or more cards altered", () => {
+  it("Two Faces is a Leetposter win with two or more cards altered", () => {
     expect(get([row({ was_imposter: true, won: true, cards_played: 3, cards_altered: 2 })], "two-faces").earned).toBe(true);
     expect(get([row({ was_imposter: true, won: true, cards_played: 3, cards_altered: 1 })], "two-faces").earned).toBe(false);
     expect(get([row({ was_imposter: true, won: false, cards_played: 3, cards_altered: 2 })], "two-faces").earned).toBe(false);

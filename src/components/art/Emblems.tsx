@@ -5,11 +5,11 @@ import { Plate, type ArtProps } from "./Plate";
 const MASK = "M12 42 C18 26 34 20 48 26 C62 20 78 26 84 42 C88 52 80 64 66 64 C58 64 52 58 48 56 C44 58 38 64 30 64 C16 64 8 52 12 42 Z";
 const EYES = "M23 44 Q33 33 43 44 Q33 53 23 44 Z M53 44 Q63 33 73 44 Q63 53 53 44 Z";
 
-/** A smiling half-mask with a crack of light through it: the Changeling. */
+/** A smiling half-mask with a crack of light through it: the Leetposter. */
 export function ChangelingMask(props: ArtProps): ReactElement {
   const id = useId();
   return (
-    <Plate name="The Changeling: a smiling half-mask with a crack" {...props}>
+    <Plate name="The Leetposter: a smiling half-mask with a crack" {...props}>
       <clipPath id={`${id}mask`}>
         <path d={`${MASK} ${EYES}`} clipRule="evenodd" />
       </clipPath>

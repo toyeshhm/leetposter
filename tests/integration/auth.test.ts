@@ -240,7 +240,7 @@ describe("halls with accounts", () => {
     }
     const { data, error } = await supabase.from("game_results").select("code, won, reason, was_imposter").eq("user_id", gus.id);
     if (error !== null) throw new Error(error.message);
-    // An accepted submission is a crew win: the host won unless the deal made them the Changeling.
+    // An accepted submission is a crew win: the host won unless the deal made them the Leetposter.
     expect(data).toEqual([{ code: host.code, won: data[0]?.was_imposter === false, reason: "accepted", was_imposter: data[0]?.was_imposter }]);
   });
 });

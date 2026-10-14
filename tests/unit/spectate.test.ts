@@ -41,7 +41,7 @@ describe("spectate", () => {
     expect(spectate(act(lobby(2), "p0", T0, { type: "setProblem", problem: PROBLEM }), T0).problem).toMatchObject({ rating: null, bankId: null });
   });
 
-  it("hides the Changeling while reading and building, and runs the clock", () => {
+  it("hides the Leetposter while reading and building, and runs the clock", () => {
     const reading = spectate(started(), T0 + MIN);
     expect(reading.phase).toBe("reading");
     expect(reading.clock.phaseEndsAt).toBe(T0 + DEFAULT_SETTINGS.readMs);
@@ -97,7 +97,7 @@ describe("spectate", () => {
     expect(v.players.every((p) => p.isImposter === null)).toBe(true);
   });
 
-  it("names the Changeling and hands over the full truth at the reveal", () => {
+  it("names the Leetposter and hands over the full truth at the reveal", () => {
     const s = withReveal();
     const v = spectate(s, T_BUILD + 2 * MIN);
     expect(v.phase).toBe("reveal");

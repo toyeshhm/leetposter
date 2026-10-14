@@ -192,7 +192,7 @@ function Roster({ view }: { view: SpectatorView }): ReactElement {
             {p.seats.map((seat) => (
               <Badge key={seat} seat={seat} />
             ))}
-            {p.isImposter === true ? <span className="roster-word">Changeling</span> : null}
+            {p.isImposter === true ? <span className="roster-word">Leetposter</span> : null}
             {p.ejected ? <span className="roster-note">cast out</span> : null}
             {!p.ejected && p.freezeUsed ? <span className="roster-note">bell rung</span> : null}
             {voted.has(p.id) ? <span className="roster-note">voted</span> : null}
@@ -233,7 +233,7 @@ function Record({ view }: { view: SpectatorView }): ReactElement {
   );
 }
 
-/** The outcome and the Changeling, named. Only rendered at the reveal. */
+/** The outcome and the Leetposter, named. Only rendered at the reveal. */
 function Unmasking({ view }: { view: SpectatorView }): ReactElement | null {
   const { outcome, reveal } = view;
   if (outcome === null || reveal === null) return null;
@@ -249,7 +249,7 @@ function Unmasking({ view }: { view: SpectatorView }): ReactElement | null {
           <p className="reveal-reason">{words.reason}</p>
         </div>
       </Frame>
-      <section className="reveal-mask-body" aria-label="The Changeling">
+      <section className="reveal-mask-body" aria-label="The Leetposter">
         <ChangelingMask size={120} decorative />
         <div>
           {changelings.map((p) => {
@@ -258,7 +258,7 @@ function Unmasking({ view }: { view: SpectatorView }): ReactElement | null {
               <div key={p.id}>
                 <h2 className="reveal-title">{p.name}</h2>
                 <p className="reveal-reason">
-                  was the Changeling{seats.length === 0 ? "" : `, seated as ${seats.map((s) => SEAT_TITLES[s]).join(" and ")}`}.{p.ejected ? " Cast out." : " Never cast out."}
+                  was the Leetposter{seats.length === 0 ? "" : `, seated as ${seats.map((s) => SEAT_TITLES[s]).join(" and ")}`}.{p.ejected ? " Cast out." : " Never cast out."}
                 </p>
               </div>
             );
@@ -288,7 +288,7 @@ function Truth({ view }: { view: SpectatorView }): ReactElement | null {
                 {played.map((seat) => (
                   <Badge key={seat} seat={seat} />
                 ))}
-                <span className={cx("reveal-word", p.isImposter === true ? "reveal-lie" : "reveal-true")}>{p.isImposter === true ? "the Changeling" : "crew"}</span>
+                <span className={cx("reveal-word", p.isImposter === true ? "reveal-lie" : "reveal-true")}>{p.isImposter === true ? "the Leetposter" : "crew"}</span>
                 {p.ejected ? <span className="muted">cast out</span> : null}
               </p>
               {played.length === 0 ? <p className="muted">Held no seat.</p> : null}

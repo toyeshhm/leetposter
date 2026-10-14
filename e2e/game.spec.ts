@@ -52,7 +52,7 @@ test("full game through the UI: crew win on an accepted submission", async ({ br
     await expect(host.getByText("Input: nums = [2,7,11,15], target = 9")).toBeVisible();
 
     const seats = await seatMap(pages);
-    // Everyone, the Changeling included, holds exactly one seat and sees only that panel.
+    // Everyone, the Leetposter included, holds exactly one seat and sees only that panel.
     for (const page of pages) expect(await heldSeats(page)).toHaveLength(1);
     const readingTags = seats.tagger.getByRole("group", { name: SEAT_TITLES.tagger }).getByRole("list", { name: "Topic tags" });
     await expect(readingTags.getByRole("listitem")).toHaveText(PROBLEM.tags);
@@ -121,10 +121,10 @@ test("full game through the UI: crew win on an accepted submission", async ({ br
     await expect(host.getByRole("heading", { name: "The Crew win" })).toBeVisible();
     await expect(host.getByText("The judge accepted a submission.")).toBeVisible();
 
-    const unmasked = host.getByRole("region", { name: "The Changeling" });
+    const unmasked = host.getByRole("region", { name: "The Leetposter" });
     const changeling = await unmasked.getByRole("heading", { level: 2 }).innerText();
     expect(NAMES).toContain(changeling);
-    await expect(unmasked).toContainText("was the Changeling, seated as");
+    await expect(unmasked).toContainText("was the Leetposter, seated as");
     await expect(unmasked).toContainText("Never cast out.");
 
     const taggerCard = host.getByRole("region", { name: "Every seat, every card" }).getByRole("group", { name: nameOf(seats.tagger) });
@@ -141,7 +141,7 @@ test("full game through the UI: crew win on an accepted submission", async ({ br
   }
 });
 
-test("four rejections, then the Reckoning casts out a crewmate: the Changeling wins", async ({ browser, request }) => {
+test("four rejections, then the Reckoning casts out a crewmate: the Leetposter wins", async ({ browser, request }) => {
   // Seeded through the API: reading 0 s, four rejections land the room in the final vote before any browser opens.
   const host = await api<Credentials>(request, "/api/rooms", { name: NAMES[0] });
   const others = await Promise.all(NAMES.slice(1).map((name) => api<Credentials>(request, `/api/rooms/${host.code}/join`, { name })));
@@ -189,9 +189,9 @@ test("four rejections, then the Reckoning casts out a crewmate: the Changeling w
     }
 
     await Promise.all(pages.map((p) => expect(p.getByRole("heading", { level: 1, name: "Unmasking" })).toBeVisible()));
-    await expect(first.getByRole("heading", { name: "The Changeling wins" })).toBeVisible();
-    await expect(first.getByText("The Reckoning cast out a crewmate. The Changeling is still at the table.")).toBeVisible();
-    await expect(first.getByRole("region", { name: "The Changeling" })).toContainText("Never cast out.");
+    await expect(first.getByRole("heading", { name: "The Leetposter wins" })).toBeVisible();
+    await expect(first.getByText("The Reckoning cast out a crewmate. The Leetposter is still at the table.")).toBeVisible();
+    await expect(first.getByRole("region", { name: "The Leetposter" })).toContainText("Never cast out.");
     const votes = first.getByRole("heading", { name: "The Reckoning", level: 3 }).locator("..");
     await expect(votes).toContainText(`${target.name} was cast out.`);
     await expect(votes.getByRole("listitem")).toHaveCount(4);

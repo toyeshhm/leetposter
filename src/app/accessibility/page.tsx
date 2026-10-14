@@ -47,7 +47,7 @@ export default function AccessibilityPage(): ReactElement {
           <p className="prose">
             Colour is never the only carrier of meaning. Accepted and Rejected each have their own drawing and their own word, and the rejection also names a
             category. The clock&apos;s last minute is a colour change and also a change in the digits, with a screen reader announcement at one minute and at
-            ten seconds. A player who has been ejected, and the Changeling at the reveal, are marked with words, not a colour.
+            ten seconds. A player who has been ejected, and the Leetposter at the reveal, are marked with words, not a colour.
           </p>
         </section>
 

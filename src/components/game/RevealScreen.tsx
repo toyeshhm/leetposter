@@ -17,7 +17,7 @@ import { lookOf } from "./Roster";
 import { playerName } from "./select";
 import "./reveal.css";
 
-/** Unmasking: the outcome, the Changeling, every card against the truth, and how the votes fell. */
+/** Unmasking: the outcome, the Leetposter, every card against the truth, and how the votes fell. */
 export function RevealScreen({ view }: { view: PlayerView }): ReactElement {
   const { page } = useEconomy();
   const mine = page?.loadout ?? null;
@@ -38,7 +38,7 @@ export function RevealScreen({ view }: { view: PlayerView }): ReactElement {
       </Frame>
 
       <Divider>Unmasked</Divider>
-      <section className="reveal-mask-body" aria-label="The Changeling">
+      <section className="reveal-mask-body" aria-label="The Leetposter">
         <ChangelingMask size={160} decorative />
         <div>
           {changelings.map((p) => (
@@ -46,7 +46,7 @@ export function RevealScreen({ view }: { view: PlayerView }): ReactElement {
               <h2 className="reveal-title">{p.name}</h2>
               <TitleLine look={lookOf(view, p, mine)} />
               <p className="reveal-reason">
-                was the Changeling{seatsHeld(view, p).length === 0 ? "" : `, seated as ${seatsHeld(view, p).map((s) => SEAT_TITLES[s]).join(" and ")}`}.
+                was the Leetposter{seatsHeld(view, p).length === 0 ? "" : `, seated as ${seatsHeld(view, p).map((s) => SEAT_TITLES[s]).join(" and ")}`}.
                 {p.ejected ? " Cast out." : " Never cast out."}
               </p>
             </div>
@@ -74,7 +74,7 @@ export function RevealScreen({ view }: { view: PlayerView }): ReactElement {
                 {seats.map((seat) => (
                   <Badge key={seat} seat={seat} />
                 ))}
-                <span className={cx("reveal-word", isChangeling ? "reveal-lie" : "reveal-true")}>{isChangeling ? "the Changeling" : "crew"}</span>
+                <span className={cx("reveal-word", isChangeling ? "reveal-lie" : "reveal-true")}>{isChangeling ? "the Leetposter" : "crew"}</span>
                 {p.ejected ? <span className="muted">cast out</span> : null}
                 {mark === undefined ? null : (
                   <span className="reveal-mark">

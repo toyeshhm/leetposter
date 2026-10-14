@@ -39,11 +39,11 @@ const RULES: Rule[] = [
   {
     id: "unmasked",
     name: "Unmasked",
-    description: "Sat with the crew when the Changeling was cast out.",
+    description: "Sat with the crew when the Leetposter was cast out.",
     need: 1,
     qualifies: (r) => !r.was_imposter && r.won && r.reason === "imposter-ejected",
   },
-  { id: "silver-tongue", name: "Silver Tongue", description: "Won as the Changeling.", need: 1, qualifies: (r) => r.was_imposter && r.won },
+  { id: "silver-tongue", name: "Silver Tongue", description: "Won as the Leetposter.", need: 1, qualifies: (r) => r.was_imposter && r.won },
   {
     id: "clean-hands",
     name: "Clean Hands",
@@ -56,7 +56,7 @@ const RULES: Rule[] = [
   {
     id: "two-faces",
     name: "Two Faces",
-    description: "Won as the Changeling with two or more cards altered.",
+    description: "Won as the Leetposter with two or more cards altered.",
     need: 1,
     qualifies: (r) => r.was_imposter && r.won && r.cards_altered >= 2,
   },

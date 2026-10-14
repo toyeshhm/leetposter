@@ -22,7 +22,7 @@ function whenPlayed(iso: string, now: number): string {
 }
 
 function hallLine(hall: FriendHall, now: number): string {
-  return `${hall.username} played hall ${hall.code} ${whenPlayed(hall.playedAt, now)}, ${hall.wasImposter ? "the Changeling" : "crew"}, ${hall.won ? "won" : "lost"}.`;
+  return `${hall.username} played hall ${hall.code} ${whenPlayed(hall.playedAt, now)}, ${hall.wasImposter ? "the Leetposter" : "crew"}, ${hall.won ? "won" : "lost"}.`;
 }
 
 /** One friend row: the name and a two-step Remove that never leaves the line. */

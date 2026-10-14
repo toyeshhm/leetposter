@@ -28,18 +28,18 @@ export const CATEGORY_WORDS: Record<ReportCategory, string> = {
 
 /** The outcome, stated plainly. */
 export function outcomeWords(outcome: Outcome): { title: string; reason: string } {
-  const title = outcome.winner === "crew" ? "The Crew win" : "The Changeling wins";
+  const title = outcome.winner === "crew" ? "The Crew win" : "The Leetposter wins";
   switch (outcome.reason) {
     case "accepted":
       return { title, reason: "The judge accepted a submission." };
     case "imposter-ejected":
-      return { title, reason: "The Changeling was cast out." };
+      return { title, reason: "The Leetposter was cast out." };
     case "time":
       return { title, reason: "The candle burned out with nothing accepted, and the Reckoning cast out no one." };
     case "submissions":
       return { title, reason: "Every submission was rejected, and the Reckoning cast out no one." };
     case "final-vote":
-      return { title, reason: "The Reckoning cast out a crewmate. The Changeling is still at the table." };
+      return { title, reason: "The Reckoning cast out a crewmate. The Leetposter is still at the table." };
   }
 }
 

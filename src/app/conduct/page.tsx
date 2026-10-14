@@ -34,8 +34,8 @@ export default function ConductPage(): ReactElement {
         <section className="doc-section">
           <h2>Lying is the game. Harassment is not.</h2>
           <p className="prose">
-            The Changeling lies on cards and out loud, and that is the whole design. Crew speculate, hedge and are wrong in public, and that is their cover.
-            Accusing someone of being the Changeling on no evidence at all is a legal move, and nobody owes an apology for it when the round ends.
+            The Leetposter lies on cards and out loud, and that is the whole design. Crew speculate, hedge and are wrong in public, and that is their cover.
+            Accusing someone of being the Leetposter on no evidence at all is a legal move, and nobody owes an apology for it when the round ends.
           </p>
           <p className="prose">
             None of that reaches the person holding the seat. Their name, their accent, where they are from, their race, their gender, their religion, their
@@ -72,7 +72,7 @@ export default function ConductPage(): ReactElement {
           <h2>The shared file</h2>
           <p className="prose">
             The editor is one file with live carets and everyone in the hall can edit all of it. There is nothing stopping you deleting someone else&apos;s
-            work, and doing it is not a play: a Changeling wins by lying about the problem, not by wrecking the file. The same goes for pasting a wall of text
+            work, and doing it is not a play: a Leetposter wins by lying about the problem, not by wrecking the file. The same goes for pasting a wall of text
             over the top of a solution or filling the file with abuse.
           </p>
         </section>

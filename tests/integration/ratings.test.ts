@@ -68,7 +68,7 @@ describe("ratings at the reveal and the leaderboard route", () => {
     const mask = await newUser("mask");
     const crew1 = await newUser("c1");
     const crew2 = await newUser("c2");
-    // Four at the table: the Changeling and two crew hold accounts, the fourth is a guest.
+    // Four at the table: the Leetposter and two crew hold accounts, the fourth is a guest.
     let s = building(4);
     const [p1, p2] = s.players.filter((p) => !p.isImposter);
     if (p1 === undefined || p2 === undefined) throw new Error("no crew");
@@ -80,7 +80,7 @@ describe("ratings at the reveal and the leaderboard route", () => {
 
     await recordResults(s);
     const first = await loadRatings([mask.id, crew1.id, crew2.id]);
-    // Everyone started at 1200 against 1200: the crew take 16 on overall and crew, the Changeling loses 16 on overall and changeling.
+    // Everyone started at 1200 against 1200: the crew take 16 on overall and crew, the Leetposter loses 16 on overall and changeling.
     expect(first.get(crew1.id)).toEqual({ overall: { rating: 1216, games: 1, wins: 1 }, crew: { rating: 1216, games: 1, wins: 1 }, changeling: UNRATED.changeling });
     expect(first.get(crew2.id)).toEqual({ overall: { rating: 1216, games: 1, wins: 1 }, crew: { rating: 1216, games: 1, wins: 1 }, changeling: UNRATED.changeling });
     expect(first.get(mask.id)).toEqual({ overall: { rating: 1184, games: 1, wins: 0 }, crew: UNRATED.crew, changeling: { rating: 1184, games: 1, wins: 0 } });
@@ -117,7 +117,7 @@ describe("ratings at the reveal and the leaderboard route", () => {
     expect(short.me).toMatchObject({ username: mask.username, score: 1184, games: 1, wins: 0 });
     expect(short.me?.rank).toBeGreaterThanOrEqual(3);
 
-    // A second hall, the Changeling's this time: ratings move from where they stood.
+    // A second hall, the Leetposter's this time: ratings move from where they stood.
     await recordResults({ ...s, code: `${code.slice(0, 4)}2`, outcome: { winner: "imposter", reason: "time" } });
     const second = await loadRatings([mask.id, crew1.id, crew2.id]);
     expect(second.get(crew1.id)).toEqual({ overall: { rating: 1199, games: 2, wins: 1 }, crew: { rating: 1199, games: 2, wins: 1 }, changeling: UNRATED.changeling });

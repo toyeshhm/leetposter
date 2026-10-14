@@ -1,14 +1,14 @@
 # Leetposter
 
-A social-deduction party game for programmers. Four to eight friends on a voice call try to solve one hard algorithm problem together in 40 minutes. Each seat holds one channel of information about the problem. One of them is the Changeling, and lies.
+A social-deduction party game for programmers. Four to eight friends on a voice call try to solve one hard algorithm problem together in 40 minutes. Each seat holds one channel of information about the problem. One of them is the Leetposter, and lies.
 
-The traitor role is still called the Changeling in-game. Never put "LeetCode" (the registered mark) in the product name; "Leet"-prefixed names are tolerated in practice but not guaranteed.
+The traitor role is still called the Leetposter in-game. Never put "LeetCode" (the registered mark) in the product name; "Leet"-prefixed names are tolerated in practice but not guaranteed.
 
 ## The game
 
-**Players.** 1 to 8; four or more for a real game. Under four (for testing) the four seats are shared round the table, so a solo host holds every seat. Everyone sees the problem statement, examples included. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Changeling.
+**Players.** 1 to 8; four or more for a real game. Under four (for testing) the four seats are shared round the table, so a solo host holds every seat. Everyone sees the problem statement, examples included. Everyone types in the hall's shared editor, one file with live carets and a language picker (any external editor the group already uses still works alongside it). Exactly one player is the Leetposter.
 
-**Seats.** Dealt secretly at start. Everyone sees the statement; a seat adds one extra channel of information on top of it. Every player, including the Changeling, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private, and who is the Changeling is secret.
+**Seats.** Dealt secretly at start. Everyone sees the statement; a seat adds one extra channel of information on top of it. Every player, including the Leetposter, holds a seat. Seats are public (everyone knows who holds what); only the panel contents are private, and who is the Leetposter is secret.
 
 | Seat | In-world name | Sees | Plays |
 |---|---|---|---|
@@ -19,7 +19,7 @@ The traitor role is still called the Changeling in-game. Never put "LeetCode" (t
 
 Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartographer, second Warden, third Oracle. Two holders of the same seat who disagree tell the crew one of them is lying.
 
-**The Changeling** holds a normal seat and sees only that seat's panel, like any crew member. They may lie on any card and on voice: a Changeling seated as Oracle can reveal a hint that reads nothing like the true one, since a hint card carries whatever text the Oracle typed and is only checked against the true hint at the reveal. The one thing never faked is the Accepted/Rejected verdict. Balance knob: if the Changeling loses far more than 60% of calibrated rounds, consider giving them the full problem.
+**The Leetposter** holds a normal seat and sees only that seat's panel, like any crew member. They may lie on any card and on voice: a Leetposter seated as Oracle can reveal a hint that reads nothing like the true one, since a hint card carries whatever text the Oracle typed and is only checked against the true hint at the reveal. The one thing never faked is the Accepted/Rejected verdict. Balance knob: if the Leetposter loses far more than 60% of calibrated rounds, consider giving them the full problem.
 
 **Truth rule.** Cards are the official record and are shown next to the truth at the reveal. Crew must fill every card truthfully. Voice is free for everyone: speculate, hedge, be wrong. That is the honest players' cover.
 
@@ -27,11 +27,11 @@ Players 5 to 8 get duplicate seats in this order: second Oracle, second Cartogra
 1. Lobby: host fetches or pastes the problem (title, URL, statement with its examples, tags, hints, constraints) and starts.
 2. Reading (5 min): everyone reads the statement alone and sees their own panel.
 3. Building (40 min, pauses during freezes): shared editor, cards, submissions. Cap of 4 submissions. Accepted ends the round: crew win. The 4th rejection starts the final vote.
-4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. The in-app editor locks (an external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Changeling: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
-5. Final vote: when the build clock hits zero or the 4th rejection lands. 60 s discussion, 15 s vote, no Skip. Plurality is ejected. Changeling ejected: crew win. Anything else including a tie: Changeling wins.
-6. Reveal: the Changeling, the final editor state, read-only, every seat's true panel next to every card they played, the vote history.
+4. Freeze: any un-ejected player, once per round, between minute 3 and 90 seconds before the end. The in-app editor locks (an external editor: hands off keyboards). 90 s discussion, 15 s vote. Plurality strictly above every other option including Skip ejects; ties go to Skip. Ejected Leetposter: crew win. Ejected crewmate: read-only, no further votes; if they were the Herald, the Herald seat passes to a random un-ejected player.
+5. Final vote: when the build clock hits zero or the 4th rejection lands. 60 s discussion, 15 s vote, no Skip. Plurality is ejected. Leetposter ejected: crew win. Anything else including a tie: Leetposter wins.
+6. Reveal: the Leetposter, the final editor state, read-only, every seat's true panel next to every card they played, the vote history.
 
-**Win conditions.** Crew: an Accepted submission, or the Changeling is ejected. Changeling: no Accepted submission and still standing after the final vote.
+**Win conditions.** Crew: an Accepted submission, or the Leetposter is ejected. Leetposter: no Accepted submission and still standing after the final vote.
 
 ## Getting a problem in
 
@@ -144,9 +144,9 @@ Indie dark fantasy, medieval, hand-inked. Think a candlelit stone hall where a c
 
 ## Accounts (optional)
 
-Nobody needs an account to play. Signing up (email + password through Supabase Auth, then a username on the "Choose your name" step) lets the app remember your games. A signed-in account with no name yet (a sign-up that never reached that step) is sent back to it by the header, plays as a guest until then, and gets 404 `not-found` from `GET /api/account` where every other account route answers 401. When a hall you joined while signed in reaches the reveal, the server writes one `game_results` row for you (seats, whether you were the Changeling, won, why, cards played and how many were altered). Achievements are computed from those rows, never stored. Friends are `friendships` rows (request, accept); your friends page shows their recent halls. All four tables have RLS with no policies: only the server reads and writes them, after verifying the caller's Supabase access token.
+Nobody needs an account to play. Signing up (email + password through Supabase Auth, then a username on the "Choose your name" step) lets the app remember your games. A signed-in account with no name yet (a sign-up that never reached that step) is sent back to it by the header, plays as a guest until then, and gets 404 `not-found` from `GET /api/account` where every other account route answers 401. When a hall you joined while signed in reaches the reveal, the server writes one `game_results` row for you (seats, whether you were the Leetposter, won, why, cards played and how many were altered). Achievements are computed from those rows, never stored. Friends are `friendships` rows (request, accept); your friends page shows their recent halls. All four tables have RLS with no policies: only the server reads and writes them, after verifying the caller's Supabase access token.
 
-**Ladders.** The same reveal rates the hall: one match, the Changeling against the crew as a body, Elo with K = 32. Everyone starts at 1200 and a guest always weighs 1200. Each crew member rates against the Changeling's overall rating; the Changeling rates against the mean of the crew's overall ratings. Three `ratings` rows per account, one per ladder: overall (every hall), crew (halls as crew), changeling (halls in the mask), each with its games and wins. A hall is rated once: if its `game_results` rows already exist the ratings stand. `/leaderboard` shows five boards: the three ladders, plus two counts folded from `game_results`, solves (crew wins on an accepted submission) and changeling wins. Ranks are competition ranks (1, 2, 2, 4); the top fifty are listed and a signed-in player sees their own line wherever they stand. `/me` opens with the three ratings.
+**Ladders.** The same reveal rates the hall: one match, the Leetposter against the crew as a body, Elo with K = 32. Everyone starts at 1200 and a guest always weighs 1200. Each crew member rates against the Leetposter's overall rating; the Leetposter rates against the mean of the crew's overall ratings. Three `ratings` rows per account, one per ladder: overall (every hall), crew (halls as crew), changeling (halls in the mask), each with its games and wins. A hall is rated once: if its `game_results` rows already exist the ratings stand. `/leaderboard` shows five boards: the three ladders, plus two counts folded from `game_results`, solves (crew wins on an accepted submission) and changeling wins. Ranks are competition ranks (1, 2, 2, 4); the top fifty are listed and a signed-in player sees their own line wherever they stand. `/me` opens with the three ratings.
 
 Routes: `POST /api/account` (choose the name after sign-up), `GET /api/account` (me; 404 `not-found` until the name is chosen), `GET /api/account/history`, `GET /api/account/achievements`, `GET|POST /api/friends`, `POST /api/friends/[username]/accept`, `DELETE /api/friends/[username]`, `GET /api/leaderboard?board=<board>` (bearer optional; `me` and `ratings` are null for a guest). Pages: `/account`, `/me`, `/friends`, `/leaderboard`.
 
@@ -163,7 +163,7 @@ In the lobby the host can roll a bank problem by rating band instead of pasting.
 judged in-app: the Herald's Submit runs the shared file (Python or JavaScript) against the samples
 and hidden tests in their own browser with the problem's time limit, and the verdict (Accepted, or
 the first failing category and case) is recorded automatically; the Herald still fills the report
-card by hand, so a Changeling Herald can still lie about the details. Hidden tests are fetched by
+card by hand, so a Leetposter Herald can still lie about the details. Hidden tests are fetched by
 the Herald's token only (`GET /api/problems/[id]/tests`). `/problems` lists the bank with ratings
 and tags; `/problems/[id]` shows one statement.
 
@@ -191,7 +191,7 @@ A host may list their hall (`rooms.listed`). `/halls` shows listed halls that mo
 15 minutes: code, host, phase, seats taken, problem rating, and a Watch link. Anyone with a code
 can watch any hall at `/room/[code]/watch`: the spectator view (`GET /api/rooms/[code]/spectate`,
 no token) shows the statement, every seat panel, the record, the clock and the votes, but hides who
-the Changeling is until the reveal, so a player opening it learns nothing they could not learn by
+the Leetposter is until the reveal, so a player opening it learns nothing they could not learn by
 being every seat at once. Spectators do not see the shared editor.
 
 ## Economy

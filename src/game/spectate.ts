@@ -3,7 +3,7 @@ import { buildElapsed } from "./util";
 
 /**
  * Project the room state down to what a spectator may see: the statement, every seat panel, the record,
- * the clock and the votes, with ballots hidden until a round resolves and the Changeling hidden until the
+ * the clock and the votes, with ballots hidden until a round resolves and the Leetposter hidden until the
  * reveal. Strips every token. A player opening this learns nothing beyond being every seat at once.
  */
 export function spectate(state: RoomState, now: number): SpectatorView {

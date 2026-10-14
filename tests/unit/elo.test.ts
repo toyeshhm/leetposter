@@ -3,7 +3,7 @@ import { DEFAULT_RATING, K, expected, rateHall, type HallPlayer, type RatingChan
 
 const rating = (overall: number, crew = overall, changeling = overall): HallPlayer["rating"] => ({ overall, crew, changeling });
 
-/** The table under test: an account Changeling, two account crew (one already above 1200), one guest crew. */
+/** The table under test: an account Leetposter, two account crew (one already above 1200), one guest crew. */
 const TABLE: HallPlayer[] = [
   { userId: "mask", isImposter: true, rating: rating(1200, 1200, 1250) },
   { userId: "c1", isImposter: false, rating: rating(1200) },
@@ -26,7 +26,7 @@ describe("expected", () => {
 });
 
 describe("rateHall", () => {
-  it("moves the crew against the Changeling and the Changeling against the crew's mean on a crew win", () => {
+  it("moves the crew against the Leetposter and the Leetposter against the crew's mean on a crew win", () => {
     const changes = rateHall(TABLE, "crew");
     // The mean counts the guest at 1200, not the 2000 on their (ignored) row: (1200 + 1300 + 1200) / 3.
     expect(changes).toHaveLength(6);
@@ -38,7 +38,7 @@ describe("rateHall", () => {
     expect(find(changes, "mask", "changeling")).toMatchObject({ rating: 1233, won: false });
   });
 
-  it("reverses the scores on a Changeling win", () => {
+  it("reverses the scores on a Leetposter win", () => {
     const changes = rateHall(TABLE, "imposter");
     expect(find(changes, "c1", "overall")).toMatchObject({ rating: 1184, won: false });
     expect(find(changes, "c2", "overall")).toMatchObject({ rating: 1280, won: false });
@@ -55,7 +55,7 @@ describe("rateHall", () => {
     expect(changes.every((c) => Number.isInteger(c.rating))).toBe(true);
   });
 
-  it("weighs a guest Changeling at 1200 whatever their row says", () => {
+  it("weighs a guest Leetposter at 1200 whatever their row says", () => {
     const changes = rateHall(
       [
         { userId: null, isImposter: true, rating: rating(2000) },
@@ -82,7 +82,7 @@ describe("rateHall", () => {
     expect(find(changes, "mask", "overall").rating).toBe(992);
   });
 
-  it("falls back to 1200 for a missing Changeling or an empty crew", () => {
+  it("falls back to 1200 for a missing Leetposter or an empty crew", () => {
     const onlyCrew = rateHall([{ userId: "c1", isImposter: false, rating: rating(1200) }], "crew");
     expect(find(onlyCrew, "c1", "overall").rating).toBe(DEFAULT_RATING + K / 2);
     const onlyMask = rateHall([{ userId: "mask", isImposter: true, rating: rating(1200) }], "imposter");

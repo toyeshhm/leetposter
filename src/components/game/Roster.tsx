@@ -41,8 +41,8 @@ export function Roster({ view }: { view: PlayerView }): ReactElement {
               {p.seats.map((seat) => (
                 <Badge key={seat} seat={seat} />
               ))}
-              {/* Only at the Unmasking (the watch screen): during the Work the Changeling's own row would give them away to anyone looking on. */}
-              {view.phase === "reveal" && p.isImposter === true ? <span className="roster-word">Changeling</span> : null}
+              {/* Only at the Unmasking (the watch screen): during the Work the Leetposter's own row would give them away to anyone looking on. */}
+              {view.phase === "reveal" && p.isImposter === true ? <span className="roster-word">Leetposter</span> : null}
               {p.ejected ? <span className="roster-note">cast out</span> : null}
               {!p.ejected && p.freezeUsed ? <span className="roster-note">bell rung</span> : null}
               {voted.has(p.id) ? <span className="roster-note">voted</span> : null}

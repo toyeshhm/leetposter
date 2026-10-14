@@ -142,7 +142,7 @@ describe("listing", () => {
 });
 
 describe("spectate", () => {
-  it("serves listed and unlisted halls alike by code, without a token, and hides the Changeling until the reveal", async () => {
+  it("serves listed and unlisted halls alike by code, without a token, and hides the Leetposter until the reveal", async () => {
     const crew = await newHall(4);
     const host = crew[0];
     if (host === undefined) throw new Error("host");

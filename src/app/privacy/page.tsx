@@ -52,10 +52,10 @@ export default function PrivacyPage(): ReactElement {
           </p>
           <ul className="doc-list">
             <li>
-              game_results, one row per hall you finished: the seats you held, whether you were the Changeling, whether you won and why, how many cards you
+              game_results, one row per hall you finished: the seats you held, whether you were the Leetposter, whether you won and why, how many cards you
               played, how many of them you altered, whether you were ejected, and how many were at the table.
             </li>
-            <li>ratings, your Elo on the overall, crew and changeling ladders, with games and wins.</li>
+            <li>ratings, your Elo on the overall, crew and Leetposter ladders, with games and wins.</li>
             <li>friendships, the requests you sent and the ones you accepted.</li>
             <li>wallets, your candles and your lifetime XP.</li>
             <li>inventory and loadouts, the cosmetics you own and the ones you wear.</li>

@@ -14,9 +14,9 @@ Job to be done: hold the record. Cards, clock, votes, verdicts. Voice is where t
 
 ## Product Purpose
 
-A social-deduction party game for programmers. Every seat holds one channel of truth about the problem; one player, the Changeling, sees every channel and lies. The app deals seats, keeps the clock, records cards and submissions as the official record, runs freezes and votes, and shows the truth next to every card at the reveal.
+A social-deduction party game for programmers. Every seat holds one channel of truth about the problem; one player, the Leetposter, sees every channel and lies. The app deals seats, keeps the clock, records cards and submissions as the official record, runs freezes and votes, and shows the truth next to every card at the reveal.
 
-Success: a group finishes a round without the app ever being the thing they argue about, and the reveal screen makes the Changeling's lies legible in one glance.
+Success: a group finishes a round without the app ever being the thing they argue about, and the reveal screen makes the Leetposter's lies legible in one glance.
 
 ## Brand Personality
 
@@ -24,9 +24,9 @@ Inked, candlelit, sly.
 
 - Inked: everything on screen looks cut or drawn by hand. Heavy bone-white line on near-black, cross-hatching for tone, one warm spot color where a candle or wax would be.
 - Candlelit: the surface is dark because the room is dark. Light is scarce and it comes from one place.
-- Sly: the Changeling is smiling somewhere on every screen. Ornament is allowed to be slightly wrong.
+- Sly: the Leetposter is smiling somewhere on every screen. Ornament is allowed to be slightly wrong.
 
-Voice: plain sentences, sentence case, in-world nouns (Cartographer, Oracle, Warden, Herald, Crew, Changeling) used as names, not lore dumps. Verdicts are stated, never softened. No exclamation marks. No em dashes.
+Voice: plain sentences, sentence case, in-world nouns (Cartographer, Oracle, Warden, Herald, Crew, Leetposter) used as names, not lore dumps. Verdicts are stated, never softened. No exclamation marks. No em dashes.
 
 ## Anti-references
 

@@ -13,7 +13,7 @@ export const PROBLEM_K = 24;
 
 /**
  * The problem's rating after one hall. The crew won when the judge accepted, so the problem scores
- * zero; anything else — the candle, the Reckoning, a Changeling who walked away with it — is a win
+ * zero; anything else — the candle, the Reckoning, a Leetposter who walked away with it — is a win
  * for the problem. Pure, so the arithmetic is testable without a table.
  */
 export function rateProblem(rating: number, crewRating: number, accepted: boolean): number {

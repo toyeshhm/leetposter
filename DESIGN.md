@@ -90,7 +90,7 @@ Numbers on the record (timer, submission counts, votes) use `font-variant-numeri
 
 Every image is an original SVG React component. Ink is `currentColor`, the spot is `.spot { fill: var(--art-spot) }`, tone is hatching from `hatch()` in `src/components/art/hatch.ts`, edges are roughened by an `feTurbulence` displacement filter at sizes 48px and up. Each takes `size` (width in px) and an optional `title`, and renders `role="img"` with a `<title>`.
 
-Seat sigils: Cartographer (compass rose over a torn map), Oracle (eye inside a candle flame), Warden (portcullis under a chain with a measuring rule), Herald (sealed scroll with a raven). The Changeling mask is a hatched half-mask with an amber crack; the Crew emblem is a candle behind an open book inside a rope ring. The landing hero is a long table, five hooded figures, one candle; the light is drawn as hatching that thins with distance, and the shadow of the figure on the right does not match its body.
+Seat sigils: Cartographer (compass rose over a torn map), Oracle (eye inside a candle flame), Warden (portcullis under a chain with a measuring rule), Herald (sealed scroll with a raven). The Leetposter mask is a hatched half-mask with an amber crack; the Crew emblem is a candle behind an open book inside a rope ring. The landing hero is a long table, five hooded figures, one candle; the light is drawn as hatching that thins with distance, and the shadow of the figure on the right does not match its body.
 
 ## Layout Principles
 
