@@ -24,12 +24,34 @@
 .editor-bar .field-control {
   width: auto;
 }
+.editor-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+/* Two ways to a bigger file: drag the corner for height, or Expand to take the whole window. */
 .editor-body {
   height: 50vh;
   min-height: 40vh;
   border: var(--rule) solid var(--line);
   background-color: var(--surface);
   overflow: hidden;
+  resize: vertical;
+}
+.editor[data-full="true"] {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  padding: var(--space-4);
+  background-color: var(--bg);
+  overflow: auto;
+}
+.editor[data-full="true"] .editor-body {
+  flex: 1 1 auto;
+  /* beats the inline height a dragged corner leaves behind */
+  height: auto !important;
+  resize: none;
 }
 .editor-body[data-locked="true"] {
   border-style: dashed;

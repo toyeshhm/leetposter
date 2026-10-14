@@ -9,8 +9,8 @@ import { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
 import { errorMessage, type Credentials } from "@/client/api";
 import { persistDoc } from "@/client/docPersist";
-import { connectDoc } from "@/client/docSync";
-import { Notice } from "@/components/ui";
+import { connectDoc, type Link } from "@/client/docSync";
+import { Button, Notice } from "@/components/ui";
 import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_NAMES, languageExtension, parseLanguage, type Language } from "./languages";
 import { RunPanel } from "./RunPanel";
 import { editorTheme } from "./theme";
@@ -64,6 +64,10 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
   const [ready, setReady] = useState(false);
   const [fault, setFault] = useState<string | null>(null);
+  const [link, setLink] = useState<Link>("up");
+  const [expanded, setExpanded] = useState(false);
+  // A locked file (a tribunal, the reveal) falls back into the page: the ballot lives there, under the overlay.
+  const full = expanded && !readOnly;
   const pickerId = useId();
 
   useEffect(() => {
@@ -109,7 +113,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
     const fail = (error: unknown): void => {
       setFault(errorMessage(error));
     };
-    const sync = connectDoc(creds.code, doc, awareness, fail);
+    const sync = connectDoc(creds.code, doc, awareness, setLink);
     const store = persistDoc(
       creds,
       doc,
@@ -137,30 +141,44 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
   }, [readOnly]);
 
   return (
-    <section className="editor" aria-label="The shared editor">
+    <section className="editor" aria-label="The shared editor" data-full={full}>
       <div className="editor-bar">
         <h2 className="section-title">The file</h2>
-        <div className="field">
-          <label className="field-label" htmlFor={pickerId}>
-            Language
-          </label>
-          <select
-            id={pickerId}
-            className="field-control"
-            value={language}
-            disabled={readOnly || !ready}
-            onChange={(e) => metaRef.current?.set("language", e.target.value)}
+        <div className="editor-tools">
+          <div className="field">
+            <label className="field-label" htmlFor={pickerId}>
+              Language
+            </label>
+            <select
+              id={pickerId}
+              className="field-control"
+              value={language}
+              disabled={readOnly || !ready}
+              onChange={(e) => metaRef.current?.set("language", e.target.value)}
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l} value={l}>
+                  {LANGUAGE_NAMES[l]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button
+            variant="ghost"
+            aria-pressed={full}
+            disabled={readOnly}
+            onClick={() => {
+              setExpanded(!full);
+            }}
           >
-            {LANGUAGES.map((l) => (
-              <option key={l} value={l}>
-                {LANGUAGE_NAMES[l]}
-              </option>
-            ))}
-          </select>
+            {full ? "Shrink" : "Expand"}
+          </Button>
         </div>
       </div>
       {reason === null ? null : <p className="editor-reason">{reason}</p>}
       {fault === null ? null : <Notice kind="error">{fault}</Notice>}
+      {link === "down" ? <Notice>The line to the hall dropped. Reconnecting; keep typing, your edits go out when it is back.</Notice> : null}
+      {link === "closed" ? <Notice kind="error">The hall closed the line. Reload the page to pick the file up again.</Notice> : null}
       <div ref={host} className="editor-body" data-locked={readOnly} aria-busy={!ready} />
       {showRun ? <RunPanel language={language} getCode={() => textRef.current?.toJSON() ?? ""} /> : null}
     </section>

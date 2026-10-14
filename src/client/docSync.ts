@@ -27,11 +27,19 @@ const syncResponseMsg = z.object({ to: z.number(), state: z.string() });
  * channel. Joining sends the local state and asks the room for theirs; every peer answers with a
  * full state (idempotent to apply). Presence needs no pulse of its own: Awareness renews the local
  * state every 15 s (a "local" update, forwarded here) and drops peers silent for 30 s.
+ * `onLink` follows the channel: "down" while the socket is gone (a Realtime restart, a sleeping laptop, a
+ * normal closure 1000 from the far end) and the client is redialling on its own, "up" on every join,
+ * which resends the whole file, so edits made while down are not lost. "closed" is the server ending the
+ * channel itself, which the client does not retry.
  * ponytail: full-state sync on join, no state vectors; the document is one file a few KB long.
  */
-export function connectDoc(code: string, doc: Y.Doc, awareness: Awareness, onError: (error: Error) => void): { destroy(): void } {
+export type Link = "up" | "down" | "closed";
+
+export function connectDoc(code: string, doc: Y.Doc, awareness: Awareness, onLink: (link: Link) => void): { destroy(): void } {
   const channel = supabaseBrowser.channel(`doc:${code}`, { config: { broadcast: { self: false } } });
   let joined = false;
+  // Removing the channel reports CLOSED too; that one is ours and is not news.
+  let live = true;
   const send = (event: string, payload: Record<string, unknown>): void => {
     if (joined) void channel.send({ type: "broadcast", event, payload });
   };
@@ -61,19 +69,19 @@ export function connectDoc(code: string, doc: Y.Doc, awareness: Awareness, onErr
       const message = syncResponseMsg.parse(payload);
       if (message.to === doc.clientID) Y.applyUpdate(doc, fromBase64(message.state), REMOTE);
     })
-    .subscribe((status, error) => {
-      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-        joined = true;
+    .subscribe((status) => {
+      if (!live) return;
+      joined = status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED;
+      if (joined) {
         send("update", { u: toBase64(Y.encodeStateAsUpdate(doc)) });
         send("sync-request", { from: doc.clientID });
         sendAwareness();
-      } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR || status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
-        joined = false;
-        onError(error ?? new Error(`realtime channel doc:${code}: ${status}`));
       }
+      onLink(joined ? "up" : status === REALTIME_SUBSCRIBE_STATES.CLOSED ? "closed" : "down");
     });
   return {
     destroy(): void {
+      live = false;
       doc.off("update", onUpdate);
       // Tell the room this caret is gone before the channel closes; the null state is the wire's "removed".
       awareness.setLocalState(null);
