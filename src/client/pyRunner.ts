@@ -1,15 +1,19 @@
 import { z } from "zod";
+import type { Judged } from "@/server/judge/languages";
+import { call } from "./api";
 
 /** The version the Pyodide quickstart pins today (Python 3.14). Loaded from the CDN on the first Run, never bundled. */
 export const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
 export const RUN_TIMEOUT_MS = 10_000;
 
-/** What the hall can run in the browser. Everything else needs a judge. */
-export const RUNNABLE = ["python", "javascript"] as const;
-export type Runnable = (typeof RUNNABLE)[number];
+/** What runs in this browser. */
+export const IN_BROWSER = ["python", "javascript"] as const;
+export type InBrowser = (typeof IN_BROWSER)[number];
+/** What the hall can run at all: those two here, the compiled four on the judge (POST /api/run). */
+export type Runnable = InBrowser | Judged;
 
-export function runnable(language: string): language is Runnable {
-  return RUNNABLE.some((l) => l === language);
+export function inBrowser(language: string): language is InBrowser {
+  return IN_BROWSER.some((l) => l === language);
 }
 
 export interface RunRequest {
@@ -116,12 +120,12 @@ self.onmessage = ({ data }) => {
 };
 `;
 
-const WORKER_SOURCE: Record<Runnable, string> = { python: PYTHON_WORKER, javascript: JAVASCRIPT_WORKER };
+const WORKER_SOURCE: Record<InBrowser, string> = { python: PYTHON_WORKER, javascript: JAVASCRIPT_WORKER };
 
 /* One live worker per language for the page: Pyodide stays loaded between runs. A worker is replaced only after a timeout or a failure. */
-const workers = new Map<Runnable, Worker>();
+const workers = new Map<InBrowser, Worker>();
 
-function workerFor(language: Runnable): Worker {
+function workerFor(language: InBrowser): Worker {
   const live = workers.get(language);
   if (live !== undefined) return live;
   // ponytail: the blob URL is never revoked (a few KB per page); revoking it before the worker has fetched its script breaks some browsers.
@@ -131,13 +135,19 @@ function workerFor(language: Runnable): Worker {
 }
 
 /**
- * Run `request.code` with `request.stdin` in this browser and resolve with what it printed. `onLoaded`
- * fires when the runtime is ready (after the first Python run's download); the run is cut off
- * RUN_TIMEOUT_MS after that, the worker terminated (a busy worker cannot be interrupted) and the
- * outcome marked `timedOut`. Rejects when the runtime cannot be set up.
+ * Run `request.code` with `request.stdin` and resolve with what it printed. Python and JavaScript run
+ * in this browser: `onLoaded` fires when the runtime is ready (after the first Python run's
+ * download); the run is cut off RUN_TIMEOUT_MS after that, the worker terminated (a busy worker
+ * cannot be interrupted) and the outcome marked `timedOut`. Rejects when the runtime cannot be set up.
+ * The compiled languages go to the judge through POST /api/run, which answers in the same shape and
+ * keeps the same ten seconds; there is nothing to download, so `onLoaded` fires at once.
  * ponytail: one run at a time per language; the panel disables its button while a run is out.
  */
 export function runCode(language: Runnable, request: RunRequest, onLoaded: () => void): Promise<RunOutcome> {
+  if (!inBrowser(language)) {
+    onLoaded();
+    return call<RunOutcome>("/api/run", { method: "POST", body: JSON.stringify({ language, ...request }) });
+  }
   return new Promise((resolve, reject) => {
     const worker = workerFor(language);
     let timer: ReturnType<typeof setTimeout> | null = null;

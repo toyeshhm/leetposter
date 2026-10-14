@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { Credentials } from "@/client/api";
-import { NOT_RUNNABLE } from "@/components/editor/RunPanel";
+import { JAVA_NOTE, JUDGE_NOTE, LOCAL_NOTE } from "@/components/editor/RunPanel";
 import { NAMES, PROBLEM, act, api, closePages, enterAs, newPages } from "./helpers";
 
 /** Replace the whole shared file with `code` from this page's keyboard. */
@@ -12,7 +12,7 @@ async function typeFile(page: Page, code: string): Promise<void> {
   await expect(content).toContainText(code);
 }
 
-test("the Run panel runs the shared Python file here, twice, cuts off a loop, and is Python and JavaScript only", async ({ browser, request }) => {
+test("the Run panel runs Python and JavaScript here, cuts off a loop, and compiles Java on the judge", async ({ browser, request }) => {
   const host = await api<Credentials>(request, "/api/rooms", { name: NAMES[0] });
   const guest = await api<Credentials>(request, `/api/rooms/${host.code}/join`, { name: NAMES[1] });
   await act(request, host, { type: "setProblem", problem: PROBLEM });
@@ -48,7 +48,7 @@ test("the Run panel runs the shared Python file here, twice, cuts off a loop, an
 
     // B ran nothing and sees nothing: runs are local.
     await pageB.getByText("Run the file").click();
-    await expect(pageB.getByText("Runs on your machine only; nobody else sees the output.")).toBeVisible();
+    await expect(pageB.getByText(LOCAL_NOTE)).toBeVisible();
     await expect(pageB.getByLabel("Output")).toHaveCount(0);
 
     // A loop is cut off after ten seconds and the worker thrown away.
@@ -63,10 +63,19 @@ test("the Run panel runs the shared Python file here, twice, cuts off a loop, an
     await runButton.click();
     await expect(output).toContainText("42", { timeout: 15_000 });
 
-    // Anything else needs a judge: the message replaces the button.
-    await editorA.getByLabel("Language").selectOption("cpp");
-    await expect(editorA.getByText(NOT_RUNNABLE)).toBeVisible();
-    await expect(runButton).toHaveCount(0);
+    // Java does not run here: it is compiled and run on the judge, and the panel says so.
+    await editorA.getByLabel("Language").selectOption("java");
+    await expect(editorA.getByText(`${JUDGE_NOTE} ${JAVA_NOTE}`)).toBeVisible();
+    await typeFile(pageA, "public class Main { public static void main(String[] args) { System.out.println(new java.util.Scanner(System.in).nextInt() * 2); } }");
+    await input.fill("21");
+    await runButton.click();
+    await expect(output).toContainText("42", { timeout: 45_000 });
+    await expect(output).toContainText("exit in");
+
+    // What the compiler says comes back as it wrote it.
+    await typeFile(pageA, "public class Main { public static void main(String[] args) { int x = ; } }");
+    await runButton.click();
+    await expect(output).toContainText("error: illegal start of expression", { timeout: 45_000 });
   } finally {
     await closePages(pages);
   }

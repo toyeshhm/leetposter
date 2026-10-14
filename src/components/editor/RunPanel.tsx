@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactElement } from "react";
 import { errorMessage } from "@/client/api";
-import { RUN_TIMEOUT_MS, runCode, runnable, type RunOutcome } from "@/client/pyRunner";
+import { RUN_TIMEOUT_MS, inBrowser, runCode, type RunOutcome } from "@/client/pyRunner";
 import { Button, Notice, TextareaField } from "@/components/ui";
 import type { Language } from "./languages";
 
@@ -11,17 +11,18 @@ export interface RunPanelProps {
   getCode: () => string;
 }
 
-export const NOT_RUNNABLE = "Run is Python and JavaScript only for now; C++, Java, Go and Rust need a judge, which the hall does not have.";
+export const LOCAL_NOTE = "Runs on your machine only; nobody else sees the output.";
+export const JUDGE_NOTE = "Compiled and run on Judge0, an outside judge, not on your machine. Nobody else in the hall sees the output.";
+export const JAVA_NOTE = "Java is compiled as Main.java, so the class that holds main must be called Main.";
 
 type Phase = { kind: "idle" } | { kind: "fetching" } | { kind: "running" } | { kind: "done"; outcome: RunOutcome } | { kind: "failed"; message: string };
 
-/** Run the shared file here, on this machine, with the Input box as stdin. Collapsed to one row until opened. */
+/** Run the shared file with the Input box as stdin: here for Python and JavaScript, on the judge for the compiled four. Collapsed to one row until opened. */
 export function RunPanel({ language, getCode }: RunPanelProps): ReactElement {
   const [stdin, setStdin] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const busy = phase.kind === "fetching" || phase.kind === "running";
   const run = async (): Promise<void> => {
-    if (!runnable(language)) return;
     setPhase({ kind: "fetching" });
     try {
       const outcome = await runCode(language, { code: getCode(), stdin }, () => {
@@ -35,30 +36,29 @@ export function RunPanel({ language, getCode }: RunPanelProps): ReactElement {
   return (
     <details className="run">
       <summary className="run-summary">Run the file</summary>
-      {runnable(language) ? (
-        <div className="run-body">
-          <TextareaField
-            label="Input"
-            className="run-stdin"
-            value={stdin}
-            spellCheck={false}
-            autoComplete="off"
-            onChange={(e) => {
-              setStdin(e.target.value);
-            }}
-          />
-          <div className="run-row">
-            <Button variant="primary" loading={busy} onClick={() => void run()}>
-              {phase.kind === "fetching" && language === "python" ? "Fetching the Python runtime, about 10 MB, once." : busy ? "Running" : "Run"}
-            </Button>
-            <span className="run-note muted">Runs on your machine only; nobody else sees the output.</span>
-          </div>
-          {phase.kind === "failed" ? <Notice kind="error">{phase.message}</Notice> : null}
-          {phase.kind === "done" ? <Output outcome={phase.outcome} /> : null}
+      <div className="run-body">
+        <TextareaField
+          label="Input"
+          className="run-stdin"
+          value={stdin}
+          spellCheck={false}
+          autoComplete="off"
+          onChange={(e) => {
+            setStdin(e.target.value);
+          }}
+        />
+        <div className="run-row">
+          <Button variant="primary" loading={busy} onClick={() => void run()}>
+            {phase.kind === "fetching" && language === "python" ? "Fetching the Python runtime, about 10 MB, once." : busy ? "Running" : "Run"}
+          </Button>
+          <span className="run-note muted">
+            {inBrowser(language) ? LOCAL_NOTE : JUDGE_NOTE}
+            {language === "java" ? ` ${JAVA_NOTE}` : null}
+          </span>
         </div>
-      ) : (
-        <p className="run-note muted">{NOT_RUNNABLE}</p>
-      )}
+        {phase.kind === "failed" ? <Notice kind="error">{phase.message}</Notice> : null}
+        {phase.kind === "done" ? <Output outcome={phase.outcome} /> : null}
+      </div>
     </details>
   );
 }

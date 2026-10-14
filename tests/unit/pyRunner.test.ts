@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
-import { PY_PRELUDE, parseWorkerMessage, runnable } from "@/client/pyRunner";
+import { PY_PRELUDE, inBrowser, parseWorkerMessage } from "@/client/pyRunner";
 
 /** The prelude as Pyodide runs it, through the real python3 on this machine: __run(code, stdin) -> [stdout, stderr]. */
 function runPrelude(code: string, stdin: string): [string, string] {
@@ -40,11 +40,11 @@ describe("parseWorkerMessage", () => {
   });
 });
 
-describe("runnable", () => {
+describe("inBrowser", () => {
   it("is Python and JavaScript, nothing else", () => {
-    expect(runnable("python")).toBe(true);
-    expect(runnable("javascript")).toBe(true);
-    expect(runnable("cpp")).toBe(false);
-    expect(runnable("")).toBe(false);
+    expect(inBrowser("python")).toBe(true);
+    expect(inBrowser("javascript")).toBe(true);
+    expect(inBrowser("java")).toBe(false);
+    expect(inBrowser("")).toBe(false);
   });
 });

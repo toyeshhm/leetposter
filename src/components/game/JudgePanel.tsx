@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactElement } from "react";
 import { errorMessage, fetchProblemTests, loadCredentials } from "@/client/api";
-import { runnable } from "@/client/pyRunner";
+import { inBrowser } from "@/client/pyRunner";
 import { Button, Notice } from "@/components/ui";
 import type { Action } from "@/game/types";
 import { judge, sharedFile, type JudgeVerdict } from "./Judge";
@@ -44,7 +44,8 @@ export function JudgeAction({ bankId, code, act, busy, onJudged }: JudgeActionPr
     setPhase({ kind: "fetching" });
     try {
       const [{ samples, tests, timeLimitMs }, file] = await Promise.all([fetchProblemTests(creds, bankId), sharedFile(creds)]);
-      if (!runnable(file.language)) {
+      // The Judge stays in the browser: a submit is a dozen or two runs, too many to send to the judge the Run panel borrows.
+      if (!inBrowser(file.language)) {
         setPhase({ kind: "failed", message: `The Judge runs Python and JavaScript; the shared file is set to ${file.language}.` });
         return;
       }

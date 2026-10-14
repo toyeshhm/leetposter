@@ -54,7 +54,7 @@ const NIGHT: {
     Art: null,
     step: "The work",
     time: duration(DEFAULT_SETTINGS.buildMs),
-    what: "One shared file with live carets and a language picker. Python and JavaScript run in the browser on your own machine. Every card played goes on the record as it is played.",
+    what: "One shared file with live carets and a language picker. Python and JavaScript run in the browser on your own machine; Java, C++, Go and Rust compile on a judge. Every card played goes on the record as it is played.",
   },
   {
     Art: FreezeBell,

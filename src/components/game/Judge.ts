@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { loadDoc, type Credentials } from "@/client/api";
 import { fromBase64 } from "@/client/docSync";
-import { RUN_TIMEOUT_MS, runCode, type Runnable } from "@/client/pyRunner";
+import { RUN_TIMEOUT_MS, runCode, type InBrowser } from "@/client/pyRunner";
 import type { ReportCategory } from "@/game/types";
 import type { BankIo } from "@/problems/schema";
 
@@ -40,7 +40,7 @@ export function shownCase(input: string): string {
  * that gets the shorter clock; per-run timeouts belong in pyRunner, which the hall shares.
  */
 export async function judge(
-  language: Runnable,
+  language: InBrowser,
   code: string,
   cases: BankIo[],
   timeLimitMs: number,

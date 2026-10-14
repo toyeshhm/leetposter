@@ -71,7 +71,7 @@ export default function PrivacyPage(): ReactElement {
 
         <section className="doc-section">
           <h2>Who else it reaches</h2>
-          <p className="prose">Four companies, each for one job.</p>
+          <p className="prose">Five companies, each for one job.</p>
           <ul className="doc-list">
             <li>Supabase holds the database and the accounts. Every table named above lives there.</li>
             <li>Vercel hosts the site. A server error is written as a single JSON line to the Vercel logs and kept for as long as Vercel keeps logs.</li>
@@ -82,6 +82,11 @@ export default function PrivacyPage(): ReactElement {
             <li>
               Groq reads pasted problems. POST /api/parse sends the whole pasted text to api.groq.com, to the model openai/gpt-oss-120b, when the built-in
               parser cannot make enough of the paste or when someone presses Sort with the model. Paste nothing you would not hand to a third party.
+            </li>
+            <li>
+              Judge0 compiles and runs Java, C++, Go and Rust. Pressing Run on a file in one of those languages sends the whole shared file and the Input box
+              through this server to ce.judge0.com, which runs it and answers with what it printed. Judge0 sees the code and this server&apos;s address, not
+              yours. Python and JavaScript are never sent anywhere; they run in your browser.
             </li>
           </ul>
         </section>
