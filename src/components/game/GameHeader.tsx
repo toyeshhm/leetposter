@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { ChangelingMask } from "@/components/art";
 import { Badge } from "@/components/ui";
 import type { PlayerView } from "@/game/types";
 import { PHASE_NAMES } from "./copy";
@@ -18,7 +17,6 @@ export function GameHeader({ view }: { view: PlayerView }): ReactElement {
         </p>
       )}
       <p className="room-me">
-        {view.me.isImposter ? <ChangelingMask size={24} title="You are the Changeling" /> : null}
         <span className="room-name">{me?.name ?? "You"}</span>
         {view.me.seats.map((seat) => (
           <Badge key={seat} seat={seat}>

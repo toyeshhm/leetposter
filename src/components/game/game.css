@@ -231,7 +231,7 @@ h3.section-title {
   border-top: var(--rule) solid var(--line);
 }
 
-/* the Changeling's line */
+/* the Changeling's line, as the landing page prints it */
 .changeling-note {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -244,4 +244,31 @@ h3.section-title {
 .changeling-note p {
   font-family: var(--font-display);
   font-size: var(--text-md);
+}
+
+/* your role: one shut row, the same for crew and Changeling */
+.role {
+  border-top: var(--rule) solid var(--ink);
+  border-bottom: var(--rule) solid var(--ink);
+}
+.role > summary {
+  cursor: pointer;
+  padding: var(--space-3) 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.role-hint {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+.role-body {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding-bottom: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+.role-name {
+  color: var(--danger-ink);
 }

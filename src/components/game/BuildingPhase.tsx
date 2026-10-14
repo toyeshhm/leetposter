@@ -8,7 +8,7 @@ import type { Action, PlayerView } from "@/game/types";
 import { CardsLog } from "./CardsLog";
 import { ProblemText } from "./ProblemText";
 import { Roster } from "./Roster";
-import { ChangelingNote, SeatPanel } from "./SeatPanel";
+import { RoleReveal, SeatPanel } from "./SeatPanel";
 import { FreezeButton, SeatAction } from "./SeatActions";
 import { playerName, recentResult } from "./select";
 import { Tribunal } from "./Tribunal";
@@ -56,7 +56,7 @@ export function BuildingPhase({ view, clockOffset, act, busy }: BoardProps): Rea
 function Actions({ view, act, busy }: Omit<BoardProps, "clockOffset">): ReactElement {
   return (
     <>
-      {view.me.isImposter ? <ChangelingNote seats={view.me.seats} size={40} /> : null}
+      <RoleReveal isImposter={view.me.isImposter} seats={view.me.seats} />
       {view.me.seats.map((seat) => (
         <SeatPanel key={seat} seat={seat} panel={view.panel}>
           <SeatAction seat={seat} view={view} act={act} busy={busy} />
