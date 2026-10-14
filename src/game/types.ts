@@ -3,6 +3,10 @@
  * Pure data only: no classes, no functions. Times are epoch milliseconds.
  */
 
+/** The shared file's languages, in the picker's order. */
+export const LANGUAGES = ["python", "cpp", "java", "javascript", "go", "rust"] as const;
+export type Language = (typeof LANGUAGES)[number];
+
 export const SEATS = ["tagger", "oracle", "bounds", "runner"] as const;
 export type Seat = (typeof SEATS)[number];
 
@@ -36,6 +40,8 @@ export interface Problem {
   bankId?: string | undefined;
   /** Leetposter rating (800..3500, Codeforces-like). Absent when nothing could estimate it. */
   rating?: number | undefined;
+  /** LeetCode's starter code per language, when the problem came from LeetCode: the shared file opens on it. */
+  starters?: Partial<Record<Language, string>> | undefined;
 }
 
 export interface Settings {
@@ -229,7 +235,7 @@ export interface PlayerView {
   players: PublicPlayer[];
   settings: Settings;
   /** Public problem parts; null in lobby before the host pastes it. */
-  problem: { statement: string; tagCount: number; hintCount: number; rating: number | null; bankId: string | null } | null;
+  problem: { statement: string; tagCount: number; hintCount: number; rating: number | null; bankId: string | null; starters: Partial<Record<Language, string>> | null } | null;
   /** True for the host in the lobby once a problem is set. */
   problemReady: boolean;
   /** My own seat panels only (the imposter included); every panel at the reveal. */

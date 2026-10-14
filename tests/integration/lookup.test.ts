@@ -48,6 +48,15 @@ describe("lookupLeetCode", () => {
     expect(problem.title).toBe("Longest Chunked Palindrome Decomposition");
   });
 
+  it("brings LeetCode's starter code for each of the file's languages, and none where LeetCode has none", NETWORK, async () => {
+    const [twoSum, sql] = await Promise.all([lookupLeetCode("1"), lookupLeetCode("175")]);
+    expect(Object.keys(twoSum.problem.starters ?? {}).sort()).toEqual(["cpp", "go", "java", "javascript", "python", "rust"]);
+    expect(twoSum.problem.starters?.python).toContain("def twoSum(self, nums");
+    expect(twoSum.problem.starters?.java).toContain("public int[] twoSum(int[] nums, int target)");
+    // A database problem: LeetCode's snippets are SQL and pandas, none of them a language the file speaks.
+    expect(sql.problem.starters).toEqual({});
+  });
+
   it("takes a leetcode.cn link and a contest link to the same slug", NETWORK, async () => {
     const links = ["https://leetcode.cn/problems/trapping-rain-water/", "https://leetcode.com/contest/weekly-contest-400/problems/minimum-number-of-chairs-in-a-waiting-room/"];
     const found = await Promise.all(links.map((link) => lookupLeetCode(link)));

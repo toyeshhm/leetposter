@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { openHall } from "./helpers";
+import * as Y from "yjs";
+import type { Credentials } from "@/client/api";
+import type { Problem } from "@/game/types";
+import type { ProblemDetail } from "@/server/problems";
+import { act, api, enterAs, openHall } from "./helpers";
 
 /*
  * The bank and the Judge in the Hall shipped unreachable: nothing in the UI ever set `bankId`, so
@@ -99,4 +103,56 @@ test("a pasted problem still gets the hand-recorded verdict, not the Judge", asy
 
   await expect(page.getByText("Record the verdict exactly as the judge gave it.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Submit to the Judge" })).toHaveCount(0);
+});
+
+test("the Judge in the Hall takes Java: every case of a bank problem compiles and runs on the judge", async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const id = "the-stuck-door-wedge";
+  const detail = await (await request.get(`/api/problems/${id}`)).json() as ProblemDetail;
+  const problem: Problem = {
+    title: detail.title,
+    url: `http://127.0.0.1:3000/problems/${id}`,
+    statement: `${detail.statement}\n\nInput\n${detail.inputFormat}\n\nOutput\n${detail.outputFormat}`,
+    tags: [...detail.tags],
+    hints: [...detail.hints],
+    constraints: detail.constraints,
+    bankId: id,
+    rating: detail.rating,
+  };
+  // A hall of one holds every seat, the Herald's included.
+  const host = await api<Credentials>(request, "/api/rooms", { name: "Ada" });
+  await act(request, host, { type: "setProblem", problem });
+  await act(request, host, { type: "setSettings", settings: { readMs: 0, buildMs: 10 * 60_000, maxSubmissions: 4 } });
+  await act(request, host, { type: "start" });
+  await enterAs(page, host);
+
+  const editor = page.getByRole("region", { name: "The shared editor" });
+  await expect(editor.getByLabel("Language")).toBeEnabled();
+  await editor.getByLabel("Language").selectOption("java");
+  await editor.locator(".cm-content").click();
+  // One line, so the editor's auto-indent has nothing to rewrite. A monotonic stack, as the bank's own Python does it.
+  await page.keyboard.type(
+    "import java.io.*; public class Main { public static void main(String[] a) throws IOException { StreamTokenizer in = new StreamTokenizer(new BufferedInputStream(System.in)); in.nextToken(); int n = (int) in.nval; long[] t = new long[n]; for (int i = 0; i < n; i++) { in.nextToken(); t[i] = (long) in.nval; } int[] ans = new int[n]; int[] st = new int[n]; int top = 0; for (int i = 0; i < n; i++) { while (top > 0 && t[st[top - 1]] < t[i]) ans[st[--top]] = i + 1; st[top++] = i; } StringBuilder sb = new StringBuilder(); for (int i = 0; i < n; i++) { if (i > 0) sb.append(' '); sb.append(ans[i]); } System.out.println(sb); } }",
+  );
+
+  // The Judge reads the file the hall saved, not this tab's copy: wait for the save to carry Java and the code.
+  await expect
+    .poll(
+      async () => {
+        const res = await request.get(`/api/rooms/${host.code}/doc`, { headers: { authorization: `Bearer ${host.token}` } });
+        const saved = ((await res.json()) as { doc: string | null }).doc;
+        if (saved === null) return "nothing saved";
+        const doc = new Y.Doc();
+        Y.applyUpdate(doc, Buffer.from(saved, "base64"));
+        return `${doc.getMap<string>("meta").get("language") ?? "python"} ${String(doc.getText("code").toJSON().includes("StreamTokenizer"))}`;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe("java true");
+
+  // The Judge submits Accepted only after every case passes, and that ends the round on the spot, so
+  // what is left to see is the Unmasking, not the Judge's own line.
+  await page.getByRole("button", { name: "Submit to the Judge" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Unmasking" })).toBeVisible({ timeout: 200_000 });
+  await expect(page.getByText("The judge accepted a submission.")).toBeVisible();
 });

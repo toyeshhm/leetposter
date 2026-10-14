@@ -37,7 +37,7 @@ describe("spectate", () => {
     const withProblem = act(lobby(2), "p0", T0, { type: "setProblem", problem: { ...PROBLEM, rating: 1500, bankId: "two-sum" } });
     const v = spectate(withProblem, T0);
     expect(v.panel).toEqual({ tags: PROBLEM.tags, hints: PROBLEM.hints, constraints: PROBLEM.constraints, title: PROBLEM.title, url: PROBLEM.url });
-    expect(v.problem).toEqual({ statement: PROBLEM.statement, tagCount: 2, hintCount: 2, rating: 1500, bankId: "two-sum" });
+    expect(v.problem).toEqual({ statement: PROBLEM.statement, tagCount: 2, hintCount: 2, rating: 1500, bankId: "two-sum", starters: null });
     expect(spectate(act(lobby(2), "p0", T0, { type: "setProblem", problem: PROBLEM }), T0).problem).toMatchObject({ rating: null, bankId: null });
   });
 

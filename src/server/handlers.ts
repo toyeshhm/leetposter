@@ -10,7 +10,7 @@ import { equippedLook } from "@/server/economy/look";
 import { log } from "@/server/log";
 import { recordResults } from "@/server/results";
 import { createRoom, withRoom } from "@/server/store";
-import { parse } from "@/server/validate";
+import { parse, token } from "@/server/validate";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const CODE_ATTEMPTS = 5;
@@ -121,6 +121,11 @@ export async function respond(work: () => Promise<unknown>): Promise<Response> {
     log.error("route.failed", { error });
     return Response.json({ code: "internal", message: "internal error" }, { status: 500 });
   }
+}
+
+/** The player token from `Authorization: Bearer <token>`; a missing or malformed one is "invalid". */
+export function bearer(req: Request): string {
+  return parse(token, req.headers.get("authorization")?.replace(/^Bearer /, ""));
 }
 
 export async function readBody<T>(req: Request, schema: z.ZodType<T>): Promise<T> {

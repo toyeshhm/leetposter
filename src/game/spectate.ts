@@ -62,6 +62,7 @@ export function spectate(state: RoomState, now: number): SpectatorView {
             hintCount: problem.hints.length,
             rating: problem.rating ?? null,
             bankId: problem.bankId ?? null,
+            starters: problem.starters ?? null,
           },
     panel,
     cards: state.cards,

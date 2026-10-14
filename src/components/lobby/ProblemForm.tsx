@@ -2,7 +2,7 @@
 import { useState, type ChangeEvent, type SyntheticEvent, type ReactElement } from "react";
 import { call, errorMessage } from "@/client/api";
 import { Button, Field, Frame, Notice, TextareaField } from "@/components/ui";
-import type { Action, PlayerView, Problem } from "@/game/types";
+import type { Action, Language, PlayerView, Problem } from "@/game/types";
 import type { ParseResponse } from "@/server/parse/types";
 import { BankRoller } from "./BankRoller";
 import { PasteBox } from "./PasteBox";
@@ -17,10 +17,11 @@ interface Draft {
   hints: string;
   constraints: string;
   /* Not fields on the form. They ride along so a rolled bank problem stays a bank problem when the
-     host tidies its text, and so a rating the lookup found is not thrown away on the way to the
-     reducer. Dropping bankId here is what kept the Judge in the Hall unreachable. */
+     host tidies its text, and so the rating and LeetCode starters the lookup found are not thrown
+     away on the way to the reducer. Dropping bankId here is what kept the Judge in the Hall unreachable. */
   bankId: string | null;
   rating: number | null;
+  starters: Partial<Record<Language, string>> | null;
 }
 
 const lines = (s: string): string[] =>
@@ -57,6 +58,7 @@ function parse(draft: Draft): { problem: Problem | null; errors: Partial<Record<
       constraints,
       ...(draft.bankId === null ? {} : { bankId: draft.bankId }),
       ...(draft.rating === null ? {} : { rating: draft.rating }),
+      ...(draft.starters === null ? {} : { starters: draft.starters }),
     },
     errors,
   };
@@ -67,7 +69,7 @@ interface Note {
   text: string;
 }
 
-const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n"), bankId: p.bankId ?? null, rating: p.rating ?? null });
+const toDraft = (p: Problem): Draft => ({ ...p, tags: p.tags.join(", "), hints: p.hints.join("\n"), bankId: p.bankId ?? null, rating: p.rating ?? null, starters: p.starters ?? null });
 
 /** The host pastes the problem. The statement (examples included) is public; the rest become seat panels. */
 export function ProblemForm({
@@ -88,6 +90,7 @@ export function ProblemForm({
     constraints: "",
     bankId: null,
     rating: null,
+    starters: null,
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof Draft, string>>>({});
   const [note, setNote] = useState<Note | null>(null);

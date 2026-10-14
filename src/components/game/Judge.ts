@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { loadDoc, type Credentials } from "@/client/api";
 import { fromBase64 } from "@/client/docSync";
-import { RUN_TIMEOUT_MS, runCode, type InBrowser } from "@/client/pyRunner";
+import { RUN_TIMEOUT_MS, runCode, type Runnable } from "@/client/pyRunner";
 import type { ReportCategory } from "@/game/types";
 import type { BankIo } from "@/problems/schema";
 
@@ -38,20 +38,28 @@ export function shownCase(input: string): string {
  * behind it, so the panel can count the Herald through.
  * ponytail: the browser runner cuts a run off at RUN_TIMEOUT_MS, so a problem allowed more than
  * that gets the shorter clock; per-run timeouts belong in pyRunner, which the hall shares.
+ * ponytail: a compiled language is one judge submission per case, in order (8 to 25 a problem, a
+ * couple of seconds each). Judge0's batch endpoint takes 20 at once, if a submit ever feels slow.
  */
 export async function judge(
-  language: InBrowser,
+  language: Runnable,
   code: string,
   cases: BankIo[],
   timeLimitMs: number,
   onRunning: (passed: number) => void,
+  creds: Credentials,
 ): Promise<JudgeVerdict> {
   const limit = Math.min(timeLimitMs, RUN_TIMEOUT_MS);
   let passed = 0;
   for (const one of cases) {
-    const outcome = await runCode(language, { code, stdin: one.input }, () => {
-      onRunning(passed);
-    });
+    const outcome = await runCode(
+      language,
+      { code, stdin: one.input },
+      () => {
+        onRunning(passed);
+      },
+      creds,
+    );
     const reject = (category: ReportCategory, detail: string): JudgeVerdict => ({ verdict: "rejected", category, failingCase: shownCase(one.input), passed, detail });
     if (outcome.timedOut || outcome.ms > limit) return reject("time-limit", `over ${String(limit)} ms`);
     if (outcome.stderr !== "") return reject("runtime-error", outcome.stderr.trim().split("\n").at(-1) ?? "");

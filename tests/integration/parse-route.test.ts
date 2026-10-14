@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { POST } from "@/app/api/parse/route";
+import { MODEL_HINTS, POST } from "@/app/api/parse/route";
+import { NO_HINTS } from "@/server/parse/leetcode";
 import type { ParseResponse } from "@/server/parse/types";
 
 /** Every "auto" call here reaches leetcode.com; the "llm" and low-confidence ones reach Groq too. */
@@ -43,6 +44,28 @@ describe("POST /api/parse", () => {
     expect(body.problem.hints).toHaveLength(2);
   });
 
+  it("auto: a problem LeetCode lists no hints for gets hints the model wrote, and says so", NETWORK, async () => {
+    const body = await json<ParseResponse>(await POST(post({ text: "42" })));
+    expect(body.source).toBe("leetcode");
+    expect(body.problem.title).toBe("Trapping Rain Water");
+    expect(body.problem.hints.length).toBeGreaterThanOrEqual(1);
+    expect(body.problem.hints.length).toBeLessThanOrEqual(4);
+    expect(body.problem.hints.every((h) => h.trim() !== "")).toBe(true);
+    expect(body.warnings).toContain(MODEL_HINTS);
+    expect(body.warnings).not.toContain(NO_HINTS);
+  });
+
+  it("auto: without a key, or when the model fails, a hintless problem still comes back, hintless and saying so", NETWORK, async () => {
+    for (const key of ["", "bogus-key-would-fail"]) {
+      vi.stubEnv("GROQ_API_KEY", key);
+      const body = await json<ParseResponse>(await POST(post({ text: "42" })));
+      expect(body.problem.title, key).toBe("Trapping Rain Water");
+      expect(body.problem.hints, key).toEqual([]);
+      expect(body.warnings, key).toContain(NO_HINTS);
+      expect(body.warnings, key).not.toContain(MODEL_HINTS);
+    }
+  });
+
   it("auto: an unknown short text is 404 in the game's voice", NETWORK, async () => {
     const body = await json<{ code: string; message: string }>(await POST(post({ text: "zzzqqqxxx not a problem" })), 404);
     expect(body.code).toBe("not-found");
@@ -60,6 +83,8 @@ describe("POST /api/parse", () => {
     expect(body.problem.title).toBe("Two Sum");
     expect(body.problem.tags).toEqual(["Array", "Hash Table"]);
     expect(body.problem.constraints).toContain("2 <= nums.length <= 10^4");
+    // A paste carries no starter code; LeetCode's answer does, and it survives the merge.
+    expect(body.problem.starters?.java).toContain("public int[] twoSum");
   });
 
   it("auto: the parser fills what LeetCode leaves empty", NETWORK, async () => {
@@ -76,7 +101,9 @@ describe("POST /api/parse", () => {
     expect(body.llmAvailable).toBe(true);
     expect(body.warnings[0]).toBe("LeetCode did not answer; used the pasted text.");
     expect(body.problem.statement).toContain("median of the two sorted arrays");
-    expect(body.problem.hints).toEqual([]);
+    // The parse invents no hints (parse-groq.test.ts holds it to that); the hints here were written afterwards, and say so.
+    expect(body.problem.hints.length).toBeGreaterThan(0);
+    expect(body.warnings).toContain(MODEL_HINTS);
   });
 
   it("auto: without a key that fallback stops at the parser, with its warnings", NETWORK, async () => {

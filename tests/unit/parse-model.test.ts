@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GameError } from "@/game/errors";
-import { groqKey, parseWithGroq, readCompletion } from "@/server/parse/groq";
+import { groqKey, parseWithGroq, readCompletion, readHints } from "@/server/parse/groq";
 
 const fields = { title: " Two Sum ", url: "https://leetcode.com/problems/two-sum/", statement: "s", tags: [" Array ", ""], hints: ["", "h"], constraints: "c" };
 const envelope = (content: string): unknown => ({ choices: [{ message: { content } }] });
@@ -42,6 +42,25 @@ describe("readCompletion", () => {
   it("rejects JSON missing any of the six fields", () => {
     expect(invalid(envelope(JSON.stringify({ title: "x" })))).toContain("six fields");
     expect(invalid(envelope(JSON.stringify({ ...fields, hints: "not an array" })))).toContain("six fields");
+  });
+});
+
+describe("readHints", () => {
+  it("reads, trims, drops empty hints and keeps at most four", () => {
+    expect(readHints(envelope(JSON.stringify({ hints: [" a ", "", "b", "c", "d", "e"] })))).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("rejects an answer with no usable hint, or not shaped as {hints}", () => {
+    for (const content of [JSON.stringify({ hints: ["", "  "] }), JSON.stringify({ hint: "one" })]) {
+      let caught: unknown;
+      try {
+        readHints(envelope(content));
+      } catch (error: unknown) {
+        caught = error;
+      }
+      expect(caught).toBeInstanceOf(GameError);
+      expect((caught as GameError).message).toBe("The model wrote no hints.");
+    }
   });
 });
 

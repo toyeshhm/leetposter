@@ -26,15 +26,15 @@ test("the host types a problem number and the form fills itself from LeetCode", 
   await expect(problem.getByRole("status").last()).toHaveText("The problem is set. Panels are dealt when the reading begins.");
 });
 
-test("a problem LeetCode lists no hints for is still set from its number alone", async ({ page }) => {
+test("a problem LeetCode lists no hints for gets the model's, and is set from its number alone", async ({ page }) => {
   await openHall(page, NAMES[0]);
   const problem = page.getByRole("group", { name: "The problem" });
   await problem.getByLabel("Problem").fill("#42");
   await problem.getByRole("button", { name: "Sort it out" }).click();
-  await expect(problem.getByRole("status")).toHaveText(/^Fetched from LeetCode\. No hints found, so the Oracle's panel is empty\./, { timeout: 30_000 });
+  await expect(problem.getByRole("status")).toHaveText(/^Fetched from LeetCode\. LeetCode lists no hints for this one, so the model wrote these\./, { timeout: 45_000 });
 
   await expect(problem.getByLabel("Title")).toHaveValue("Trapping Rain Water");
-  await expect(problem.getByLabel("Hints", { exact: true })).toHaveValue("");
+  await expect(problem.getByLabel("Hints", { exact: true })).not.toHaveValue("");
 
   await problem.getByRole("button", { name: "Set the problem" }).click();
   await expect(problem.getByRole("status").last()).toHaveText("The problem is set. Panels are dealt when the reading begins.");

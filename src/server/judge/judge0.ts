@@ -22,6 +22,7 @@ const POLLS = 80;
 /** Judge0 statuses: 1 In Queue, 2 Processing, 3 Accepted, 5 Time Limit Exceeded, 6 Compilation Error, 7 to 12 runtime errors. */
 const PROCESSING = 2;
 const TIME_LIMIT_EXCEEDED = 5;
+const COMPILATION_ERROR = 6;
 
 const created = z.object({ token: z.string() });
 const judged = z.object({
@@ -56,7 +57,9 @@ async function ask<T>(url: string, init: RequestInit, shape: z.ZodType<T>): Prom
 /**
  * Compile and run `code` on the judge with `stdin`, and answer in the browser runners' own shape, so
  * the Run panel cannot tell them apart. A compile error, an uncaught exception and a crash are all
- * text on stderr (the compiler's lines, then the program's, then the judge's one-line reason); only a
+ * text on stderr (the compiler's lines, then the program's, then the judge's one-line reason). The
+ * compiler's output counts only when it failed: javac prints Notes on a clean build, and the Judge in
+ * the Hall reads any stderr as a runtime error. Only a
  * judge that cannot be reached or does not finish throws, and only ever GameError "upstream".
  * Submit, then poll: `wait=true` would save the loop, but an instance may switch it off (the public
  * one reports enable_wait_result false), and the token flow works on every Judge0 there is.
@@ -70,7 +73,8 @@ export async function runOnJudge(language: Judged, code: string, stdin: string, 
     const result = await ask(`${endpoint}/submissions/${token}?base64_encoded=true&fields=status,time,stdout,stderr,compile_output,message`, { method: "GET" }, judged);
     if (result.status.id > PROCESSING) {
       const timedOut = result.status.id === TIME_LIMIT_EXCEEDED;
-      const said = [result.compile_output, result.stderr, result.message].map(decode).filter((line) => line !== "");
+      const compiler = result.status.id === COMPILATION_ERROR ? result.compile_output : null;
+      const said = [compiler, result.stderr, result.message].map(decode).filter((line) => line !== "");
       return { stdout: decode(result.stdout), stderr: timedOut ? "" : said.join("\n"), ms: Math.round(Number(result.time ?? "0") * 1000), timedOut };
     }
   }

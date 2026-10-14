@@ -84,6 +84,13 @@ describe("problem", () => {
       hints: ["Try a map."],
     });
   });
+  it("takes LeetCode starters keyed by the file's languages, and nothing else", () => {
+    const starters = { python: "class Solution:\n    pass\n", java: "class Solution {\n}\n" };
+    expect(parse(problem, { ...PROBLEM, starters }).starters).toEqual(starters);
+    invalid(problem, { ...PROBLEM, starters: { kotlin: "class Solution" } });
+    invalid(problem, { ...PROBLEM, starters: { java: "x".repeat(20_001) } });
+  });
+
   it("rejects every bad field", () => {
     invalid(problem, { ...PROBLEM, title: "" });
     invalid(problem, { ...PROBLEM, title: "   " });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { GameError } from "@/game/errors";
-import type { Problem } from "@/game/types";
+import { LANGUAGES, type Language, type Problem } from "@/game/types";
 import { log } from "@/server/log";
 import { assess } from "@/server/parse/leetcode";
 import type { ParsedProblem } from "@/server/parse/types";
@@ -18,7 +18,9 @@ const ENDPOINT = "https://leetcode.com/graphql";
 const TIMEOUT_MS = 15_000;
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 const SEARCH = `query s($f:QuestionListFilterInput){questionList(categorySlug:"", limit:5, skip:0, filters:$f){data{questionFrontendId title titleSlug}}}`;
-const DETAIL = `query q($slug:String!){question(titleSlug:$slug){questionFrontendId title titleSlug difficulty stats content hints topicTags{name}}}`;
+const DETAIL = `query q($slug:String!){question(titleSlug:$slug){questionFrontendId title titleSlug difficulty stats content hints topicTags{name} codeSnippets{langSlug code}}}`;
+/** LeetCode's name for each of the file's languages. */
+const LEETCODE_LANG: Record<Language, string> = { python: "python3", cpp: "cpp", java: "java", javascript: "javascript", go: "golang", rust: "rust" };
 /** A problem's own page on leetcode.com or leetcode.cn (the slugs match), or its page inside a contest. */
 const PROBLEM_URL = /leetcode\.(?:com|cn)\/(?:contest\/[^/]+\/)?problems\/([a-z0-9-]+)/i;
 /** A number however it is written: "42", "#42", "Problem 42", "No. 42", "42." or a copied title line "42. Trapping Rain Water". Not "3Sum". */
@@ -30,7 +32,15 @@ const detailReply = z.object({
   data: z.object({
     // `question` is null for an unknown slug; `content` is null when the problem sits behind the paywall.
     question: hit
-      .extend({ difficulty: z.string(), stats: z.string(), content: z.string().nullable(), hints: z.array(z.string()), topicTags: z.array(z.object({ name: z.string() })) })
+      .extend({
+        difficulty: z.string(),
+        stats: z.string(),
+        content: z.string().nullable(),
+        hints: z.array(z.string()),
+        topicTags: z.array(z.object({ name: z.string() })),
+        // null behind the paywall; a starter is a convenience, so anything unreadable is simply none.
+        codeSnippets: z.array(z.object({ langSlug: z.string(), code: z.string() })).catch([]),
+      })
       .nullable(),
   }),
 });
@@ -80,6 +90,11 @@ export async function lookupLeetCode(query: string, endpoint = ENDPOINT): Promis
   const rating =
     (await lookupZerotrac(question.titleSlug)) ??
     estimateRating({ difficulty: question.difficulty, acRate: acRateFrom(question.stats), tags, constraints });
+  const starters: Partial<Record<Language, string>> = {};
+  for (const language of LANGUAGES) {
+    const snippet = question.codeSnippets.find((s) => s.langSlug === LEETCODE_LANG[language]);
+    if (snippet !== undefined) starters[language] = snippet.code;
+  }
   const problem: Problem = {
     title: question.title,
     url: `https://leetcode.com/problems/${question.titleSlug}/`,
@@ -88,6 +103,7 @@ export async function lookupLeetCode(query: string, endpoint = ENDPOINT): Promis
     hints: question.hints.map((h) => htmlToText(h)),
     constraints,
     rating,
+    starters,
   };
   return { problem, ...assess(problem), source: "leetcode", number: question.questionFrontendId };
 }

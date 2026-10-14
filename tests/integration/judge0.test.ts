@@ -1,7 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { POST } from "@/app/api/run/route";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { POST } from "@/app/api/rooms/[code]/run/route";
+import type { Credentials } from "@/client/api";
 import type { RunOutcome } from "@/client/pyRunner";
 import { GameError } from "@/game/errors";
+import { createRoomHandler } from "@/server/handlers";
 import { runOnJudge } from "@/server/judge/judge0";
 
 /** Every test here compiles and runs on the real judge (ce.judge0.com unless JUDGE0_URL says otherwise). */
@@ -9,8 +11,10 @@ const NETWORK = { timeout: 60_000 };
 
 const javaMain = (body: string): string => `import java.util.*;\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ${body}\n    }\n}\n`;
 
-function post(body: unknown): Request {
-  return new Request("http://test/api/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+/** POST to the hall's run route as `token`, with the route's own params. */
+function run(code: string, token: string, body: unknown): Promise<Response> {
+  const req = new Request(`http://test/api/rooms/${code}/run`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+  return POST(req, { params: Promise.resolve({ code }) });
 }
 
 async function failsUpstream(work: Promise<unknown>, message: RegExp): Promise<void> {
@@ -36,6 +40,12 @@ describe("runOnJudge", () => {
     expect(outcome.ms).toBeGreaterThan(0);
   });
 
+  it("keeps a compiler warning out of stderr when the program compiled and ran", NETWORK, async () => {
+    // new StreamTokenizer(InputStream) is deprecated: javac prints a Note, and the run is still clean.
+    const outcome = await runOnJudge("java", `import java.io.*;\n${javaMain("StreamTokenizer in = new StreamTokenizer(System.in); in.nextToken(); System.out.println((int) in.nval * 2);")}`, "21");
+    expect(outcome).toMatchObject({ stdout: "42\n", stderr: "", timedOut: false });
+  });
+
   it("hands a compile error back as the compiler wrote it", NETWORK, async () => {
     const outcome = await runOnJudge("java", javaMain("int x = ;"), "");
     expect(outcome.stdout).toBe("");
@@ -57,13 +67,16 @@ describe("runOnJudge", () => {
     expect(outcome).toMatchObject({ stdout: "", stderr: "", timedOut: true });
   });
 
-  it("runs C++, Go and Rust on the same judge", NETWORK, async () => {
-    const outcomes = await Promise.all([
-      runOnJudge("cpp", '#include <iostream>\nint main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\\n"; }\n', "2 40"),
-      runOnJudge("go", 'package main\nimport "fmt"\nfunc main() { var a, b int; fmt.Scan(&a, &b); fmt.Println(a + b) }\n', "2 40"),
-      runOnJudge("rust", 'use std::io::Read;\nfn main() { let mut s = String::new(); std::io::stdin().read_to_string(&mut s).unwrap(); let n: i32 = s.split_whitespace().map(|x| x.parse::<i32>().unwrap()).sum(); println!("{}", n); }\n', "2 40"),
-    ]);
-    expect(outcomes.map((o) => o.stdout)).toEqual(["42\n", "42\n", "42\n"]);
+  it("runs C++, Go and Rust on the same judge", { timeout: 120_000 }, async () => {
+    const programs = [
+      ["cpp", '#include <iostream>\nint main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\\n"; }\n'],
+      ["go", 'package main\nimport "fmt"\nfunc main() { var a, b int; fmt.Scan(&a, &b); fmt.Println(a + b) }\n'],
+      ["rust", 'use std::io::Read;\nfn main() { let mut s = String::new(); std::io::stdin().read_to_string(&mut s).unwrap(); let n: i32 = s.split_whitespace().map(|x| x.parse::<i32>().unwrap()).sum(); println!("{}", n); }\n'],
+    ] as const;
+    // One at a time: the public judge throttles per IP, and three compiles at once is how a test run trips it.
+    for (const [language, source] of programs) {
+      expect((await runOnJudge(language, source, "2 40")).stdout, language).toBe("42\n");
+    }
   });
 
   it("says upstream when the judge is still working after the last poll", NETWORK, async () => {
@@ -77,18 +90,27 @@ describe("runOnJudge", () => {
   });
 });
 
-describe("POST /api/run", () => {
-  it("runs a judged language and answers the outcome", NETWORK, async () => {
-    const res = await POST(post({ language: "java", code: javaMain('System.out.println("hall");'), stdin: "" }));
+describe("POST /api/rooms/[code]/run", () => {
+  let seat: Credentials;
+  beforeAll(async () => {
+    seat = await createRoomHandler("Ada", null);
+  });
+
+  it("runs a judged language for a seat in the hall and answers the outcome", NETWORK, async () => {
+    const res = await run(seat.code, seat.token, { language: "java", code: javaMain('System.out.println("hall");'), stdin: "" });
     expect(res.status).toBe(200);
     expect(((await res.json()) as RunOutcome).stdout).toBe("hall\n");
   });
 
+  it("is no relay: a token that holds no seat in the hall is refused before anything reaches the judge", async () => {
+    const res = await run(seat.code, "0".repeat(32), { language: "java", code: javaMain(""), stdin: "" });
+    expect(res.status).toBe(401);
+  });
+
   it("rejects a language the judge does not take, and a body out of bounds, with 400", async () => {
-    for (const body of [{ language: "python", code: "print(1)", stdin: "" }, { language: "java", code: "", stdin: "" }, { language: "java", code: "x", stdin: "x".repeat(1_000_001) }]) {
-      const res = await POST(post(body));
-      expect(res.status).toBe(400);
-      expect(((await res.json()) as { code: string }).code).toBe("invalid");
-    }
+    const bodies = [{ language: "python", code: "print(1)", stdin: "" }, { language: "java", code: "", stdin: "" }, { language: "java", code: "x", stdin: "x".repeat(1_000_001) }];
+    const answers = await Promise.all(bodies.map((body) => run(seat.code, seat.token, body)));
+    for (const res of answers) expect(res.status).toBe(400);
+    expect(await Promise.all(answers.map(async (res) => ((await res.json()) as { code: string }).code))).toEqual(["invalid", "invalid", "invalid"]);
   });
 });

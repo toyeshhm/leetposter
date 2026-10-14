@@ -1,5 +1,5 @@
 /**
- * The languages that compile and run on the judge (POST /api/run) rather than in the browser, with
+ * The languages that compile and run on the judge (POST /api/rooms/<code>/run) rather than in the browser, with
  * their ids on Judge0 CE 1.14 (GET /languages): JDK 17, GCC 14, Go 1.23, Rust 1.85.
  * No imports: the browser bundle reads this file too.
  */

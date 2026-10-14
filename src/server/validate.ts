@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { GameError } from "@/game/errors";
-import { PHASES, REPORT_CATEGORIES, SEATS } from "@/game/types";
+import { LANGUAGES, PHASES, REPORT_CATEGORIES, SEATS } from "@/game/types";
 import type { Action, Problem, RoomState } from "@/game/types";
 
 export const playerName = z.string().trim().min(1).max(24);
@@ -21,6 +21,8 @@ export const problem: z.ZodType<Problem> = z.object({
   constraints: z.string().max(5000),
   bankId: z.string().regex(/^[a-z0-9-]{3,60}$/).optional(),
   rating: z.number().int().min(800).max(3500).optional(),
+  // LeetCode's longest starters are a few hundred characters; this is room, not a target.
+  starters: z.partialRecord(z.enum(LANGUAGES), z.string().max(20_000)).optional(),
 });
 
 const submit = z.discriminatedUnion("verdict", [

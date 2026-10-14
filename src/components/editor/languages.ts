@@ -5,9 +5,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { rust } from "@codemirror/lang-rust";
 import type { Extension } from "@codemirror/state";
-
-export const LANGUAGES = ["python", "cpp", "java", "javascript", "go", "rust"] as const;
-export type Language = (typeof LANGUAGES)[number];
+import { LANGUAGES, type Language } from "@/game/types";
 
 export const LANGUAGE_NAMES: Record<Language, string> = {
   python: "Python",

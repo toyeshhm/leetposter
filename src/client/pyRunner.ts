@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Judged } from "@/server/judge/languages";
-import { call } from "./api";
+import { JUDGED, type Judged } from "@/server/judge/languages";
+import { call, type Credentials } from "./api";
 
 /** The version the Pyodide quickstart pins today (Python 3.14). Loaded from the CDN on the first Run, never bundled. */
 export const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
@@ -9,11 +9,16 @@ export const RUN_TIMEOUT_MS = 10_000;
 /** What runs in this browser. */
 export const IN_BROWSER = ["python", "javascript"] as const;
 export type InBrowser = (typeof IN_BROWSER)[number];
-/** What the hall can run at all: those two here, the compiled four on the judge (POST /api/run). */
+/** What the hall can run at all: those two here, the compiled four on the judge (POST /api/rooms/<code>/run). */
+export const RUNNABLE = [...IN_BROWSER, ...JUDGED] as const;
 export type Runnable = InBrowser | Judged;
 
 export function inBrowser(language: string): language is InBrowser {
   return IN_BROWSER.some((l) => l === language);
+}
+
+export function runnable(language: string): language is Runnable {
+  return RUNNABLE.some((l) => l === language);
 }
 
 export interface RunRequest {
@@ -139,14 +144,14 @@ function workerFor(language: InBrowser): Worker {
  * in this browser: `onLoaded` fires when the runtime is ready (after the first Python run's
  * download); the run is cut off RUN_TIMEOUT_MS after that, the worker terminated (a busy worker
  * cannot be interrupted) and the outcome marked `timedOut`. Rejects when the runtime cannot be set up.
- * The compiled languages go to the judge through POST /api/run, which answers in the same shape and
- * keeps the same ten seconds; there is nothing to download, so `onLoaded` fires at once.
+ * The compiled languages go to the judge through the hall's run route, as the seat `creds` holds; it
+ * answers in the same shape and keeps the same ten seconds. Nothing to download, so `onLoaded` fires at once.
  * ponytail: one run at a time per language; the panel disables its button while a run is out.
  */
-export function runCode(language: Runnable, request: RunRequest, onLoaded: () => void): Promise<RunOutcome> {
+export function runCode(language: Runnable, request: RunRequest, onLoaded: () => void, creds: Credentials): Promise<RunOutcome> {
   if (!inBrowser(language)) {
     onLoaded();
-    return call<RunOutcome>("/api/run", { method: "POST", body: JSON.stringify({ language, ...request }) });
+    return call<RunOutcome>(`/api/rooms/${creds.code}/run`, { method: "POST", body: JSON.stringify({ language, ...request }) }, creds.token);
   }
   return new Promise((resolve, reject) => {
     const worker = workerFor(language);

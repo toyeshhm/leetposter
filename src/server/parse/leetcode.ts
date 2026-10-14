@@ -38,6 +38,8 @@ export function difficultyIn(text: string): string | null {
 /** A title, a number or a link rather than a whole page: short, and none of a page's section headings. */
 export const isQuery = (text: string): boolean => text.length < 200 && !/Example|Constraints/.test(text);
 
+export const NO_HINTS = "No hints found, so the Oracle's panel is empty. LeetCode lists none for some problems; on a pasted page, open every Hint before copying.";
+
 /** Warnings and confidence for a problem from either source. */
 export function assess(problem: Problem): Pick<ParsedProblem, "confidence" | "warnings"> {
   const warnings: string[] = [];
@@ -45,14 +47,12 @@ export function assess(problem: Problem): Pick<ParsedProblem, "confidence" | "wa
   if (problem.statement === "") warnings.push("No statement found. Copy from the problem's Description tab.");
   if (problem.constraints === "") warnings.push("No constraints found. The Warden's panel is empty.");
   if (problem.tags.length === 0) warnings.push("Topics were collapsed on the page, so no tags. Open Topics before copying.");
-  if (problem.hints.length === 0) {
-    warnings.push("No hints found, so the Oracle's panel is empty. LeetCode lists none for some problems; on a pasted page, open every Hint before copying.");
-  }
+  if (problem.hints.length === 0) warnings.push(NO_HINTS);
   const missing = problem.title === "" || problem.statement === "" || problem.constraints === "";
   return { confidence: missing ? "low" : "high", warnings };
 }
 
-/** `over` with every empty field replaced by `base`'s: the model's answer on top of what the parser already found. */
+/** `over` with every empty field replaced by `base`'s: the model's answer on top of what the parser already found. Starters only ever come from LeetCode, so they ride along from whichever side has them. */
 export function fillEmpty(base: Problem, over: Problem): Problem {
   return {
     title: over.title === "" ? base.title : over.title,
@@ -61,6 +61,7 @@ export function fillEmpty(base: Problem, over: Problem): Problem {
     tags: over.tags.length === 0 ? base.tags : over.tags,
     hints: over.hints.length === 0 ? base.hints : over.hints,
     constraints: over.constraints === "" ? base.constraints : over.constraints,
+    starters: over.starters ?? base.starters,
   };
 }
 

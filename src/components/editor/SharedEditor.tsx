@@ -11,7 +11,8 @@ import { errorMessage, type Credentials } from "@/client/api";
 import { persistDoc } from "@/client/docPersist";
 import { connectDoc, type Link } from "@/client/docSync";
 import { Button, Notice } from "@/components/ui";
-import { DEFAULT_LANGUAGE, LANGUAGES, LANGUAGE_NAMES, languageExtension, parseLanguage, type Language } from "./languages";
+import { LANGUAGES, type Language } from "@/game/types";
+import { DEFAULT_LANGUAGE, LANGUAGE_NAMES, languageExtension, parseLanguage } from "./languages";
 import { RunPanel } from "./RunPanel";
 import { editorTheme } from "./theme";
 import "./editor.css";
@@ -26,6 +27,8 @@ export interface SharedEditorProps {
   showRun: boolean;
   /** Called once the saved state is in. Pass a stable function: it is an effect dependency. */
   onReady?: () => void;
+  /** LeetCode's starter code per language, or null: an empty file opens on its language's starter. */
+  starters: Partial<Record<Language, string>> | null;
 }
 
 /*
@@ -52,12 +55,30 @@ function cursorColor(name: string): { color: string; colorLight: string } {
 }
 
 /**
+ * A language's starter as one fixed Yjs update, written under a client id no seat ever edits with (one
+ * per language). Every seat that opens an empty file applies these same bytes, so however many race to
+ * it the starter goes in once, and a starter someone has since deleted stays deleted when applied again.
+ */
+function starterUpdate(language: Language, starter: string): Uint8Array {
+  const seed = new Y.Doc();
+  seed.clientID = LANGUAGES.indexOf(language) + 1;
+  seed.getText("code").insert(0, starter);
+  const update = Y.encodeStateAsUpdate(seed);
+  seed.destroy();
+  return update;
+}
+
+/**
  * One CodeMirror over one Y.Text ("code") per hall, with the language in a Y.Map ("meta") so the
  * picker syncs too. Realtime carries edits between open tabs; the server keeps the last saved state.
  */
-export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onReady }: SharedEditorProps): ReactElement {
+export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onReady, starters }: SharedEditorProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const docRef = useRef<Y.Doc | null>(null);
+  // Read when the saved state lands, inside the editor's own effect, which must not rebuild on every poll.
+  const startersRef = useRef(starters);
+  const readOnlyRef = useRef(readOnly);
   const metaRef = useRef<Y.Map<string> | null>(null);
   const textRef = useRef<Y.Text | null>(null);
   const lock = useRef(new Compartment());
@@ -74,6 +95,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
     const parent = host.current;
     if (parent === null) return;
     const doc = new Y.Doc();
+    docRef.current = doc;
     const text = doc.getText("code");
     const meta = doc.getMap<string>("meta");
     metaRef.current = meta;
@@ -118,6 +140,10 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
       creds,
       doc,
       () => {
+        // A locked file is left as it is: a seat could not save the starter anyway.
+        const opening = parseLanguage(meta.get("language"));
+        const starter = startersRef.current?.[opening];
+        if (text.length === 0 && starter !== undefined && !readOnlyRef.current) Y.applyUpdate(doc, starterUpdate(opening, starter));
         setReady(true);
         onReady?.();
       },
@@ -131,14 +157,37 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
       awareness.destroy();
       doc.destroy();
       viewRef.current = null;
+      docRef.current = null;
       metaRef.current = null;
       textRef.current = null;
     };
   }, [creds, playerName, onReady]);
 
   useEffect(() => {
+    readOnlyRef.current = readOnly;
     viewRef.current?.dispatch({ effects: lock.current.reconfigure([EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]) });
   }, [readOnly]);
+
+  useEffect(() => {
+    startersRef.current = starters;
+  }, [starters]);
+
+  /** A new language swaps in its starter, but only over an empty file or the old starter untouched: never anyone's work. */
+  const pick = (next: Language): void => {
+    const doc = docRef.current;
+    const text = textRef.current;
+    const meta = metaRef.current;
+    if (doc === null || text === null || meta === null) return;
+    const starter = starters?.[next];
+    const current = text.toJSON();
+    doc.transact(() => {
+      if (starter !== undefined && (current.trim() === "" || current === starters?.[language])) {
+        text.delete(0, text.length);
+        text.insert(0, starter);
+      }
+      meta.set("language", next);
+    });
+  };
 
   return (
     <section className="editor" aria-label="The shared editor" data-full={full}>
@@ -154,7 +203,9 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
               className="field-control"
               value={language}
               disabled={readOnly || !ready}
-              onChange={(e) => metaRef.current?.set("language", e.target.value)}
+              onChange={(e) => {
+                pick(parseLanguage(e.target.value));
+              }}
             >
               {LANGUAGES.map((l) => (
                 <option key={l} value={l}>
@@ -180,7 +231,7 @@ export function SharedEditor({ creds, playerName, readOnly, reason, showRun, onR
       {link === "down" ? <Notice>The line to the hall dropped. Reconnecting; keep typing, your edits go out when it is back.</Notice> : null}
       {link === "closed" ? <Notice kind="error">The hall closed the line. Reload the page to pick the file up again.</Notice> : null}
       <div ref={host} className="editor-body" data-locked={readOnly} aria-busy={!ready} />
-      {showRun ? <RunPanel language={language} getCode={() => textRef.current?.toJSON() ?? ""} /> : null}
+      {showRun ? <RunPanel creds={creds} language={language} getCode={() => textRef.current?.toJSON() ?? ""} /> : null}
     </section>
   );
 }

@@ -83,6 +83,7 @@ export function personalize(state: RoomState, playerId: string, now: number): Pl
             hintCount: problem.hints.length,
             rating: problem.rating ?? null,
             bankId: problem.bankId ?? null,
+            starters: problem.starters ?? null,
           },
     problemReady: problem !== null,
     panel,

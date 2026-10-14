@@ -1,11 +1,13 @@
 "use client";
 import { useState, type ReactElement } from "react";
-import { errorMessage } from "@/client/api";
+import { errorMessage, type Credentials } from "@/client/api";
 import { RUN_TIMEOUT_MS, inBrowser, runCode, type RunOutcome } from "@/client/pyRunner";
 import { Button, Notice, TextareaField } from "@/components/ui";
-import type { Language } from "./languages";
+import type { Language } from "@/game/types";
 
 export interface RunPanelProps {
+  /** The seat this browser holds: the judge runs only for a seat in the hall. */
+  creds: Credentials;
   language: Language;
   /** The shared file as it stands when Run is pressed. */
   getCode: () => string;
@@ -18,16 +20,21 @@ export const JAVA_NOTE = "Java is compiled as Main.java, so the class that holds
 type Phase = { kind: "idle" } | { kind: "fetching" } | { kind: "running" } | { kind: "done"; outcome: RunOutcome } | { kind: "failed"; message: string };
 
 /** Run the shared file with the Input box as stdin: here for Python and JavaScript, on the judge for the compiled four. Collapsed to one row until opened. */
-export function RunPanel({ language, getCode }: RunPanelProps): ReactElement {
+export function RunPanel({ creds, language, getCode }: RunPanelProps): ReactElement {
   const [stdin, setStdin] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const busy = phase.kind === "fetching" || phase.kind === "running";
   const run = async (): Promise<void> => {
     setPhase({ kind: "fetching" });
     try {
-      const outcome = await runCode(language, { code: getCode(), stdin }, () => {
-        setPhase({ kind: "running" });
-      });
+      const outcome = await runCode(
+        language,
+        { code: getCode(), stdin },
+        () => {
+          setPhase({ kind: "running" });
+        },
+        creds,
+      );
       setPhase({ kind: "done", outcome });
     } catch (error: unknown) {
       setPhase({ kind: "failed", message: errorMessage(error) });
